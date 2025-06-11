@@ -2,15 +2,22 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "SitePerso",
+    "title": "Page d’accueil",
     "section": "",
-    "text": "This is a Quarto website.\nTo learn more about Quarto websites visit https://quarto.org/docs/websites.\n\n1 + 1\n\n[1] 2"
+    "text": "Bienvenue\nCe gabarit fournit une structure minimale pour un site web Quarto. Utilisez la page index.qmd pour présenter votre projet ou vos ressources.\n\nAjoutez des sections avec du texte et du code.\nModifiez la navigation dans _quarto.yml selon vos besoins.\n\nConsultez about.qmd pour un exemple de page supplémentaire.\n\n\n\n\n Back to top"
   },
   {
     "objectID": "about.html",
     "href": "about.html",
-    "title": "About",
+    "title": "À propos",
     "section": "",
-    "text": "About this site\n\n1 + 1\n\n[1] 2"
+    "text": "À propos\nCette page peut contenir des informations sur les auteurs, la licence ou toute autre ressource utile.\n\n# Exemples de code R\nsummary(cars)\n\n     speed           dist       \n Min.   : 4.0   Min.   :  2.00  \n 1st Qu.:12.0   1st Qu.: 26.00  \n Median :15.0   Median : 36.00  \n Mean   :15.4   Mean   : 42.98  \n 3rd Qu.:19.0   3rd Qu.: 56.00  \n Max.   :25.0   Max.   :120.00  \n\n\n\n\n\n\n Back to top"
+  },
+  {
+    "objectID": "page1.html",
+    "href": "page1.html",
+    "title": "Page 1",
+    "section": "",
+    "text": "Page d’exemple\nUtilisez cette page pour ajouter du contenu supplémentaire.\n\n# Exemple de graphique R\nplot(cars)\n\n\n\n\n\n\n\n\n Back to top"
   }
 ]

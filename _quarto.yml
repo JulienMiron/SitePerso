@@ -3,14 +3,20 @@ project:
   output-dir: docs
 
 website:
-  title: "Site personnel"
+  title: "Titre du site"
   navbar:
     left:
       - href: index.qmd
         text: Accueil
       - href: about.qmd
         text: À propos
+      - href: page1.qmd
+        text: Page 1
+  page-navigation: true
+  back-to-top-navigation: true
+
 format:
   html:
-    theme: default
+    theme: cosmo
     css: styles.css
+    toc: true

@@ -1,12 +1,12 @@
 {
-    "id": "FABE6E8D",
-    "path": "~/Library/CloudStorage/OneDrive-UniversitéLaval/Quarto/SitePerso/SitePerso/index.qmd",
-    "project_path": "index.qmd",
+    "id": "5C2D8B44",
+    "path": "~/Library/CloudStorage/OneDrive-UniversitéLaval/Quarto/SitePerso/SitePerso/about.qmd",
+    "project_path": "about.qmd",
     "type": "quarto_markdown",
     "hash": "0",
     "contents": "",
-    "dirty": false,
-    "created": 1749598901867.0,
+    "dirty": true,
+    "created": 1749649513944.0,
     "source_on_save": false,
     "relative_order": 1,
     "properties": {
@@ -16,14 +16,16 @@
         "Source": "Source",
         "docOutlineVisible": "1",
         "rmdVisualCollapsedChunks": "",
-        "rmdVisualModeLocation": "28:0"
+        "rmdVisualModeLocation": "27:0",
+        "cursorPosition": "0,0",
+        "scrollLine": "0"
     },
     "folds": "",
-    "lastKnownWriteTime": 1749598898,
+    "lastKnownWriteTime": 1749386782,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1749598898,
+    "last_content_update": 1749649520293,
     "read_only": false,
     "read_only_alternatives": []
 }
