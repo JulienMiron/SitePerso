@@ -1,5 +1,10 @@
 ---
 title: "STT-1900"
+format:
+  html:
+#    theme: cosmo
+    toc: true
+    toc-title: "Test menu"
 ---
 
 Voici les différentes applications Shiny pour le cours STT-1900

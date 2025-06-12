@@ -31,9 +31,9 @@ site:
       - icon: github
         menu:
           - text: Source Code
-            href:  https://github.com/AurelienNicosiaULaval
+            href:  https://github.com/JulienMiron
           - text: Report a Bug
-            href:  https://github.com/AurelienNicosiaULaval
+            href:  https://github.com/JulienMiron
   page-navigation: true
 ---
 
@@ -51,4 +51,4 @@ Ce site est mon site
 
 ------------------------------------------------------------------------
 
-Si vous souhaitez contribuer ou avez des questions, n'hésitez pas à [ouvrir une issue sur GitHub](https://github.com/ton-utilisateur/ton-repo/issues).
+Si vous souhaitez contribuer ou avez des questions, n'hésitez pas à [ouvrir une issue sur GitHub](https://github.com/JulienMiron/SitePerso/issues).
