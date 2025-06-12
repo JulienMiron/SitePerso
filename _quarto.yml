@@ -5,7 +5,7 @@ project:
 website:
   title: ""  # On cache le titre textuel
   navbar:
-    logo: img/logo-ulaval.png
+    logo: img/logo_ul.png
     tools:
     - icon: github
       href: https://github.com/AurelienNicosiaULaval/site_ressources_SSD
