@@ -1,5 +1,5 @@
 ---
-title: "Ressources pédagogiques pour l'enseignement en statistique et en sciences des données"
+title: "Site de Julien Miron"
 format:
   html:
 #    theme: cosmo
@@ -40,27 +40,15 @@ site:
 
 # Bienvenue
 
-Ce site rassemble divers matériels pédagogiques, modèles Quarto, gabarits GitHub et ressources pour l’enseignement des statistiques au département de mathématiques et statistique de l’Université Laval.
+Ce site est mon site
 
 ## Objectifs du site
 
-- Offrir un point d’entrée simple pour accéder aux différents gabarits et ressources.
-- Favoriser le partage entre enseignant·es du département.
-- Illustrer les bonnes pratiques en matière de reproductibilité et de partage de contenu pédagogique.
+- Fournir de la documentation
 
 ## Structure du site
 
-- **Modèles** : documents `.qmd`, présentations, devoirs, examens.
-- **Outils** : bibliothèques R utiles, extensions Quarto, automatisations.
-- **Tutoriels** : guides pas-à-pas pour utiliser R, GitHub, Quarto, etc.
-
----
-
-## 🚀 Démarrage rapide
-
-1. Explorez les modèles disponibles dans la section [Modèles](templates/index.qmd).
-2. Consultez les outils proposés dans [Outils](outils.qmd).
-3. Apprenez avec nos [Tutoriels](tutoriels.qmd).
+- test test
 
 ---
 
