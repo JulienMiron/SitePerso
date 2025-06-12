@@ -14,17 +14,13 @@ website:
     left:
     - href: index.qmd
       text: Accueil
-    - text: Modèles
+    - text: Cours
       menu:
-        - href: templates/index.qmd
-          text: Vue d’ensemble
-        - href: templates/quarto.qmd
-          text: Gabarits Quarto
-        - href: templates/site-web.qmd
-          text: Modèle de site web
+        - href: cours/STT-1900.qmd
+          text: STT-1900
 
-    - href: page1.qmd
-      text: Page 1
+    - href: apps/ANOVA.qmd
+      text: ANOVA
     - href: about.qmd
       text: À propos
   back-to-top-navigation: true
