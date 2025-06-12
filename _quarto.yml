@@ -19,7 +19,7 @@ website:
         - href: cours/STT-1900.qmd
           text: STT-1900
 
-    - href: apps/ANOVA.qmd
+    - href: ../apps/ANOVA.qmd
       text: ANOVA
     - href: about.qmd
       text: À propos
