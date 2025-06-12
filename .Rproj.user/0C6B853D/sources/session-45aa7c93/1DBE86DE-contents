@@ -5,7 +5,7 @@ project:
 website:
   title: ""  # On cache le titre textuel
   navbar:
-    logo: img/logo-ulaval.png
+    logo: img/logo-ul.pdf
     tools:
     - icon: github
       href: https://github.com/AurelienNicosiaULaval/site_ressources_SSD
@@ -19,7 +19,7 @@ website:
         - href: cours/STT-1900.qmd
           text: STT-1900
 
-    - href: apps/ANOVA.qmd
+    - href: cours/apps/ANOVA.qmd
       text: ANOVA
     - href: about.qmd
       text: À propos
