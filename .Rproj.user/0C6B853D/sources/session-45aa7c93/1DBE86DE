@@ -3,7 +3,7 @@
     "path": "~/Library/CloudStorage/OneDrive-UniversitéLaval/Quarto/SitePerso/SitePerso/_quarto.yml",
     "project_path": "_quarto.yml",
     "type": "yaml",
-    "hash": "0",
+    "hash": "3636228461",
     "contents": "",
     "dirty": false,
     "created": 1749747964488.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "23,24",
-        "scrollLine": "0"
+        "cursorPosition": "30,0",
+        "scrollLine": "3"
     },
     "folds": "",
-    "lastKnownWriteTime": 1749749751,
+    "lastKnownWriteTime": 1749769643,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1749749751985,
+    "last_content_update": 1749769643959,
     "read_only": false,
     "read_only_alternatives": []
 }

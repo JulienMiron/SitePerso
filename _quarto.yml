@@ -8,7 +8,7 @@ website:
     logo: img/logo_ul.png
     tools:
     - icon: github
-      href: https://github.com/AurelienNicosiaULaval/site_ressources_SSD
+      href: https://github.com/JulienMiron/SitePerso
       aria-label: GitHub
     - toggle-appearance: true
     left:
@@ -26,7 +26,7 @@ website:
       text: À propos
   back-to-top-navigation: true
   reader-mode: true
-  repo-url: https://github.com/AurelienNicosiaULaval/site_ressources_SSD
+  repo-url: https://github.com/JulienMiron/SitePerso
   repo-actions: [edit, source, issue]
 
 
