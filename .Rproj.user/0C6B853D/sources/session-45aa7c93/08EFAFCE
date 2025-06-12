@@ -3,9 +3,9 @@
     "path": "~/Library/CloudStorage/OneDrive-UniversitéLaval/Quarto/SitePerso/SitePerso/page1.qmd",
     "project_path": "page1.qmd",
     "type": "quarto_markdown",
-    "hash": "0",
+    "hash": "3524570407",
     "contents": "",
-    "dirty": true,
+    "dirty": false,
     "created": 1749688837963.0,
     "source_on_save": false,
     "relative_order": 3,
@@ -21,11 +21,11 @@
         "rmdVisualModeLocation": "191:0"
     },
     "folds": "",
-    "lastKnownWriteTime": 1749386782,
+    "lastKnownWriteTime": 1749689084,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1749688905586,
+    "last_content_update": 1749689084211,
     "read_only": false,
     "read_only_alternatives": []
 }

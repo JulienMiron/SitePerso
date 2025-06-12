@@ -4,10 +4,7 @@ title: "Page 1"
 
 # Page d'exemple
 
-Utilisez cette page pour ajouter du contenu supplémentaire.
+## Mon application interactive
 
-```{r}
-# Exemple de graphique R
-plot(cars)
-```
-
+<iframe src="https://https://jmiron.shinyapps.io/ANOVA/"
+        width="100%" height="600" frameborder="0"></iframe>

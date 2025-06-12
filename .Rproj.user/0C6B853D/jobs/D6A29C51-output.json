@@ -10,3 +10,6 @@
 [1,"\u001B[32mGET: /\u001B[39m\n"]
 [1,"\u001B[32mGET: /\u001B[39m\n"]
 [1,"\u001B[32mGET: /\u001B[39m\n"]
+[1,"\u001B[1mpandoc \u001B[22m\n  to: html\n  output-file: page1.html\n  standalone: true\n  title-prefix: Titre du site\n  section-divs: true\n  html-math-method: mathjax\n  wrap: none\n  default-image-extension: png\n  css:\n    - styles.css\n  toc: true\n  \n\u001B[1mmetadata\u001B[22m\n  document-css: false\n  link-citations: true\n  date-format: long\n  lang: en\n  theme: cosmo\n  title: Page 1\n  \n"]
+[1,"Output created: docs/page1.html\n\n\u001B[32mWatching files for changes\u001B[39m\n"]
+[1,"\u001B[32mGET: /page1.html\u001B[39m\n"]
