@@ -2,7 +2,6 @@
 title: "ANOVA 1 facteur"
 ---
 
-# ANOVA 1 facteur
 
 ## Mon application interactive
 
