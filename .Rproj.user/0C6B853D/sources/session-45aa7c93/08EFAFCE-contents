@@ -1,0 +1,10 @@
+---
+title: "Page 1"
+---
+
+# Page d'exemple
+
+## Mon application interactive
+
+<iframe src="https://https://jmiron.shinyapps.io/ANOVA/"
+        width="100%" height="600" frameborder="0"></iframe>
