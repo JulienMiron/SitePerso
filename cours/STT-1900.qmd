@@ -4,4 +4,4 @@ title: "STT-1900"
 
 Voici les différentes applications Shiny pour le cours STT-1900
 
-- [Application 1](../apps/ANOVA.qmd)
+- [Module 9 - ANOVA 1 facteur](../apps/ANOVA.qmd)
