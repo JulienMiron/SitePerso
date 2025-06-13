@@ -4,7 +4,7 @@ format:
   html:
 #    theme: cosmo
     toc: true
-    toc-title: "Test menu"
+    toc-title: "Test menu test"
     embed-resources: true
     link-external-newwindow: true
     code-link: true
