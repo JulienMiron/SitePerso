@@ -16,11 +16,11 @@ website:
       text: Accueil
     - text: Cours
       menu:
-        - href: cours/STT-1900.qmd
+        - href: cours/STT-1900/STT-1900.qmd
           text: STT-1900
-        - href: cours/STT-1000.qmd
+        - href: cours/STT-1000/STT-1000.qmd
           text: STT-1000
-        - href: cours/STT-2902.qmd
+        - href: cours/STT-2902/STT-2902.qmd
           text: STT-2902
     - href: about.qmd
       text: À propos
