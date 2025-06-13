@@ -3,7 +3,7 @@ project:
   output-dir: docs
 
 website:
-  title: ""  # On cache le titre textuel
+  title: "TEST TITRE"  # On cache le titre textuel
   navbar:
     logo: img/logo_ul.png
     tools:
