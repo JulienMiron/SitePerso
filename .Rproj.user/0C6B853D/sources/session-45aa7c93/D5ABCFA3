@@ -3,7 +3,7 @@
     "path": "~/Library/CloudStorage/OneDrive-UniversitéLaval/Quarto/SitePerso/SitePerso/cours/STT-1900/STT-1900.qmd",
     "project_path": "cours/STT-1900/STT-1900.qmd",
     "type": "quarto_markdown",
-    "hash": "2146384681",
+    "hash": "1225114663",
     "contents": "",
     "dirty": false,
     "created": 1749774433954.0,
@@ -17,15 +17,15 @@
         "docOutlineVisible": "1",
         "rmdVisualModeLocation": "2:0",
         "rmdVisualCollapsedChunks": "",
-        "cursorPosition": "15,33",
+        "cursorPosition": "11,22",
         "scrollLine": "0"
     },
     "folds": "",
-    "lastKnownWriteTime": 1749774779,
+    "lastKnownWriteTime": 1749820888,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1749774779278,
+    "last_content_update": 1749820888307,
     "read_only": false,
     "read_only_alternatives": []
 }
