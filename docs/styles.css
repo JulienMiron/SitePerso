@@ -99,6 +99,10 @@ a:hover {
   text-decoration: underline;
 }
 
+.navbar {
+  background-color: #f8f9fa; /* Remplace par la couleur que tu veux */
+}
+
 
 
 /* === Mode sombre === */
