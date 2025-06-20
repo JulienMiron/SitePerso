@@ -1,3 +1,0 @@
-library(magick)
-img <- image_read_pdf("logo_ul.pdf", density = 300)
-image_write(img, "logo_ul.png")
