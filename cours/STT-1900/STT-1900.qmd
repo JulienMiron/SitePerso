@@ -12,4 +12,4 @@ Voici les différentes applications Shiny pour le cours STT-1900
 
 # Applications SHINY
 
--   [Module 9 - ANOVA 1 facteur](https://jmiron.shinyapps.io/ANOVA/)
+-   [Module 9 - ANOVA 1 facteur](https://jmiron.shinyapps.io/ANOVA/){target="_blank"}
