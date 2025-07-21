@@ -12,4 +12,9 @@ Voici les différentes applications Shiny pour le cours STT-1900
 
 # Applications SHINY
 
--   [Module 9 - ANOVA 1 facteur](https://jmiron.shinyapps.io/ANOVA/){target="_blank"}
+-   [Module 6 - Moyenne échantillonnale, loi inconnue](https://jmiron.shinyapps.io/MoyEchExp/){target="_blank"}
+-   [Module 6 - Moyenne échantillonnale, loi normale](https://jmiron.shinyapps.io/MoyEchNorm/){target="_blank"}
+-   [Module 6 - Moyenne échantillonnale, loi du khi-carré](https://jmiron.shinyapps.io/KhiCarre/){target="_blank"}
+-   [Module 6 - Moyenne échantillonnale, loi de Student](https://jmiron.shinyapps.io/Student/){target="_blank"}
+-   [Module 6 - Moyenne échantillonnale, estimation ponctuelle](https://jmiron.shinyapps.io/EstimationPonctuelle/){target="_blank"}
+-   [Module 9 - ANOVA](https://jmiron.shinyapps.io/ANOVA/){target="_blank"}
