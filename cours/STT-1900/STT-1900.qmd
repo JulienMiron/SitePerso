@@ -18,4 +18,8 @@ Voici les différentes applications Shiny pour le cours STT-1900
 -   [Module 6 - Exemple, khi-carré](https://jmiron.shinyapps.io/ExempleKhiCarre/){target="_blank"}
 -   [Module 6 - Standardisation par S ou Sigma, diapo #](https://jmiron.shinyapps.io/StdSvSigma/){target="_blank"}
 -   [Module 6 - Loi de Student, diapo #](https://jmiron.shinyapps.io/Student/){target="_blank"}
+-   [Module 7 - Introduction aux intervalles de confiance, diap #](https://jmiron.shinyapps.io/ICintro/){target="_blank"}
+-   [Module 7 - Intervalle de confiance, variance connue, diapo #](https://jmiron.shinyapps.io/ICVarConnue/){target="_blank"}
+-   [Module 7 - Vrais ou faux, intervalle de confiance, diapo #](https://jmiron.shinyapps.io/VFVarConnue/){target="_blank"}
+-   [Module 8 - Illustration de la valeur-p, diapo #](https://jmiron.shinyapps.io/ICVarInconnue/){target="_blank"}
 -   [Module 9 - ANOVA, diapo #](https://jmiron.shinyapps.io/ANOVA/){target="_blank"}
