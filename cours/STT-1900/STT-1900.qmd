@@ -22,4 +22,5 @@ Voici les différentes applications Shiny pour le cours STT-1900
 -   [Module 7 - Intervalle de confiance, variance connue, diapo #](https://jmiron.shinyapps.io/ICVarConnue/){target="_blank"}
 -   [Module 7 - Vrais ou faux, intervalle de confiance, diapo #](https://jmiron.shinyapps.io/VFVarConnue/){target="_blank"}
 -   [Module 8 - Illustration de la valeur-p, diapo #](https://jmiron.shinyapps.io/ICVarInconnue/){target="_blank"}
+-   [Module 8 - Introduction aux tests, diapo #](https://jmiron.shinyapps.io/IntroTest/){target="_blank"}
 -   [Module 9 - ANOVA, diapo #](https://jmiron.shinyapps.io/ANOVA/){target="_blank"}
