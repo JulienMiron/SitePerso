@@ -26,7 +26,7 @@ Voici les différentes applications Shiny pour le cours STT-1900
 -   [Module 8.1 - Exemple des dés, diapo # 23](https://jmiron.shinyapps.io/valeurP/){target="_blank"}
 -   [Module 9 - Illustration des paramètres de l'ANOVA, diapo # 16 et 20](https://jmiron.shinyapps.io/ANOVApara/){target="_blank"}
 -   [Module 9 - Illustration de la décomposition de la variabilité de l'ANOVA, diapo # 24](https://jmiron.shinyapps.io/ANOVA_SS/){target="_blank"}
--   [Module 10 - Introduction du modèle de régression linéaire simple, diapo # 10](https://jmiron.shinyapps.io/ANOVA_SS/){target="_blank"}
--   [Module 10 - Corrélation en régression linéaire simple, diapo # 55](https://jmiron.shinyapps.io/ANOVA_SS/){target="_blank"}
+-   [Module 10 - Introduction du modèle de régression linéaire simple, diapo # 10](https://jmiron.shinyapps.io/ModeleIntro/){target="_blank"}
+-   [Module 10 - Corrélation en régression linéaire simple, diapo # 55](https://jmiron.shinyapps.io/RegLinCorr/){target="_blank"}
 
 Merci de relever les erreurs que vous pourriez trouver dans les applications Shiny et de communiquer avec moi par courriel.
