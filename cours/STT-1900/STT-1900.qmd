@@ -12,15 +12,7 @@ Voici les différentes applications Shiny pour le cours STT-1900
 
 # Applications SHINY
 
-<<<<<<< Updated upstream
--   [Module 6 - Moyenne échantillonnale, loi inconnue, diapo #](https://jmiron.shinyapps.io/MoyEchExp/){target="_blank"}
--   [Module 6 - Moyenne échantillonnale, loi normale, diapo #](https://jmiron.shinyapps.io/MoyEchNorm/){target="_blank"}
--   [Module 6 - Loi du khi-carré, diapo #](https://jmiron.shinyapps.io/KhiCarre/){target="_blank"}
--   [Module 6 - Exemple, khi-carré](https://jmiron.shinyapps.io/ExempleKhiCarre/){target="_blank"}
--   [Module 6 - Standardisation par S ou Sigma, diapo #](https://jmiron.shinyapps.io/StdSvSigma/){target="_blank"}
--   [Module 6 - Loi de Student, diapo #](https://jmiron.shinyapps.io/Student/){target="_blank"}
--   [Module 9 - ANOVA, diapo #](https://jmiron.shinyapps.io/ANOVA/){target="_blank"}
-=======
+
 -   [Module 3 - TCL introduction, diapo # 26](https://jmiron.shinyapps.io/introTCL/){target="_blank"}
 -   [Module 6 - Moyenne échantillonnale, loi inconnue, diapos # 15 et 17](https://jmiron.shinyapps.io/MoyEchExp/){target="_blank"}
 -   [Module 6 - Moyenne échantillonnale, loi normale, diapos # 10 et 20-21 ](https://jmiron.shinyapps.io/MoyEchNorm/){target="_blank"}
@@ -40,4 +32,4 @@ Voici les différentes applications Shiny pour le cours STT-1900
 -   [Module 10 - Corrélation en régression linéaire simple, diapo # 55](https://jmiron.shinyapps.io/RegLinCorr/){target="_blank"}
 
 Merci de relever les erreurs que vous pourriez trouver dans les applications Shiny et de communiquer avec moi par courriel à julien.miron@mat.ulaval.ca .
->>>>>>> Stashed changes
+
