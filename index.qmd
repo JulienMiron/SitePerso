@@ -38,7 +38,13 @@ site:
 ---
 
 
+## Objectifs du site
 
+-   Fournir de la documentation
+
+## Structure du site
+
+-   test test
 
 ------------------------------------------------------------------------
 
