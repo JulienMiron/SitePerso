@@ -3,37 +3,44 @@ project:
   output-dir: docs
 
 website:
-  title: "Julien Miron"  # On cache le titre textuel
+  title: "Julien Miron"
+  site-url: https://julienmiron.github.io
   navbar:
     logo: img/logo_ul.png
-    tools:
-    - icon: github
-      href: https://github.com/JulienMiron/SitePerso
-      aria-label: GitHub
-    - toggle-appearance: true
     left:
-    - href: index.qmd
-      text: Accueil
-    - text: Cours
-      menu:
-        - href: cours/STT-1000/STT-1000.qmd
-          text: STT-1000
-        - href: cours/STT-1900/STT-1900.qmd
-          text: STT-1900
-        - href: cours/STT-2902/STT-2902.qmd
-          text: STT-2902
-    - href: about.qmd
-      text: À propos
+      - href: index.qmd
+        text: Accueil
+      - text: Cours
+        menu:
+          - href: cours/STT-1000/STT-1000.qmd
+            text: STT-1000
+          - href: cours/STT-1900/STT-1900.qmd
+            text: STT-1900
+          - href: cours/STT-2902/STT-2902.qmd
+            text: STT-2902
+      - href: index.qmd#sites
+        text: Sites
+      - href: index.qmd#depots
+        text: Dépôts
+      - href: about.qmd
+        text: À propos
+    tools:
+      - icon: github
+        href: https://github.com/JulienMiron
+        aria-label: Profil GitHub
+      - toggle-appearance: true
   back-to-top-navigation: true
   reader-mode: true
   repo-url: https://github.com/JulienMiron/SitePerso
   repo-actions: [edit, source, issue]
 
-
 format:
   html:
-    theme: cosmo
+    theme:
+      light: cosmo
+      dark: darkly
     css: styles.css
     toc: true
+    lang: fr
 
 editor: visual

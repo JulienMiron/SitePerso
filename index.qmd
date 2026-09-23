@@ -1,51 +1,65 @@
 ---
-title: "Site de Julien Miron"
-format:
-  html:
-#    theme: cosmo
-    toc: true
-    toc-title: "Menu"
-    embed-resources: true
-    link-external-newwindow: true
-    code-link: true
-    css: styles.css
-site:
-  title: "Ressources en statistique"
-  navbar:
-    left:
-      - href: index.qmd
-        text: Accueil
-      - href: templates/index.qmd
-        text: Modèles
-      - href: outils.qmd
-        text: Outils
-      - href: tutoriels.qmd
-        text: Tutoriels
-      - href: about.qmd
-        text: À propos
-      - icon: github
-        href: https://github.com/AurelienNicosiaULaval
-        aria-label: GitHub
-        css: styles.css
-        tools:
-      - icon: github
-        menu:
-          - text: Source Code
-            href:  https://github.com/JulienMiron
-          - text: Report a Bug
-            href:  https://github.com/JulienMiron
-  page-navigation: true
+title: "Julien Miron"
+subtitle: "Chargé d'enseignement en statistique · Département de mathématiques et de statistique · Université Laval"
+toc: false
+listing:
+  - id: liste-sites
+    contents: liens.yml
+    type: grid
+    grid-columns: 3
+    fields: [title, description, categories]
+    sort: false
+    categories: true
 ---
 
+Bienvenue. Cette page regroupe mes cours, mes autres sites et mes dépôts GitHub.
 
-## Objectifs du site
+## Sites {#sites}
 
--   Fournir de la documentation
+::: {#liste-sites}
+:::
 
-## Structure du site
+## Dépôts GitHub {#depots}
 
--   test test
+Liste mise à jour automatiquement à partir de mon [profil GitHub](https://github.com/JulienMiron).
+
+::: {#depots-github .depots}
+Chargement des dépôts…
+:::
+
+```{=html}
+<script>
+(async () => {
+  const USER = "JulienMiron";
+  const EXCLURE = [];            // ex. ["SitePerso"] pour masquer un dépôt
+  const cible = document.getElementById("depots-github");
+  try {
+    const rep = await fetch(`https://api.github.com/users/${USER}/repos?per_page=100&sort=updated`);
+    if (!rep.ok) throw new Error(rep.status);
+    const depots = (await rep.json())
+      .filter(d => !d.fork && !d.archived && !EXCLURE.includes(d.name));
+    if (!depots.length) { cible.textContent = "Aucun dépôt public pour le moment."; return; }
+    cible.innerHTML = depots.map(d => {
+      const site = d.homepage || (d.has_pages ? `https://${USER.toLowerCase()}.github.io/${d.name}/` : null);
+      const maj = new Date(d.pushed_at).toLocaleDateString("fr-CA");
+      return `
+        <article class="depot">
+          <h3><a href="${d.html_url}">${d.name}</a></h3>
+          <p>${d.description ?? ""}</p>
+          <p class="depot-meta">
+            ${d.language ? `<span>${d.language}</span>` : ""}
+            <span>Modifié le ${maj}</span>
+            ${site ? `<a href="${site}">Voir le site</a>` : ""}
+          </p>
+        </article>`;
+    }).join("");
+  } catch (e) {
+    cible.innerHTML = `Impossible de charger la liste. <a href="https://github.com/${USER}?tab=repositories">Voir les dépôts sur GitHub</a>.`;
+  }
+})();
+</script>
+```
 
 ------------------------------------------------------------------------
 
-Si vous souhaitez contribuer ou avez des questions, n'hésitez pas à [ouvrir une issue sur GitHub](https://github.com/JulienMiron/SitePerso/issues).
+Une question ou une erreur à signaler ? [Ouvrez une issue sur GitHub](https://github.com/JulienMiron/SitePerso/issues).

@@ -1,0 +1,17 @@
+# Un élément par site. « path » peut être une adresse externe.
+# Pour ajouter un site : copier un bloc et modifier les champs.
+
+- title: "STT-1000"
+  description: "Notes et exercices du cours STT-1000."
+  path: cours/STT-1000/STT-1000.qmd
+  categories: [Cours]
+
+- title: "Modèles linéaires généralisés"
+  description: "Notes de cours sur la régression logistique, avec code R."
+  path: https://julienmiron.github.io/notes-glm/   # à ajuster
+  categories: [Notes]
+
+- title: "Exemple de site externe"
+  description: "Remplacer par l'adresse d'un autre de vos sites."
+  path: https://example.org
+  categories: [Autre]
