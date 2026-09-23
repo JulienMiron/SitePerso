@@ -6,9 +6,9 @@
   path: cours/STT-1000/STT-1000.qmd
   categories: [Cours]
 
-- title: "Modèles linéaires généralisés"
-  description: "Notes de cours sur la régression logistique, avec code R."
-  path: https://julienmiron.github.io/notes-glm/   # à ajuster
+- title: "Régression II - STT-4300"
+  description: "Notes et exemples en R du cours STT-4300."
+  path: https://julienmiron.github.io/STT-4300/   # à ajuster
   categories: [Notes]
 
 - title: "Exemple de site externe"
