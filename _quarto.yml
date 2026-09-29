@@ -46,7 +46,8 @@ website:
 format:
   html:
     theme:
-      light: cosmo
+      #light: cosmo
+      light: [morph, custom.scss]
       dark: darkly
     css: styles.css
     toc: true
