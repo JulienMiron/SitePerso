@@ -3,15 +3,20 @@
 
 - title: "STT-1000"
   description: "Notes et exercices du cours STT-1000."
-  path: cours/STT-1000/STT-1000.qmd
+  path: https://julienmiron.github.io/STT-1000/
+  categories: [Cours]
+
+- title: "STT-1900"
+  description: "Notes et exercices du cours STT-1900."
+  path: https://julienmiron.github.io/STT-1900/
+  categories: [Cours]
+
+- title: "STT-1920"
+  description: "Notes et exercices du cours STT-1920."
+  path: https://julienmiron.github.io/STT-1920/
   categories: [Cours]
 
 - title: "Régression II - STT-4300"
   description: "Notes et exemples en R du cours STT-4300."
-  path: https://julienmiron.github.io/STT-4300/   # à ajuster
-  categories: [Notes]
-
-- title: "Exemple de site externe"
-  description: "Remplacer par l'adresse d'un autre de vos sites."
-  path: https://example.org
-  categories: [Autre]
+  path: https://julienmiron.github.io/STT-4300/
+  categories: [Cours]

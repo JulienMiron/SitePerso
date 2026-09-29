@@ -91,7 +91,7 @@ ul.task-list li input[type="checkbox"] {
     const options = {
       valueNames: ['listing-title','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
       
-      searchColumns: ["listing-title","listing-author","listing-image","listing-description","listing-categories"],
+      searchColumns: ["listing-title","listing-description","listing-categories"],
     };
 
     window['quarto-listings'] = window['quarto-listings'] || {};
@@ -380,7 +380,7 @@ window.Quarto = {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-    <h5 class="quarto-listing-category-title">Catégories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">Toutes <span class="quarto-category-count">(3)</span></div><div class="category" data-category="QXV0cmU=">Autre <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Q291cnM=">Cours <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Tm90ZXM=">Notes <span class="quarto-category-count">(1)</span></div></div></div>
+    <h5 class="quarto-listing-category-title">Catégories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">Toutes <span class="quarto-category-count">(4)</span></div><div class="category" data-category="Q291cnM=">Cours <span class="quarto-category-count">(4)</span></div></div></div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
@@ -410,8 +410,8 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="sites">Sites</h2>
 <div id="listing-liste-sites" class="quarto-listing quarto-listing-container-grid">
 <div class="list grid quarto-listing-cols-3">
-<div class="g-col-1" data-index="0" data-categories="Q291cnM=" data-listing-file-modified-sort="1790184248231" data-listing-reading-time-sort="1" data-listing-word-count-sort="46">
-<a href="./cours/STT-1000/STT-1000.html" class="quarto-grid-link">
+<div class="g-col-1" data-index="0" data-categories="Q291cnM=">
+<a href="https://julienmiron.github.io/STT-1000/" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <div class="card-body post-contents">
 <h5 class="no-anchor card-title listing-title">
@@ -428,7 +428,43 @@ STT-1000
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="1" data-categories="Tm90ZXM=">
+<div class="g-col-1" data-index="1" data-categories="Q291cnM=">
+<a href="https://julienmiron.github.io/STT-1900/" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+STT-1900
+</h5>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('Q291cnM='); return false;">Cours</div>
+
+</div>
+<div class="card-text listing-description delink">
+<p>Notes et exercices du cours STT-1900.</p>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="2" data-categories="Q291cnM=">
+<a href="https://julienmiron.github.io/STT-1920/" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+STT-1920
+</h5>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('Q291cnM='); return false;">Cours</div>
+
+</div>
+<div class="card-text listing-description delink">
+<p>Notes et exercices du cours STT-1920.</p>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="3" data-categories="Q291cnM=">
 <a href="https://julienmiron.github.io/STT-4300/" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <div class="card-body post-contents">
@@ -437,29 +473,11 @@ Régression II - STT-4300
 </h5>
 <div class="listing-categories">
 
-<div class="listing-category" onclick="window.quartoListingCategory('Tm90ZXM='); return false;">Notes</div>
+<div class="listing-category" onclick="window.quartoListingCategory('Q291cnM='); return false;">Cours</div>
 
 </div>
 <div class="card-text listing-description delink">
 <p>Notes et exemples en R du cours STT-4300.</p>
-</div>
-</div>
-</div></a>
-</div>
-<div class="g-col-1" data-index="2" data-categories="QXV0cmU=">
-<a href="https://example.org" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Exemple de site externe
-</h5>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('QXV0cmU='); return false;">Autre</div>
-
-</div>
-<div class="card-text listing-description delink">
-<p>Remplacer par l’adresse d’un autre de vos sites.</p>
 </div>
 </div>
 </div></a>
