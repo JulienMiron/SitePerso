@@ -2,6 +2,13 @@
 title: "À propos"
 ---
 
-# À propos
+Julien Miron est chargé d'enseignement au Département de mathématiques et de statistique de l'Université Laval, où il enseigne des cours de probabilités et de statistique aux premier et deuxième cycles (voir la section [Cours](index.qmd#sites)).
 
-Cette page peut contenir des informations sur les auteurs, la licence ou toute autre ressource utile.
+Ce site regroupe le matériel de cours, les applications interactives et les dépôts publics liés à cet enseignement.
+
+## Contact
+
+- Courriel : [julien.miron@mat.ulaval.ca](mailto:julien.miron@mat.ulaval.ca)
+- GitHub : [github.com/JulienMiron](https://github.com/JulienMiron)
+
+Une erreur à signaler sur ce site ? [Ouvrez une issue sur GitHub](https://github.com/JulienMiron/SitePerso/issues).

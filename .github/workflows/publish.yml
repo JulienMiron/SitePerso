@@ -1,0 +1,36 @@
+name: Rendre et publier le site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-site
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cloner le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: "1.10.18"
+
+      - name: Rendre le site (quarto render)
+        run: quarto render
+
+      - name: Publier les changements dans docs/
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Rendu automatique du site (CI)"
+          file_pattern: docs/**
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"

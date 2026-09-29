@@ -1,3 +1,14 @@
+/* Couleurs de la marque, tirées du logo (histogramme or, courbe rouge) */
+:root {
+  --brand-red: #b91c26;
+  --brand-gold: #c4911a;
+}
+
+#title-block-header .subtitle {
+  border-left: 3px solid var(--brand-gold);
+  padding-left: .6rem;
+}
+
 /* Dépôts GitHub : liste en grille, couleurs tirées du thème (clair/sombre) */
 .depots {
   display: grid;

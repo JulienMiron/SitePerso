@@ -4,18 +4,27 @@ project:
 
 website:
   title: "Julien Miron"
+  description: "Chargé d'enseignement en statistique — cours, sites et dépôts de Julien Miron, Université Laval."
   site-url: https://julienmiron.github.io
+  favicon: img/favicon.png
+  image: img/social-preview.png
+  open-graph: true
+  twitter-card: true
   navbar:
-    logo: img/logo_ul.png
+    logo: img/logo.png
     left:
       - href: index.qmd
         text: Accueil
       - text: Cours
         menu:
-          - href: cours/STT-1000/STT-1000.qmd
+          - href: https://julienmiron.github.io/STT-1000/
             text: STT-1000
-          - href: cours/STT-1900/STT-1900.qmd
+          - href: https://julienmiron.github.io/STT-1900/
             text: STT-1900
+          - href: https://julienmiron.github.io/STT-1920/
+            text: STT-1920
+          - href: https://julienmiron.github.io/STT-4300/
+            text: STT-4300
           - href: cours/STT-2902/STT-2902.qmd
             text: STT-2902
       - href: index.qmd#sites

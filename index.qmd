@@ -32,12 +32,12 @@ Chargement des dépôts…
 (async () => {
   const USER = "JulienMiron";
   const EXCLURE = [];            // ex. ["SitePerso"] pour masquer un dépôt
+  const CACHE_KEY = `depots-${USER}`;
+  const CACHE_MS = 60 * 60 * 1000; // 1 heure : évite de re-frapper l'API à chaque visite
   const cible = document.getElementById("depots-github");
-  try {
-    const rep = await fetch(`https://api.github.com/users/${USER}/repos?per_page=100&sort=updated`);
-    if (!rep.ok) throw new Error(rep.status);
-    const depots = (await rep.json())
-      .filter(d => !d.fork && !d.archived && !EXCLURE.includes(d.name));
+  const lienProfil = `https://github.com/${USER}?tab=repositories`;
+
+  const afficher = (depots) => {
     if (!depots.length) { cible.textContent = "Aucun dépôt public pour le moment."; return; }
     cible.innerHTML = depots.map(d => {
       const site = d.homepage || (d.has_pages ? `https://${USER.toLowerCase()}.github.io/${d.name}/` : null);
@@ -53,8 +53,37 @@ Chargement des dépôts…
           </p>
         </article>`;
     }).join("");
+  };
+
+  // Réutilise une copie récente en cache local (par visiteur) pour limiter les appels à
+  // l'API GitHub, limitée à 60 requêtes/heure par IP pour les visiteurs anonymes.
+  try {
+    const cache = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "null");
+    if (cache && Date.now() - cache.ts < CACHE_MS) {
+      afficher(cache.depots);
+      return;
+    }
+  } catch (e) { /* stockage indisponible (navigation privée, etc.) : on ignore */ }
+
+  try {
+    const rep = await fetch(`https://api.github.com/users/${USER}/repos?per_page=100&sort=updated`);
+    if (!rep.ok) {
+      if (rep.status === 403 && rep.headers.get("x-ratelimit-remaining") === "0") {
+        throw new Error("rate-limit");
+      }
+      throw new Error(String(rep.status));
+    }
+    const depots = (await rep.json())
+      .filter(d => !d.fork && !d.archived && !EXCLURE.includes(d.name));
+    try {
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), depots }));
+    } catch (e) { /* pas grave si le cache ne peut pas être écrit */ }
+    afficher(depots);
   } catch (e) {
-    cible.innerHTML = `Impossible de charger la liste. <a href="https://github.com/${USER}?tab=repositories">Voir les dépôts sur GitHub</a>.`;
+    const message = e.message === "rate-limit"
+      ? "Trop de requêtes vers l'API GitHub pour le moment."
+      : "Impossible de charger la liste.";
+    cible.innerHTML = `${message} <a href="${lienProfil}">Voir les dépôts sur GitHub</a>.`;
   }
 })();
 </script>

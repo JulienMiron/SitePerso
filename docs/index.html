@@ -36,6 +36,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
+<link href="./img/favicon.png" rel="icon" type="image/png">
 <script src="site_libs/quarto-listing/list.min.js"></script>
 <script src="site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
@@ -140,6 +141,18 @@ window.Quarto = {
 </script>
 
 <link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="Julien Miron">
+<meta property="og:description" content="Chargé d’enseignement en statistique · Département de mathématiques et de statistique · Université Laval">
+<meta property="og:image" content="https://julienmiron.github.io/img/social-preview.png">
+<meta property="og:site_name" content="Julien Miron">
+<meta property="og:image:height" content="630">
+<meta property="og:image:width" content="1200">
+<meta name="twitter:title" content="Julien Miron">
+<meta name="twitter:description" content="Chargé d’enseignement en statistique · Département de mathématiques et de statistique · Université Laval">
+<meta name="twitter:image" content="https://julienmiron.github.io/img/social-preview.png">
+<meta name="twitter:image-height" content="630">
+<meta name="twitter:image-width" content="1200">
+<meta name="twitter:card" content="summary_large_image">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -312,8 +325,8 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./img/logo_ul.png" alt="" class="navbar-logo light-content">
-    <img src="./img/logo_ul.png" alt="" class="navbar-logo dark-content">
+    <img src="./img/logo.png" alt="" class="navbar-logo light-content">
+    <img src="./img/logo.png" alt="" class="navbar-logo dark-content">
     </a>
     <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">Julien Miron</span>
@@ -335,12 +348,20 @@ window.Quarto = {
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-cours">    
         <li>
-    <a class="dropdown-item" href="./cours/STT-1000/STT-1000.html">
+    <a class="dropdown-item" href="https://julienmiron.github.io/STT-1000/">
  <span class="dropdown-text">STT-1000</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./cours/STT-1900/STT-1900.html">
+    <a class="dropdown-item" href="https://julienmiron.github.io/STT-1900/">
  <span class="dropdown-text">STT-1900</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://julienmiron.github.io/STT-1920/">
+ <span class="dropdown-text">STT-1920</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://julienmiron.github.io/STT-4300/">
+ <span class="dropdown-text">STT-4300</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./cours/STT-2902/STT-2902.html">
@@ -411,7 +432,7 @@ window.Quarto = {
 <div id="listing-liste-sites" class="quarto-listing quarto-listing-container-grid">
 <div class="list grid quarto-listing-cols-3">
 <div class="g-col-1" data-index="0" data-categories="Q291cnM=">
-<a href="https://julienmiron.github.io/STT-1000/" class="quarto-grid-link">
+<a href="https://julienmiron.github.io/STT-1000/diapos.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <div class="card-body post-contents">
 <h5 class="no-anchor card-title listing-title">
@@ -423,13 +444,13 @@ STT-1000
 
 </div>
 <div class="card-text listing-description delink">
-<p>Notes et exercices du cours STT-1000.</p>
+<p>Diapositives du cours STT-1000.</p>
 </div>
 </div>
 </div></a>
 </div>
 <div class="g-col-1" data-index="1" data-categories="Q291cnM=">
-<a href="https://julienmiron.github.io/STT-1900/" class="quarto-grid-link">
+<a href="https://julienmiron.github.io/STT-1900/diapos.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <div class="card-body post-contents">
 <h5 class="no-anchor card-title listing-title">
@@ -441,7 +462,7 @@ STT-1900
 
 </div>
 <div class="card-text listing-description delink">
-<p>Notes et exercices du cours STT-1900.</p>
+<p>Diapositives du cours STT-1900.</p>
 </div>
 </div>
 </div></a>
@@ -496,12 +517,12 @@ Régression II - STT-4300
 (async () => {
   const USER = "JulienMiron";
   const EXCLURE = [];            // ex. ["SitePerso"] pour masquer un dépôt
+  const CACHE_KEY = `depots-${USER}`;
+  const CACHE_MS = 60 * 60 * 1000; // 1 heure : évite de re-frapper l'API à chaque visite
   const cible = document.getElementById("depots-github");
-  try {
-    const rep = await fetch(`https://api.github.com/users/${USER}/repos?per_page=100&sort=updated`);
-    if (!rep.ok) throw new Error(rep.status);
-    const depots = (await rep.json())
-      .filter(d => !d.fork && !d.archived && !EXCLURE.includes(d.name));
+  const lienProfil = `https://github.com/${USER}?tab=repositories`;
+
+  const afficher = (depots) => {
     if (!depots.length) { cible.textContent = "Aucun dépôt public pour le moment."; return; }
     cible.innerHTML = depots.map(d => {
       const site = d.homepage || (d.has_pages ? `https://${USER.toLowerCase()}.github.io/${d.name}/` : null);
@@ -517,8 +538,37 @@ Régression II - STT-4300
           </p>
         </article>`;
     }).join("");
+  };
+
+  // Réutilise une copie récente en cache local (par visiteur) pour limiter les appels à
+  // l'API GitHub, limitée à 60 requêtes/heure par IP pour les visiteurs anonymes.
+  try {
+    const cache = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "null");
+    if (cache && Date.now() - cache.ts < CACHE_MS) {
+      afficher(cache.depots);
+      return;
+    }
+  } catch (e) { /* stockage indisponible (navigation privée, etc.) : on ignore */ }
+
+  try {
+    const rep = await fetch(`https://api.github.com/users/${USER}/repos?per_page=100&sort=updated`);
+    if (!rep.ok) {
+      if (rep.status === 403 && rep.headers.get("x-ratelimit-remaining") === "0") {
+        throw new Error("rate-limit");
+      }
+      throw new Error(String(rep.status));
+    }
+    const depots = (await rep.json())
+      .filter(d => !d.fork && !d.archived && !EXCLURE.includes(d.name));
+    try {
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), depots }));
+    } catch (e) { /* pas grave si le cache ne peut pas être écrit */ }
+    afficher(depots);
   } catch (e) {
-    cible.innerHTML = `Impossible de charger la liste. <a href="https://github.com/${USER}?tab=repositories">Voir les dépôts sur GitHub</a>.`;
+    const message = e.message === "rate-limit"
+      ? "Trop de requêtes vers l'API GitHub pour le moment."
+      : "Impossible de charger la liste.";
+    cible.innerHTML = `${message} <a href="${lienProfil}">Voir les dépôts sur GitHub</a>.`;
   }
 })();
 </script>
