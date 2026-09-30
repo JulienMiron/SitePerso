@@ -1,7 +1,7 @@
 /* Couleurs de la marque, tirées du logo (histogramme or, courbe rouge) */
 :root {
-  --brand-red: #b91c26;
-  --brand-gold: #c4911a;
+  --brand-red: #e30513;
+  --brand-gold: #ffc103;
 }
 
 #title-block-header .subtitle {
