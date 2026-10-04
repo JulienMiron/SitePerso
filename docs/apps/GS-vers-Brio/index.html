@@ -7,19 +7,20 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
-            --ulaval-red: #E30513;
-            --ulaval-red-dark: #B8040F;
-            --ulaval-gold: #FFD100;
+            /* Couleurs alignées sur la palette de julienmiron.github.io (SitePerso) */
+            --ulaval-red: #9467bd;
+            --ulaval-red-dark: #735093;
+            --ulaval-gold: #ffc103;
             --ulaval-gold-soft: #FFF3C4;
-            --bg-light: #F7F8FA;
-            --text-dark: #1A1A2E;
-            --text-muted: #5A5A72;
+            --bg-light: #f6f7f9;
+            --text-dark: #202124;
+            --text-muted: #5f6368;
             --card-bg: #FFFFFF;
-            --border-light: #E8E8EF;
+            --border-light: #d9d9d9;
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
             --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
             --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
-            --radius: 12px;
+            --radius: 8px;
         }
 
         * {
@@ -35,13 +36,13 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
             background: linear-gradient(
                 135deg,
-                #2A0A0E 0%,
+                #281C33 0%,
                 var(--ulaval-red-dark) 20%,
                 var(--ulaval-red) 38%,
-                #C8860A 52%,
+                #CA9460 52%,
                 var(--ulaval-gold) 65%,
                 #FFF3C4 80%,
                 var(--ulaval-gold) 90%,
@@ -124,9 +125,9 @@
         .file-drop {
             width: 100%;
             padding: 20px 16px;
-            border: 2px dashed #667eea;
+            border: 2px dashed #9467bd;
             border-radius: 10px;
-            background: #f8f9ff;
+            background: #f5f1fa;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
@@ -137,8 +138,8 @@
 
         .file-drop:hover,
         .file-drop.dragover {
-            border-color: #764ba2;
-            background: #f0f1ff;
+            border-color: #735093;
+            background: #ece2f4;
             color: #555;
         }
 
@@ -160,7 +161,7 @@
         button {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #2A0A12, #9F1239, #FDA4AF);
+            background: linear-gradient(135deg, #281C33, #9467BD, #CFBBE1);
             color: white;
             border: none;
             border-radius: 10px;
@@ -189,7 +190,7 @@
             margin-bottom: 20px;
             font-size: 13px;
             line-height: 1.6;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #9467bd;
             background: #e8f4ff;
             color: #555;
         }
@@ -245,7 +246,7 @@
         thead th {
             position: sticky;
             top: 0;
-            background: #f0f1ff;
+            background: #ece2f4;
             color: #333;
             font-weight: 700;
             padding: 10px 14px;
@@ -265,7 +266,7 @@
 
         .count-badge {
             display: inline-block;
-            background: #667eea;
+            background: #9467bd;
             color: white;
             font-size: 12px;
             font-weight: 700;
