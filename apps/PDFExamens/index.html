@@ -1,0 +1,2868 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de PDFs d'Examen</title>
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+
+        :root {
+            --ulaval-red: #E30513;
+            --ulaval-red-dark: #B8040F;
+            --ulaval-gold: #FFD100;
+            --ulaval-gold-soft: #FFF3C4;
+            --bg-light: #F7F8FA;
+            --text-dark: #1A1A2E;
+            --text-muted: #5A5A72;
+            --card-bg: #FFFFFF;
+            --border-light: #E8E8EF;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+            --radius: 12px;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes bgShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(
+                135deg,
+                #2A0A0E 0%,
+                var(--ulaval-red-dark) 20%,
+                var(--ulaval-red) 38%,
+                #C8860A 52%,
+                var(--ulaval-gold) 65%,
+                #FFF3C4 80%,
+                var(--ulaval-gold) 90%,
+                var(--ulaval-red) 100%
+            );
+            background-size: 300% 300%;
+            animation: bgShift 12s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Decorative blurred orbs */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            width: 520px;
+            height: 520px;
+            background: radial-gradient(circle, var(--ulaval-gold) 0%, transparent 70%);
+            top: -120px;
+            right: -100px;
+        }
+
+        body::after {
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, var(--ulaval-red) 0%, transparent 70%);
+            bottom: -120px;
+            left: -80px;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .upload-section {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #2A0A12, #9F1239, #FDA4AF);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .progress {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #e8f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            color: #555;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 5px;
+        }
+
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            background: #f8f9ff;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.3s ease;
+            appearance: auto;
+        }
+
+        select:hover, input[type="text"]:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.2);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-left: 6px;
+            vertical-align: middle;
+            position: relative;
+            user-select: none;
+            line-height: 1;
+        }
+
+        .info-icon:hover {
+            background: #764ba2;
+        }
+
+        .info-bubble {
+            display: none;
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 400;
+            color: #333;
+            line-height: 1.5;
+            z-index: 100;
+            text-align: left;
+        }
+
+        .info-bubble::before {
+            content: '';
+            position: absolute;
+            top: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-bottom: 7px solid #ccc;
+        }
+
+        .info-bubble::after {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 6px solid #fff;
+        }
+
+        .info-bubble.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 Générateur d'examens avec nom, matricule et numéro de table</h1>
+        <div class="upload-section">
+            <label for="evalName">📝 Nom de l'évaluation (obligatoire)</label>
+            <input type="text" id="evalName" placeholder="Ex: Examen 1">
+        </div>
+        <div class="upload-section">
+            <label for="courseName">📚 Numéro du cours (obligatoire)</label>
+            <input type="text" id="courseName" placeholder="Ex: STT-1900">
+        </div>
+        <div class="upload-section">
+            <label>🕐 Heures de l'examen (optionnel)</label>
+            <div style="display:flex;gap:16px;align-items:center;">
+                <div style="flex:1;">
+                    <label for="startTime" style="font-size:13px;">Début</label>
+                    <input type="time" id="startTime" style="width:100%;padding:12px;border:2px solid #667eea;border-radius:10px;background:#f8f9ff;font-size:14px;color:#333;">
+                </div>
+                <div style="flex:1;">
+                    <label for="endTime" style="font-size:13px;">Fin</label>
+                    <input type="time" id="endTime" style="width:100%;padding:12px;border:2px solid #667eea;border-radius:10px;background:#f8f9ff;font-size:14px;color:#333;">
+                </div>
+            </div>
+        </div>
+        <div class="upload-section">
+            <label for="folderInput" style="display:inline;">📁 Sélectionner le dossier contenant tous les fichiers</label>
+            <span class="info-icon" id="folderInfoIcon" title="Informations">i
+                <span class="info-bubble" id="folderInfoBubble">Le dossier sélectionné doit contenir les fichiers suivants 
+                    :<br><br><strong>BRIO.xlsx</strong> — liste d'étudiants exportée de BRIO (obligatoire)
+                    <br><strong>examen.pdf</strong> — modèle PDF de l'examen selon le .cls créé par Jérôme Soucy ou Julien Miron (obligatoire)
+                    <br><strong>accommodements.xlsx</strong> — liste des accommodements fournie par l'agente de secrétariat (optionnel)
+                    <br><strong>horscampus.xlsx</strong> — liste examen hors campus qui se trouve sur le site du SSE (optionnel)</span></span>
+            <label for="folderInput" id="folderSelectBtn" style="display:block;width:100%;padding:12px;border:2px dashed #667eea;border-radius:10px;background:#f8f9ff;cursor:pointer;transition:all 0.3s ease;text-align:left;color:#888;font-size:14px;">Cliquer pour sélectionner un dossier...</label>
+            <input type="file" id="folderInput" webkitdirectory directory multiple style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none;">
+            <div id="folderStatus" style="margin-top:10px;font-size:13px;color:#333;display:none;">
+                <div id="statusBrio" style="margin-bottom:4px;"></div>
+                <div id="statusAccom" style="margin-bottom:4px;"></div>
+                <div id="statusFilter" style="margin-bottom:4px;"></div>
+                <div id="statusPdf" style="margin-bottom:4px;"></div>
+            </div>
+            <div id="detectionResult" style="margin-top:10px;font-size:13px;color:#333"></div>
+        </div>
+
+        <!-- Hidden accom mapping UI (shown when accommodements.xlsx found) -->
+        <div id="accomMap" style="margin-top:10px;font-size:13px;color:#333;display:none;">
+            <label for="accomNiSelect">Colonne contenant le numéro de dossier (NI) — accommodements</label>
+            <select id="accomNiSelect"></select>
+            <div style="display:flex;gap:12px;margin-top:8px;">
+                <div style="flex:1;">
+                    <label for="accomStartSelect">Colonne Heure de début</label>
+                    <select id="accomStartSelect"></select>
+                </div>
+                <div style="flex:1;">
+                    <label for="accomEndSelect">Colonne Heure de fin</label>
+                    <select id="accomEndSelect"></select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden filter mapping UI (shown when horscampus.xlsx found) -->
+        <div id="filterMap" style="margin-top:10px;font-size:13px;color:#333;display:none;">
+            <label for="filterNiSelect">Colonne NI (numéro dossier) dans le fichier hors campus</label>
+            <select id="filterNiSelect"></select>
+            <label for="filterTypeSelect" style="margin-top:6px;display:block;">Colonne TypeInscription (ligne 4 et suivantes)</label>
+            <select id="filterTypeSelect"></select>
+            <div id="filterResult" style="margin-top:8px;font-size:13px;color:#333;display:none;"></div>
+        </div>
+
+        <div class="upload-section" id="mappingUI" style="display:none;">
+            <label>🔧 Vérifier / choisir les colonnes</label>
+            <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+                <input type="checkbox" id="nameSeparate" checked> <label for="nameSeparate" style="margin:0;font-weight:600;">Nom séparé en Prénom / Nom</label>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <div style="flex:1">
+                    <label for="nameCombinedSelect">Prénom et nom (combiné)</label>
+                    <select id="nameCombinedSelect"></select>
+                </div>
+                <div style="flex:1">
+                    <label for="firstNameSelect">Prénom (séparé)</label>
+                    <select id="firstNameSelect"></select>
+                </div>
+                <div style="flex:1">
+                    <label for="lastNameSelect">Nom (séparé)</label>
+                    <select id="lastNameSelect"></select>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <div style="flex:1">
+                    <label for="niSelect">Numéro d'identification (NI)</label>
+                    <select id="niSelect"></select>
+                </div>
+                <div style="flex:1">
+                    <label for="emailSelect">Courriel</label>
+                    <select id="emailSelect"></select>
+                </div>
+            </div>
+            <div style="font-size:12px;color:#666">Conseil : vérifiez et modifiez si nécessaire avant de générer.</div>
+        </div>
+
+        <!-- pdfFile is now loaded from the folder -->
+
+        <!-- attribution handled automatically by the single action button -->
+
+        <div id="roomsUI" style="margin-bottom:16px;">
+            <label>🏷️ Choisir les locaux à utiliser</label>
+                        <div style="margin-top:10px;">
+                <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block;">Mode de répartition : <span class="info-icon" id="repartitionInfoIcon" title="Informations">i
+                <span class="info-bubble" id="repartitionInfoBubble">Gros→Petit : remplit les plus gros locaux en premier. <br>
+                    Petit→Gros : remplit les plus petits en premier. <br>
+                    Uniforme : répartit les étudiants proportionnellement dans tous les locaux.</span></span></label>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="large-first" checked> Gros → Petit</label>
+                    <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="small-first"> Petit → Gros</label>
+                    <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="uniform"> Uniforme</label>
+                </div>
+
+            <div id="roomList" style="margin-top:8px;display:flex;gap:24px;align-items:flex-start;">
+                <!-- Colonne gauche : salles prédéfinies -->
+                 
+                <div style="flex:1;">
+                <div style="font-size:13px;color:#555;font-weight:600;margin-bottom:8px;">Salles prédéfinies</div>
+                
+                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="roomCheckbox" data-name="VCH-2850" id="room_VCH-2850" checked>
+                    <label for="room_VCH-2850" style="margin:0;font-weight:600;min-width:180px;">VCH-2850 (201 places)</label>
+                    <input type="number" class="roomCapacity" data-name="VCH-2850" value="201" min="1" style="width:100px;margin-left:8px;">
+                    <div style="font-size:12px;color:#666;margin-left:8px;">places</div>
+                </div>
+                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="roomCheckbox" data-name="VCH-2880" id="room_VCH-2880" checked>
+                    <label for="room_VCH-2880" style="margin:0;font-weight:600;min-width:180px;">VCH-2880 (110 places)</label>
+                    <input type="number" class="roomCapacity" data-name="VCH-2880" value="110" min="1" style="width:100px;margin-left:8px;">
+                    <div style="font-size:12px;color:#666;margin-left:8px;">places</div>
+                </div>
+                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="roomCheckbox" data-name="VCH-3860" id="room_VCH-3860" >
+                    <label for="room_VCH-3860" style="margin:0;font-weight:600;min-width:180px;">VCH-3860 (80 places)</label>
+                    <input type="number" class="roomCapacity" data-name="VCH-3860" value="80" min="1" style="width:100px;margin-left:8px;">
+                    <div style="font-size:12px;color:#666;margin-left:8px;">places</div>
+                </div>
+                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="roomCheckbox" data-name="VCH-3880" id="room_VCH-3880">
+                    <label for="room_VCH-3880" style="margin:0;font-weight:600;min-width:180px;">VCH-3880 (110 places)</label>
+                    <input type="number" class="roomCapacity" data-name="VCH-3880" value="110" min="1" style="width:100px;margin-left:8px;">
+                    <div style="font-size:12px;color:#666;margin-left:8px;">places</div>
+                </div>
+                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="roomCheckbox" data-name="PLT-1112" id="room_PLT-1112">
+                    <label for="room_PLT-1112" style="margin:0;font-weight:600;min-width:180px;">PLT-1112 (249 places)</label>
+                    <input type="number" class="roomCapacity" data-name="PLT-1112" value="249" min="1" style="width:100px;margin-left:8px;">
+                    <div style="font-size:12px;color:#666;margin-left:8px;">places</div>
+                </div>
+                </div>
+                <!-- Colonne droite : salles supplémentaires -->
+                <div style="flex:1;border-left:1px solid #ddd;padding-left:20px;">
+                <div style="font-size:13px;color:#555;font-weight:600;margin-bottom:8px;">Salles supplémentaires</div>
+                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_1">
+                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
+                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
+                    <div style="font-size:12px;color:#666;">places</div>
+                </div>
+                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_2">
+                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
+                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
+                    <div style="font-size:12px;color:#666;">places</div>
+                </div>
+                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_3">
+                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
+                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
+                    <div style="font-size:12px;color:#666;">places</div>
+                </div>
+                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_4">
+                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
+                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
+                    <div style="font-size:12px;color:#666;">places</div>
+                </div>
+                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_5">
+                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
+                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
+                    <div style="font-size:12px;color:#666;">places</div>
+                </div>
+                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_6">
+                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
+                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
+                    <div style="font-size:12px;color:#666;">places</div>
+                </div>
+                </div>
+            </div>
+            <div style="font-size:12px;color:#666">Cochez les locaux à utiliser et modifiez la capacité si besoin.</div>
+
+        </div>
+
+        <div id="accomRoomsUI" style="margin-bottom:16px;">
+            <label>🟪 Salles d'accommodement (optionnel)</label>
+            <div id="accomRoomList" style="margin-top:8px;">
+                <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_1">
+                    <input type="text" class="accomRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
+                    <input type="number" class="accomRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
+                    <div style="font-size:12px;color:#666;">places</div>
+                </div>
+                <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_2">
+                    <input type="text" class="accomRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
+                    <input type="number" class="accomRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
+                    <div style="font-size:12px;color:#666;">places</div>
+                </div>
+                <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_2">
+                    <input type="text" class="accomRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
+                    <input type="number" class="accomRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
+                    <div style="font-size:12px;color:#666;">places</div>
+                </div>
+                <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_2">
+                    <input type="text" class="accomRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
+                    <input type="number" class="accomRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
+                    <div style="font-size:12px;color:#666;">places</div>
+                </div>
+            </div>
+            <div style="font-size:12px;color:#666">Si aucune salle n'est sélectionnée, les accommodements restent sans attribution de place.</div>
+        </div>
+
+        <div class="upload-section">
+            <label>📋 Format de la liste de présence</label>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+
+                <div style="display:flex;align-items:center;gap:8px;margin-left:12px;">
+                    <label style="font-size:13px;margin-right:6px;">Format:</label>
+                    <label><input type="radio" name="listFormat" value="local" checked> Par local</label>
+                    <label><input type="radio" name="listFormat" value="section"> Par section</label>
+                </div>
+
+            </div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+            <label for="blankPercent" style="font-size:13px;font-weight:600;">Nombre de copies vierges en pourcentage <br> 
+                du nombre total d'étudiants</label>
+            <input type="number" id="blankPercent" value="2.5" min="0" max="100" step="0.1" style="width:100px;padding:8px;border:2px solid #667eea;border-radius:8px;background:#f8f9ff;text-align:right;">
+            <label > %</label>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+            <label for="numberingStart" style="font-size:13px;font-weight:600;">Numéro de départ pour la numérotation <br>
+                des examens et des places</label>
+            <input type="number" id="numberingStart" value="1" min="1" step="1" style="width:100px;padding:8px;border:2px solid #667eea;border-radius:8px;background:#f8f9ff;text-align:right;">
+        </div>
+
+
+        <button id="generateBtn" onclick="generateAll()">
+            🚀 Générer et Télécharger le ZIP
+        </button>
+
+
+
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Initialisation...</div>
+        </div>
+    </div>
+
+    <script>
+        const { PDFDocument, rgb, StandardFonts } = PDFLib;
+
+        // ========== CONFIGURATION DES POSITIONS ==========
+        // Ajustez ces valeurs si les éléments ne sont pas parfaitement positionnés
+        const CONFIG = {
+            // Position du nom (en haut à droite)
+            nomX: 445,
+            nomY: 88,  // Distance depuis le haut de la page
+            nomSize: 12,
+            
+            // Position du NI (sous le nom)
+            niX: 450,
+            niY: 147,  // Distance depuis le haut de la page
+            niSize: 16,
+            
+            // Position du numéro de table (coin bas droit)
+            tableX: 88,  // Distance depuis le bord droit
+            tableY: 38,  // Distance depuis le bas
+            tableSize: 16
+            ,
+            // Position du local (coin bas gauche sur la page de couverture)
+            localX: 40,
+            localY: 38,
+            localSize: 12
+        };
+        // ==================================================
+
+        async function generatePDFs() {
+            const csvFile = folderBrioFile;
+            const pdfFile = folderPdfFile;
+            const evalName = document.getElementById('evalName').value.trim();
+            const courseName = document.getElementById('courseName').value.trim();
+            const startTime = document.getElementById('startTime').value.trim();
+            const endTime = document.getElementById('endTime').value.trim();
+
+            if (!csvFile || !pdfFile) {
+                alert('⚠️ Veuillez sélectionner un dossier contenant BRIO.xlsx et examen.pdf');
+                return;
+            }
+
+            // course and exam name are mandatory
+            if (!evalName || !courseName) {
+                alert('⚠️ Veuillez saisir le nom de l\'évaluation et le numéro du cours.');
+                return;
+            }
+
+            const createList = true; // toujours générer les listes de présence
+            const listFormat = document.querySelector('input[name="listFormat"]:checked') ? document.querySelector('input[name="listFormat"]:checked').value : 'local';
+
+            const progressDiv = document.getElementById('progress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const generateBtn = document.getElementById('generateBtn');
+
+            try {
+                // Désactiver le bouton et afficher la progression
+                generateBtn.disabled = true;
+                progressDiv.style.display = 'block';
+                progressFill.style.width = '10%';
+                progressText.textContent = 'Lecture des fichiers...';
+
+                    // Lire le CSV ou XLSX
+                    let students = [];
+                    if (csvFile.name.toLowerCase().endsWith('.xlsx')) {
+                        const arrayBuffer = await csvFile.arrayBuffer();
+                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                        // parcourir toutes les feuilles, section = nom de la feuille
+                        for (const sheetName of workbook.SheetNames) {
+                            const sheet = workbook.Sheets[sheetName];
+                            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                            if (!rows || rows.length <= 6) continue; // header at line 6, data from 7
+                            const headerRow = (rows[5] || []).map(h => (h === undefined ? '' : String(h).trim()));
+                            const detection = detectNameColumn(headerRow);
+                            const niIndex = detectSingleColumn(headerRow, ['ni','matricule','identifiant','id','numero','num','dossier']);
+                            const emailIndex = (columnMapping.emailIdx !== null && columnMapping.emailIdx !== undefined) ? columnMapping.emailIdx : detectSingleColumn(headerRow, ['courriel','email','mail','adresse courriel','adresse']);
+                            for (let r = 6; r < rows.length; r++) {
+                                const row = rows[r] || [];
+                                let name = '';
+                                if (columnMapping.nameMode === 'separate' && columnMapping.firstIdx !== null && columnMapping.lastIdx !== null) {
+                                    name = String(row[columnMapping.firstIdx] || '') + ' ' + String(row[columnMapping.lastIdx] || '');
+                                } else if (columnMapping.nameIdx !== null) {
+                                    name = String(row[columnMapping.nameIdx] || '');
+                                } else if (detection.type === 'separate') {
+                                    name = String(row[detection.indices[0]] || '') + ' ' + String(row[detection.indices[1]] || '');
+                                } else if (detection.type === 'combined' && detection.indices.length === 1) {
+                                    name = String(row[detection.indices[0]] || '');
+                                } else {
+                                    name = String(row[0] || '');
+                                }
+                                const ni = (niIndex >= 0 ? String(row[niIndex] || '') : (columnMapping.niIdx !== null ? String(row[columnMapping.niIdx] || '') : ''));
+                                const email = (emailIndex >= 0 ? String(row[emailIndex] || '') : '').trim();
+                                const status = 'Présent';
+                                if (String(status).toLowerCase().includes('abandon')) {}
+                                if (name || ni) students.push({ name: name.trim(), ni: ni.trim(), table: '', local: '', section: sheetName, email });
+                            }
+                        }
+                    } else {
+                        const csvText = await csvFile.text();
+                        students = parseCSV(csvText);
+                    }
+                // garder une copie avant application du filtre pour produire la liste des exclus
+                const preFilterStudents = students.slice();
+
+                // Exclure les étudiants listés dans les fichiers de filtre
+                if (filterExcludeNISet && filterExcludeNISet.size > 0) {
+                    const before = students.length;
+                    students = students.filter(s => {
+                        const key = (s.ni || '').toString().trim();
+                        return !(key && filterExcludeNISet.has(key));
+                    });
+                    console.log(`Filtre exclusion: ${before - students.length} étudiants retirés`);
+                }
+                
+                if (students.length === 0) {
+                    throw new Error('Aucun étudiant trouvé dans le CSV. Vérifiez le format du fichier.');
+                }
+
+                // Si une attribution a été générée précédemment, l'appliquer (par NI d'abord, sinon par nom normalisé)
+                if (typeof lastAssignments !== 'undefined' && lastAssignments && lastAssignments.length > 0) {
+                    progressText.textContent = 'Application des attributions de places...';
+                    const byNI = Object.create(null);
+                    const byName = Object.create(null);
+                    for (const a of lastAssignments) {
+                        const niKey = (a.ni || '').toString().trim();
+                        if (niKey) byNI[niKey] = a;
+                        const nameKey = normalizeHeader(a.name || '');
+                        if (nameKey) byName[nameKey] = a;
+                    }
+                    for (const s of students) {
+                        let match = null;
+                        const niKey = (s.ni || '').toString().trim();
+                        if (niKey && byNI[niKey]) match = byNI[niKey];
+                        else {
+                            const nameKey = normalizeHeader(s.name || '');
+                            if (nameKey && byName[nameKey]) match = byName[nameKey];
+                        }
+                        if (match) {
+                            s.place = match.place || '';
+                            s.table = match.place || '';
+                            s.local = match.local || '';
+                        }
+                    }
+                }
+
+                console.log(`${students.length} étudiants trouvés:`, students);
+                
+                progressFill.style.width = '20%';
+                progressText.textContent = `${students.length} étudiants trouvés...`;
+
+                // Lire le PDF template
+                const pdfBytes = await pdfFile.arrayBuffer();
+                
+                progressFill.style.width = '30%';
+                progressText.textContent = 'Chargement du modèle PDF...';
+
+                // Créer un ZIP
+                const zip = new JSZip();
+
+                // Générer un PDF pour chaque étudiant
+                // Réordonner les étudiants : locaux avec le plus d'étudiants d'abord,
+                // puis par numéro de place croissant à l'intérieur de chaque local.
+                const grouped = {};
+                const unassigned = [];
+                for (const s of students) {
+                    const key = (s.local || '').toString() || '__UNASSIGNED__';
+                    if (!key || key === '__UNASSIGNED__') {
+                        unassigned.push(s);
+                    } else {
+                        if (!grouped[key]) grouped[key] = [];
+                        grouped[key].push(s);
+                    }
+                }
+
+                // Trier chaque groupe par place (numérique ascendant)
+                for (const k of Object.keys(grouped)) {
+                    grouped[k].sort((a,b) => {
+                        const pa = parseInt(a.place, 10);
+                        const pb = parseInt(b.place, 10);
+                        if (isNaN(pa) && isNaN(pb)) return 0;
+                        if (isNaN(pa)) return 1;
+                        if (isNaN(pb)) return -1;
+                        return pa - pb;
+                    });
+                }
+
+                // Ordonner les locaux par taille (nombre d'étudiants) décroissante
+                const localsSorted = Object.keys(grouped).sort((x,y) => grouped[y].length - grouped[x].length);
+
+                // Construire la liste ordonnée finale
+                const orderedStudents = [];
+                for (const loc of localsSorted) orderedStudents.push(...grouped[loc]);
+                // Ajouter les non assignés à la fin (triés par nom pour stabilité)
+                unassigned.sort((a,b) => normalizeHeader(a.name||'').localeCompare(normalizeHeader(b.name||'')));
+                orderedStudents.push(...unassigned);
+
+                for (let i = 0; i < orderedStudents.length; i++) {
+                    const student = orderedStudents[i];
+                    const progress = 30 + (i / students.length) * 60;
+                    try { progressFill.style.width = `${progress}%`; document.getElementById('progressText').textContent = `Génération du PDF pour ${student.name}... (${i + 1}/${students.length})`; } catch(e){}
+
+                    console.log(`Traitement de l'étudiant ${i + 1}:`, student);
+
+                    try {
+                        // Charger une nouvelle copie du PDF pour chaque étudiant
+                        const pdfDoc = await PDFDocument.load(pdfBytes);
+                        const pages = pdfDoc.getPages();
+                        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+                        console.log(`PDF chargé pour ${student.name}, pages: ${pages.length}`);
+
+                        // Remplir les informations sur la première page
+                        const firstPage = pages[0];
+                        const { width, height } = firstPage.getSize();
+
+                        // --- NOM (centré autour de CONFIG.nomX) ---
+                        const nameText = student.name.toUpperCase();
+                        const nameWidth = font.widthOfTextAtSize(nameText, CONFIG.nomSize);
+                        firstPage.drawText(nameText, {
+                            x: CONFIG.nomX - nameWidth / 2,
+                            y: height - CONFIG.nomY,
+                            size: CONFIG.nomSize,
+                            font,
+                            color: rgb(0, 0, 0),
+                        });
+
+                        // --- NI ---
+                        const niText = student.ni || '';
+                        const niWidth = font.widthOfTextAtSize(niText, CONFIG.niSize);
+                        firstPage.drawText(niText, {
+                            x: CONFIG.niX - niWidth / 2,
+                            y: height - CONFIG.niY,
+                            size: CONFIG.niSize,
+                            font,
+                            color: rgb(0, 0, 0),
+                        });
+
+                        // --- LOCAL ---
+                        const localText = student.local || '';
+                        if (localText) {
+                            firstPage.drawText(localText, {
+                                x: CONFIG.localX,
+                                y: CONFIG.localY,
+                                size: CONFIG.localSize,
+                                font,
+                                color: rgb(0, 0, 0),
+                            });
+                        }
+
+                        // Table number on every page
+                        for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+                            const page = pages[pageIndex];
+                            const { width: pageWidth } = page.getSize();
+                            const tableText = student.table || '';
+                            const tableWidth = font.widthOfTextAtSize(tableText, CONFIG.tableSize);
+                            const tableCenterX = pageWidth - CONFIG.tableX;
+                            page.drawText(tableText, {
+                                x: tableCenterX - tableWidth / 2,
+                                y: CONFIG.tableY,
+                                size: CONFIG.tableSize,
+                                font,
+                                color: rgb(0, 0, 0),
+                            });
+                        }
+
+                        // Sauvegarder le PDF
+                        const modifiedPdfBytes = await pdfDoc.save();
+                        console.log(`PDF sauvegardé pour ${student.name}, taille: ${modifiedPdfBytes.length} bytes`);
+
+                        // Ajouter au ZIP
+                        function padPlace(p) {
+                            const n = parseInt(p, 10);
+                            if (!isFinite(n) || isNaN(n)) return '000';
+                            return String(n).padStart(3, '0');
+                        }
+                        const placePad = padPlace(student.place);
+                        const localPart = sanitizeFileName(student.local || 'NOLOCAL');
+                        const fileBase = buildFileBase(student);
+                        const localIndexMap = ensureLocalIndexMap();
+                        const localIndex = (student.local && localIndexMap[student.local]) ? localIndexMap[student.local] : 0;
+                        const fullFileName = `${localIndex}${placePad}_${localPart}_${fileBase}.pdf`;
+                        zip.file(fullFileName, modifiedPdfBytes);
+                        console.log(`Ajouté au ZIP: ${fullFileName}`);
+                    } catch (errStudent) {
+                        console.error('Erreur génération PDF pour', student, errStudent);
+                        // continue with next student
+                    }
+                    // yield to the event loop every 10 students so the browser can update UI
+                    if (i % 10 === 0) await new Promise(r => setTimeout(r, 0));
+                }
+
+                // Générer des copies vierges (2.5% du nombre de PDF générés)
+                try {
+                    let blankPercent = 0;
+                    try {
+                        blankPercent = parseFloat(document.getElementById('blankPercent').value);
+                    } catch (e) { blankPercent = 0; }
+                    if (isNaN(blankPercent) || !isFinite(blankPercent) || blankPercent < 0) blankPercent = 0;
+                    const blankCount = Math.ceil(students.length * (blankPercent / 100)) || 0;
+                    if (blankCount > 0) {
+                        for (let bi = 0; bi < blankCount; bi++) {
+                            const idx = String(bi + 1).padStart(3, '0');
+                            // Use the exam PDF template for blank copies
+                            zip.file(`4000_copie_vierge_${idx}.pdf`, pdfBytes);
+                        }
+                    }
+                } catch (errBlank) {
+                    console.error('Erreur génération copies vierges:', errBlank);
+                }
+
+                // Générer les listes de présence automatiquement
+                progressFill.style.width = '92%';
+                progressText.textContent = 'Génération des listes de présence...';
+
+                const groupBy = listFormat; // 'local' ou 'section'
+                const groups = {};
+                for (const student of students) {
+                    const key = student[groupBy];
+                    if (!groups[key]) groups[key] = [];
+                    groups[key].push(student);
+                }
+
+                const groupKeys = Object.keys(groups).sort();
+                console.log('generatePDFs: génération des listes de présence pour', groupKeys.length, 'groupes');
+                for (const [idx, groupValue] of groupKeys.entries()) {
+                    try {
+                        console.log(`generatePDFs: generating attendance PDF ${idx+1}/${groupKeys.length} for ${groupValue}`);
+                        const attendancePdfBytes = await generateAttendancePDF(
+                            groups[groupValue], groupBy, groupValue, evalName, courseName, startTime, endTime
+                        );
+                        const label = groupBy === 'local' ? 'Local' : 'Section';
+                        const fileName = `listes_presence/Presence_${label}_${sanitizeFileName(groupValue)}.pdf`;
+                        zip.file(fileName, attendancePdfBytes);
+                    } catch (errList) {
+                        console.error('Erreur génération liste pour', groupValue, errList);
+                    }
+                    if (idx % 5 === 0) await new Promise(r => setTimeout(r, 0));
+                }
+
+                // Générer une liste pour les étudiants exclus (si présents)
+                if (filterExcludeNISet && filterExcludeNISet.size > 0) {
+                    const excludedStudents = preFilterStudents.filter(s => {
+                        const key = (s.ni || '').toString().trim();
+                        return key && filterExcludeNISet.has(key);
+                    });
+                    if (excludedStudents.length > 0) {
+                        const exclPdf = await generateAttendancePDF(excludedStudents, 'section', 'Exclus', evalName, courseName, startTime, endTime);
+                        zip.file('listes_presence/Presence_Exclus.pdf', exclPdf);
+                    }
+                }
+
+                progressFill.style.width = '95%';
+                progressText.textContent = 'Création du fichier ZIP...';
+
+                // Générer le fichier Excel récapitulatif avec tous les étudiants
+                try {
+                    const recapRows = [['PrénomNom', 'NI', 'Place', 'Local', 'Section', 'ACC', 'Cours', 'Examen', 'Heure début', 'Heure fin', 'Courriel', 'Hors campus']];
+                    // Inclure tous les étudiants (y compris exclus) dans le récapitulatif
+                    const allRecapStudents = (preFilterStudents && preFilterStudents.length > 0) ? preFilterStudents : orderedStudents;
+                    for (const s of allRecapStudents) {
+                        const niKey = (s.ni || '').toString().trim();
+                        const isAccom = (accomNISet && accomNISet.size > 0 && niKey && accomNISet.has(niKey));
+                        const isExcluded = (filterExcludeNISet && filterExcludeNISet.size > 0 && niKey && filterExcludeNISet.has(niKey));
+                        // Pour les ACC, utiliser les heures du fichier d'accommodements ; sinon les heures globales
+                        let sStart = startTime || '';
+                        let sEnd = endTime || '';
+                        if (isAccom && accomTimeMap && accomTimeMap.has(niKey)) {
+                            const at = accomTimeMap.get(niKey);
+                            if (at.start) sStart = at.start;
+                            if (at.end) sEnd = at.end;
+                        }
+                        recapRows.push([
+                            (s.name || '').trim(),
+                            (s.ni || '').trim(),
+                            (s.place || s.table || '').toString().trim(),
+                            (s.local || '').trim(),
+                            (s.section || '').trim(),
+                            isAccom ? 'ACC' : 'NON',
+                            courseName,
+                            evalName,
+                            sStart,
+                            sEnd,
+                            (s.email || '').trim(),
+                            isExcluded ? 'OUI' : 'NON'
+                        ]);
+                    }
+                    const recapSheet = XLSX.utils.aoa_to_sheet(recapRows);
+                    // Auto-size columns roughly
+                    recapSheet['!cols'] = recapRows[0].map((_, ci) => {
+                        let maxW = 10;
+                        for (const row of recapRows) { const l = String(row[ci] || '').length; if (l > maxW) maxW = l; }
+                        return { wch: Math.min(maxW + 2, 40) };
+                    });
+                    const recapWB = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(recapWB, recapSheet, 'Récapitulatif');
+                    const recapArray = XLSX.write(recapWB, { bookType: 'xlsx', type: 'array' });
+                    zip.file('listes_presence/Recapitulatif_etudiants.xlsx', recapArray);
+                    console.log('Fichier récapitulatif Excel ajouté au ZIP');
+                } catch (errRecap) {
+                    console.error('Erreur création fichier récapitulatif Excel:', errRecap);
+                }
+
+                console.log('generatePDFs: création du fichier ZIP...');
+                // Générer le ZIP
+                // ajouter le workbook d'attribution au ZIP si disponible
+                if (lastAssignmentWorkbookArray) {
+                    zip.file('listes_presence/Attribution_places.xlsx', lastAssignmentWorkbookArray);
+                }
+                let zipBlob;
+                try {
+                    console.log('generatePDFs: appel zip.generateAsync()');
+                    zipBlob = await zip.generateAsync({ type: 'blob' });
+                    console.log('generatePDFs: zip.generateAsync() terminé');
+                } catch (errZip) {
+                    console.error('Erreur lors de la génération du ZIP:', errZip);
+                    throw errZip;
+                }
+
+                progressFill.style.width = '100%';
+                progressText.textContent = '✅ Téléchargement du ZIP...';
+
+                // Télécharger le ZIP — écrire dans le dossier sélectionné si possible, sinon téléchargement classique
+                if (folderDirectoryHandle) {
+                    try {
+                        const fileHandle = await folderDirectoryHandle.getFileHandle('examens_personnalises.zip', { create: true });
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(zipBlob);
+                        await writable.close();
+                        console.log('ZIP enregistré directement dans le dossier sélectionné');
+                    } catch (errFs) {
+                        console.error('Erreur écriture dans le dossier:', errFs);
+                        // Fallback au téléchargement classique
+                        try {
+                            const url = URL.createObjectURL(zipBlob);
+                            const link = document.createElement('a');
+                            link.style.display = 'none';
+                            link.href = url;
+                            link.download = 'examens_personnalises.zip';
+                            document.body.appendChild(link);
+                            link.click();
+                            setTimeout(() => {
+                                try { document.body.removeChild(link); } catch (e) {}
+                                try { URL.revokeObjectURL(url); } catch (e) {}
+                            }, 5000);
+                        } catch (e2) {
+                            console.error('Fallback téléchargement échoué:', e2);
+                            alert('Le téléchargement automatique a échoué. Vérifiez la console pour plus de détails.');
+                        }
+                    }
+                } else {
+                    try {
+                        const url = URL.createObjectURL(zipBlob);
+                        const link = document.createElement('a');
+                        link.style.display = 'none';
+                        link.href = url;
+                        link.download = 'examens_personnalises.zip';
+                        document.body.appendChild(link);
+                        console.log('Téléchargement ZIP: déclenchement du click sur le lien');
+                        link.click();
+                        // cleanup
+                        setTimeout(() => {
+                            try { document.body.removeChild(link); } catch (e) {}
+                            try { URL.revokeObjectURL(url); } catch (e) {}
+                        }, 5000);
+                    } catch (err) {
+                        console.error('Erreur lors du déclenchement du téléchargement du ZIP:', err);
+                        try {
+                            const fallbackUrl = URL.createObjectURL(zipBlob);
+                            window.open(fallbackUrl, '_blank');
+                            setTimeout(() => { try { URL.revokeObjectURL(fallbackUrl); } catch (e) {} }, 10000);
+                        } catch (e2) {
+                            console.error('Fallback téléchargement échoué:', e2);
+                            alert('Le téléchargement automatique a échoué. Vérifiez la console pour plus de détails.');
+                        }
+                    }
+                }
+
+                // Message de succès
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                    progressFill.style.width = '0%';
+                    const destMsg = folderDirectoryHandle ? ` dans le dossier « ${folderDirectoryHandle.name} »` : '';
+                    alert(`✅ Succès ! ${students.length} PDFs ont été générés et téléchargés dans le ZIP${destMsg}.`);
+                    generateBtn.disabled = false;
+                }, 1000);
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                progressDiv.style.display = 'none';
+                progressFill.style.width = '0%';
+                generateBtn.disabled = false;
+                alert('❌ Erreur lors de la génération des PDFs: ' + error.message);
+            }
+        }
+
+        // ========== DÉTECTION AUTOMATIQUE DES COLONNES ==========
+        function normalizeHeader(h) {
+            if (!h) return '';
+            return h.toString()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[_\-\.,]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function isNameLike(header) {
+            const h = normalizeHeader(header);
+            const singleNameKeywords = ['prenom', 'prénom', 'nom', 'nomprenom', 'prenomnom', 'prenom et nom', 'nom et prénom', 'full name', 'fullname', 'name', 'nom complet', 'etudiant', 'student'];
+            for (const k of singleNameKeywords) if (h.includes(k)) return true;
+            if (/prenom.*nom|nom.*prenom|prénom.*nom|nom.*prénom|first\s*name.*last\s*name|last\s*name.*first\s*name/.test(h)) return true;
+            const tokens = h.split(' ');
+            if (tokens.length >= 2 && tokens.every(t => t.length > 1 && /^[a-z]+$/.test(t))) return true;
+            return false;
+        }
+
+        function detectNameColumn(headers) {
+            const normalized = headers.map(h => normalizeHeader(h));
+            // 1) exact / contains
+            for (let i = 0; i < normalized.length; i++) {
+                if (isNameLike(normalized[i])) return { type: 'combined', indices: [i], score: 0.95, match: headers[i] };
+            }
+            // 2) adjacent pair detection (prenom / nom)
+            const firstKeywords = ['prenom','prénom','first','given'];
+            const lastKeywords = ['nom','last','family','surname'];
+            for (let i = 0; i < normalized.length - 1; i++) {
+                const a = normalized[i], b = normalized[i+1];
+                if ((firstKeywords.some(k=>a.includes(k)) && lastKeywords.some(k=>b.includes(k))) ||
+                    (firstKeywords.some(k=>b.includes(k)) && lastKeywords.some(k=>a.includes(k)))) {
+                    return { type: 'separate', indices: [i, i+1], score: 0.9, match: headers[i] + ' / ' + headers[i+1] };
+                }
+            }
+            // 3) fallback heuristics
+            const candidates = [];
+            for (let i = 0; i < normalized.length; i++) {
+                const h = normalized[i];
+                if (h.split(' ').length >= 2 || /name|nom|prenom|prénom/.test(h)) candidates.push({ i, h });
+            }
+            if (candidates.length === 1) return { type: 'combined', indices: [candidates[0].i], score: 0.6, match: headers[candidates[0].i] };
+            return { type: 'none', indices: [], score: 0, match: null };
+        }
+
+        // ======= Attribution automatique des places (XLSX d'inscription) =======
+        // Salles par défaut (modifiable dans le HTML plus tard)
+        const ROOMS = [
+            { name: 'VCH-2850', capacity: 201 },
+            { name: 'VCH-2880', capacity: 110 }
+        ];
+
+        // dernière attribution en mémoire (appliquée lors de la génération des PDFs)
+        let lastAssignments = null;
+        // mapping local -> index (1..n) according to local population (most students = 1)
+        let lastLocalIndexMap = null;
+        // workbook binaire (Array) de l'attribution, à inclure dans le ZIP final
+        let lastAssignmentWorkbookArray = null;
+
+        async function generateAssignments() {
+            const file = folderBrioFile;
+            if (!file) {
+                alert('⚠️ Veuillez sélectionner un dossier contenant BRIO.xlsx avant de générer.');
+                return;
+            }
+            if (!file.name.toLowerCase().endsWith('.xlsx')) {
+                alert('⚠️ Le fichier BRIO doit être au format .xlsx.');
+                return;
+            }
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const allStudents = [];
+
+                for (const sheetName of workbook.SheetNames) {
+                    const sheet = workbook.Sheets[sheetName];
+                    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                    if (!rows || rows.length <= 6) continue; // need header at row 6 and data starting row 7
+
+                    const headerRow = rows[5].map(h => (h === undefined ? '' : String(h)));
+
+                    const idxNom = detectSingleColumn(headerRow, ['nom','nom de famille','lastname','surname']);
+                    const idxPrenom = detectSingleColumn(headerRow, ['prenom','prénom','first','given','given name']);
+                    const idxEmail = (columnMapping.emailIdx !== null && columnMapping.emailIdx !== undefined) ? columnMapping.emailIdx : detectSingleColumn(headerRow, ['mail','email','courriel','adresse courriel','adresse']);
+                    const idxNI = detectSingleColumn(headerRow, ['ni','matricule','identifiant','id','numero','numero dossier','dossier','num']);
+                    const idxStatut = detectSingleColumn(headerRow, ['statut','inscription','status','etat']);
+
+                    for (let r = 6; r < rows.length; r++) {
+                        const row = rows[r] || [];
+                        const last = (idxNom >= 0 ? (row[idxNom] || '') : '') || '';
+                        const first = (idxPrenom >= 0 ? (row[idxPrenom] || '') : '') || '';
+                        const email = (idxEmail >= 0 ? (row[idxEmail] || '') : '') || '';
+                        const ni = (idxNI >= 0 ? (row[idxNI] || '') : '') || '';
+                        const rawStatus = (idxStatut >= 0 ? (row[idxStatut] || '') : '') || '';
+
+                        const status = normalizeHeader(rawStatus).includes('abandon') ? 'Abandon' : 'Présent';
+                        const fullName = (String(first).trim() + ' ' + String(last).trim()).trim();
+                        if (!fullName && !ni) continue;
+                        allStudents.push({ name: fullName || ni, first: first, last: last, ni: String(ni).trim(), email: String(email).trim(), status, section: sheetName });
+                    }
+                }
+
+                if (allStudents.length === 0) {
+                    alert('Aucun étudiant détecté dans le fichier d\'inscription. Vérifiez la structure (en-têtes en ligne 6).');
+                    return;
+                }
+
+                // Récupérer les locaux sélectionnés dans l'UI (si aucun sélectionné -> alerte)
+                const roomsToUse = getSelectedRooms();
+                if (!roomsToUse || roomsToUse.length === 0) {
+                    alert('⚠️ Veuillez sélectionner au moins un local dans l\'interface avant de générer l\'attribution.');
+                    return;
+                }
+
+                // Séparer les accommodements (si fournis) et appliquer les exclusions par fichiers avant attribution
+                const accomList = [];
+                const remaining = [];
+                if (accomNISet && accomNISet.size > 0) {
+                    for (const s of allStudents) {
+                        const key = (s.ni || '').toString().trim();
+                        if (key && accomNISet.has(key)) {
+                            const times = (accomTimeMap && accomTimeMap.has(key)) ? accomTimeMap.get(key) : {};
+                            accomList.push({ ...s, local: 'ACCOMMODEMENT', place: 'X', accomStart: times.start || '', accomEnd: times.end || '' });
+                        } else if (filterExcludeNISet && filterExcludeNISet.size > 0 && key && filterExcludeNISet.has(key)) {
+                            // excluded by filter: skip entirely
+                            continue;
+                        } else {
+                            remaining.push(s);
+                        }
+                    }
+                } else {
+                    for (const s of allStudents) {
+                        const key = (s.ni || '').toString().trim();
+                        if (filterExcludeNISet && filterExcludeNISet.size > 0 && key && filterExcludeNISet.has(key)) {
+                            continue;
+                        }
+                        remaining.push(s);
+                    }
+                }
+
+                // tri par nom de famille avant attribution (sur les étudiants restants)
+                remaining.sort((a, b) => {
+                    const getLast = s => (s.last && String(s.last).trim()) || (s.name ? String(s.name).trim().split(/\s+/).slice(-1)[0] : '');
+                    const la = getLast(a).toString();
+                    const lb = getLast(b).toString();
+                    return la.localeCompare(lb, 'fr', { sensitivity: 'base' });
+                });
+
+                const startSeatNumber = getSeatNumberStart();
+                const assignedRegular = assignSeatsToRooms(remaining, roomsToUse, startSeatNumber);
+                // Attribuer les accommodements à leurs salles si disponibles, sinon garder ACCOMMODEMENT/X
+                const accomRoomsToUse = getSelectedAccomRooms();
+                let finalAccomList;
+                if (accomRoomsToUse.length > 0 && accomList.length > 0) {
+                    // Trier les accom par nom de famille avant attribution
+                    accomList.sort((a, b) => {
+                        const getLast = s => (s.last && String(s.last).trim()) || (s.name ? String(s.name).trim().split(/\s+/).slice(-1)[0] : '');
+                        return getLast(a).toString().localeCompare(getLast(b).toString(), 'fr', { sensitivity: 'base' });
+                    });
+                    // Start accom numbering after the max place used in assignedRegular
+                    let maxPlace = 0;
+                    for (const ar of assignedRegular) {
+                        const n = parseInt(ar.place, 10);
+                        if (!isNaN(n) && isFinite(n)) maxPlace = Math.max(maxPlace, n);
+                    }
+                    const startForAccom = maxPlace > 0 ? maxPlace + 1 : startSeatNumber;
+                    finalAccomList = assignSeatsToRooms(accomList, accomRoomsToUse, startForAccom);
+                } else {
+                    finalAccomList = accomList;
+                }
+                const assigned = assignedRegular.concat(finalAccomList);
+
+                // Générer workbook d'attribution
+                const sheetData = assigned.map(s => ({
+                    'Prénom et nom': s.name,
+                    'NI': s.ni,
+                    'Local': s.local,
+                    'Place': s.place,
+                    'adresse courriel': s.email,
+                    'Accommodement': (accomNISet && accomNISet.size>0 && s.ni && accomNISet.has(String(s.ni).trim())) ? 'oui' : 'non',
+                    'statut d\'inscription': s.status
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(sheetData, { header: ['Prénom et nom','NI','Local','Place','adresse courriel','Accommodement','statut d\'inscription'] });
+                const wbOut = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wbOut, ws, 'Attribution');
+                const wbArray = XLSX.write(wbOut, { bookType: 'xlsx', type: 'array' });
+
+                // stocker en mémoire pour réutilisation lors de la génération des PDFs
+                lastAssignments = assigned;
+                lastAssignmentWorkbookArray = wbArray;
+                // construire le mapping local -> index (1..n) basé sur le nombre d'étudiants par local (desc)
+                const counts = Object.create(null);
+                for (const s of assigned) {
+                    if (s.local) counts[s.local] = (counts[s.local] || 0) + 1;
+                }
+                const localsSorted = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
+                lastLocalIndexMap = Object.create(null);
+                localsSorted.forEach((loc, idx) => { lastLocalIndexMap[loc] = idx + 1; });
+                alert(`✅ Attribution terminée (${assigned.length} étudiants). L'attribution sera incluse dans le ZIP final.`);
+            } catch (err) {
+                console.error(err);
+                alert('Erreur lors de la génération des attributions: ' + err.message);
+            }
+        }
+
+        function getDistributionMode() {
+            const el = document.querySelector('input[name="distMode"]:checked');
+            return el ? el.value : 'large-first';
+        }
+
+        function getSeatNumberStart() {
+            const input = document.getElementById('numberingStart');
+            const value = input ? parseInt(input.value, 10) : 1;
+            const start = Number.isInteger(value) && value >= 1 ? value : 1;
+            if (input) input.value = String(start);
+            return start;
+        }
+
+        function assignSeatsToRooms(students, rooms, startFrom = 1) {
+            const mode = getDistributionMode();
+
+            if (mode === 'uniform') {
+                // Répartition uniforme : proportionnelle à la capacité de chaque salle
+                const totalCapacity = rooms.reduce((sum, r) => sum + r.capacity, 0);
+                const totalStudents = students.length;
+                // Calculer le nombre d'étudiants par salle (proportionnel)
+                const roomAllocs = rooms.map(r => ({
+                    name: r.name,
+                    capacity: r.capacity,
+                    count: 0
+                }));
+                let allocated = 0;
+                for (let i = 0; i < roomAllocs.length; i++) {
+                    if (i === roomAllocs.length - 1) {
+                        // Dernière salle : prend le reste
+                        roomAllocs[i].count = Math.min(totalStudents - allocated, roomAllocs[i].capacity);
+                    } else {
+                        const share = Math.round((roomAllocs[i].capacity / totalCapacity) * totalStudents);
+                        roomAllocs[i].count = Math.min(share, roomAllocs[i].capacity);
+                    }
+                    allocated += roomAllocs[i].count;
+                }
+                // Ajuster si on a trop ou pas assez alloué (arrondi)
+                let diff = totalStudents - allocated;
+                if (diff > 0) {
+                    for (let i = 0; i < roomAllocs.length && diff > 0; i++) {
+                        const canAdd = roomAllocs[i].capacity - roomAllocs[i].count;
+                        const add = Math.min(canAdd, diff);
+                        roomAllocs[i].count += add;
+                        diff -= add;
+                    }
+                } else if (diff < 0) {
+                    for (let i = roomAllocs.length - 1; i >= 0 && diff < 0; i--) {
+                        const canRemove = roomAllocs[i].count;
+                        const remove = Math.min(canRemove, -diff);
+                        roomAllocs[i].count -= remove;
+                        diff += remove;
+                    }
+                }
+                const assigned = [];
+                let studentIndex = 0;
+                let globalSeat = Number(startFrom) || 1;
+                for (const alloc of roomAllocs) {
+                    for (let seat = 1; seat <= alloc.count && studentIndex < students.length; seat++) {
+                        const s = students[studentIndex++];
+                        assigned.push({ ...s, local: alloc.name, place: String(globalSeat++) });
+                    }
+                }
+                while (studentIndex < students.length) {
+                    assigned.push({ ...students[studentIndex++], local: '', place: '' });
+                }
+                return assigned;
+            }
+
+            // Modes séquentiels : gros→petit ou petit→gros
+            const sortedRooms = (mode === 'small-first')
+                ? [...rooms].sort((a, b) => a.capacity - b.capacity)
+                : [...rooms].sort((a, b) => b.capacity - a.capacity);
+
+            const assigned = [];
+            let studentIndex = 0;
+            let globalSeat = Number(startFrom) || 1;
+            for (const room of sortedRooms) {
+                for (let seat = 1; seat <= room.capacity && studentIndex < students.length; seat++) {
+                    const s = students[studentIndex++];
+                    assigned.push({ ...s, local: room.name, place: String(globalSeat++) });
+                }
+                if (studentIndex >= students.length) break;
+            }
+            // If still students left (more than total capacity), append them with empty local/seat
+            while (studentIndex < students.length) {
+                const s = students[studentIndex++];
+                assigned.push({ ...s, local: '', place: '' });
+            }
+            return assigned;
+        }
+
+        function ensureLocalIndexMap() {
+            if (lastLocalIndexMap) return lastLocalIndexMap;
+            lastLocalIndexMap = Object.create(null);
+            if (!lastAssignments || lastAssignments.length === 0) return lastLocalIndexMap;
+            const counts = Object.create(null);
+            for (const s of lastAssignments) {
+                if (s.local) counts[s.local] = (counts[s.local] || 0) + 1;
+            }
+            const localsSorted = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
+            localsSorted.forEach((loc, idx) => { lastLocalIndexMap[loc] = idx + 1; });
+            return lastLocalIndexMap;
+        }
+
+        // Single action: compute assignments in-memory then generate PDFs (and optional lists)
+        async function generateAll() {
+            const csvFile = folderBrioFile;
+            const pdfFile = folderPdfFile;
+            const evalName = document.getElementById('evalName').value.trim();
+            const courseName = document.getElementById('courseName').value.trim();
+            const startTime = document.getElementById('startTime').value.trim();
+            const endTime = document.getElementById('endTime').value.trim();
+
+            if (!csvFile || !pdfFile) {
+                alert('⚠️ Veuillez sélectionner un dossier contenant BRIO.xlsx et examen.pdf');
+                return;
+            }
+            if (!evalName || !courseName) {
+                alert('⚠️ Veuillez saisir le nom de l\'évaluation et le numéro du cours.');
+                return;
+            }
+
+            // read students from registration file (XLSX multi-sheet or CSV)
+            try {
+                console.log('generateAll: starting processing');
+                try { document.getElementById('progressText').textContent = 'Lecture du fichier d\'inscription...'; document.getElementById('progressFill').style.width = '15%'; } catch(e){}
+                let allStudents = [];
+                if (csvFile.name.toLowerCase().endsWith('.xlsx')) {
+                    console.log('generateAll: reading XLSX registration file');
+                    const arrayBuffer = await csvFile.arrayBuffer();
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    for (const sheetName of workbook.SheetNames) {
+                        const sheet = workbook.Sheets[sheetName];
+                        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                        if (!rows || rows.length <= 6) continue;
+                        const headerRow = rows[5].map(h => (h === undefined ? '' : String(h)));
+                        const idxNom = detectSingleColumn(headerRow, ['nom','nom de famille','lastname','surname']);
+                        const idxPrenom = detectSingleColumn(headerRow, ['prenom','prénom','first','given','given name']);
+                        const idxEmail = (columnMapping.emailIdx !== null && columnMapping.emailIdx !== undefined) ? columnMapping.emailIdx : detectSingleColumn(headerRow, ['mail','email','courriel','adresse courriel','adresse']);
+                        const idxNI = detectSingleColumn(headerRow, ['ni','matricule','identifiant','id','numero','numero dossier','dossier','num']);
+                        const idxStatut = detectSingleColumn(headerRow, ['statut','inscription','status','etat']);
+
+                        for (let r = 6; r < rows.length; r++) {
+                            const row = rows[r] || [];
+                            const last = (idxNom >= 0 ? (row[idxNom] || '') : '') || '';
+                            const first = (idxPrenom >= 0 ? (row[idxPrenom] || '') : '') || '';
+                            const email = (idxEmail >= 0 ? (row[idxEmail] || '') : '') || '';
+                            const ni = (idxNI >= 0 ? (row[idxNI] || '') : '') || '';
+                            const rawStatus = (idxStatut >= 0 ? (row[idxStatut] || '') : '') || '';
+                            const status = normalizeHeader(rawStatus).includes('abandon') ? 'Abandon' : 'Présent';
+                            const fullName = (String(first).trim() + ' ' + String(last).trim()).trim();
+                            if (!fullName && !ni) continue;
+                            allStudents.push({ name: fullName || ni, first: first, last: last, ni: String(ni).trim(), email: String(email).trim(), status, section: sheetName });
+                        }
+                    }
+                    console.log('generateAll: finished reading XLSX, total students so far:', allStudents.length);
+                } else {
+                    console.log('generateAll: reading CSV registration file');
+                    const csvText = await csvFile.text();
+                    allStudents = parseCSV(csvText);
+                    console.log('generateAll: finished parsing CSV, total students:', allStudents.length);
+                }
+
+                if (allStudents.length === 0) {
+                    alert('Aucun étudiant détecté dans le fichier d\'inscription.');
+                    return;
+                }
+                try { document.getElementById('progressText').textContent = 'Sélection des locaux et préparation...'; document.getElementById('progressFill').style.width = '30%'; } catch(e){}
+                // get selected rooms and assign
+                const roomsToUse = getSelectedRooms();
+                console.log('generateAll: selected rooms:', roomsToUse);
+                if (!roomsToUse || roomsToUse.length === 0) {
+                    alert('⚠️ Veuillez sélectionner au moins un local dans l\'interface avant de générer l\'attribution.');
+                    return;
+                }
+
+                // Séparer les accommodements (si fournis) et appliquer les exclusions par fichiers avant attribution
+                const accomList = [];
+                const remaining = [];
+                if (accomNISet && accomNISet.size > 0) {
+                    for (const s of allStudents) {
+                        const key = (s.ni || '').toString().trim();
+                        if (key && accomNISet.has(key)) {
+                            const times = (accomTimeMap && accomTimeMap.has(key)) ? accomTimeMap.get(key) : {};
+                            accomList.push({ ...s, local: 'ACCOMMODEMENT', place: 'X', accomStart: times.start || '', accomEnd: times.end || '' });
+                        } else if (filterExcludeNISet && filterExcludeNISet.size > 0 && key && filterExcludeNISet.has(key)) {
+                            // excluded by filter: skip entirely
+                            continue;
+                        } else {
+                            remaining.push(s);
+                        }
+                    }
+                } else {
+                    for (const s of allStudents) {
+                        const key = (s.ni || '').toString().trim();
+                        if (filterExcludeNISet && filterExcludeNISet.size > 0 && key && filterExcludeNISet.has(key)) {
+                            continue;
+                        }
+                        remaining.push(s);
+                    }
+                }
+                console.log('generateAll: accomList count=', accomList.length, 'remaining count=', remaining.length);
+                try { document.getElementById('progressText').textContent = 'Tri des étudiants...'; document.getElementById('progressFill').style.width = '40%'; } catch(e){}
+
+                // tri par nom de famille avant attribution (sur les étudiants restants)
+                remaining.sort((a, b) => {
+                    const getLast = s => (s.last && String(s.last).trim()) || (s.name ? String(s.name).trim().split(/\s+/).slice(-1)[0] : '');
+                    const la = getLast(a).toString();
+                    const lb = getLast(b).toString();
+                    return la.localeCompare(lb, 'fr', { sensitivity: 'base' });
+                });
+
+                const startSeatNumber = getSeatNumberStart();
+                const assignedRegular = assignSeatsToRooms(remaining, roomsToUse, startSeatNumber);
+                console.log('generateAll: assignedRegular count=', assignedRegular.length);
+                // Attribuer les accommodements à leurs salles si disponibles
+                const accomRoomsToUse = getSelectedAccomRooms();
+                let finalAccomList;
+                if (accomRoomsToUse.length > 0 && accomList.length > 0) {
+                    accomList.sort((a, b) => {
+                        const getLast = s => (s.last && String(s.last).trim()) || (s.name ? String(s.name).trim().split(/\s+/).slice(-1)[0] : '');
+                        return getLast(a).toString().localeCompare(getLast(b).toString(), 'fr', { sensitivity: 'base' });
+                    });
+                    let maxPlace = 0;
+                    for (const ar of assignedRegular) {
+                        const n = parseInt(ar.place, 10);
+                        if (!isNaN(n) && isFinite(n)) maxPlace = Math.max(maxPlace, n);
+                    }
+                    const startForAccom = maxPlace > 0 ? maxPlace + 1 : startSeatNumber;
+                    finalAccomList = assignSeatsToRooms(accomList, accomRoomsToUse, startForAccom);
+                } else {
+                    finalAccomList = accomList;
+                }
+                const assigned = assignedRegular.concat(finalAccomList);
+                lastAssignments = assigned;
+
+                // build and store local index map
+                const counts = Object.create(null);
+                for (const s of assigned) if (s.local) counts[s.local] = (counts[s.local] || 0) + 1;
+                const localsSorted = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
+                lastLocalIndexMap = Object.create(null);
+                localsSorted.forEach((loc, idx) => { lastLocalIndexMap[loc] = idx + 1; });
+
+                // proceed to generate PDFs (and lists if requested)
+                console.log('generateAll: calling generatePDFs() with', lastAssignments.length, 'assignments');
+                try { document.getElementById('progressText').textContent = 'Génération des PDFs...'; document.getElementById('progressFill').style.width = '60%'; } catch(e){}
+                await generatePDFs();
+            } catch (err) {
+                console.error(err);
+                alert('Erreur lors du traitement : ' + err.message);
+            }
+        }
+
+        function getSelectedRooms() {
+            const rows = Array.from(document.querySelectorAll('#roomList .roomRow'));
+            const rooms = [];
+            for (const row of rows) {
+                const checkbox = row.querySelector('.roomCheckbox');
+                const capacityInput = row.querySelector('.roomCapacity');
+                if (!checkbox || !capacityInput) continue;
+                if (checkbox.checked) {
+                    // Pour les salles custom, lire le nom depuis l'input texte
+                    const customNameInput = row.querySelector('.customRoomName');
+                    let name = '';
+                    if (customNameInput) {
+                        name = (customNameInput.value || '').trim();
+                        if (!name) continue; // ignorer si pas de nom saisi
+                        // synchroniser data-name pour cohérence
+                        checkbox.dataset.name = name;
+                    } else {
+                        name = checkbox.dataset.name || checkbox.id.replace('room_','');
+                    }
+                    const cap = parseInt(capacityInput.value, 10) || 0;
+                    if (cap > 0) rooms.push({ name: String(name), capacity: cap });
+                }
+            }
+            return rooms;
+        }
+
+        function getSelectedAccomRooms() {
+            const rows = Array.from(document.querySelectorAll('#accomRoomList .accomRoomRow'));
+            const rooms = [];
+            for (const row of rows) {
+                const checkbox = row.querySelector('.accomRoomCheckbox');
+                const nameInput = row.querySelector('.accomRoomName');
+                const capacityInput = row.querySelector('.accomRoomCapacity');
+                if (!checkbox || !nameInput || !capacityInput) continue;
+                if (checkbox.checked) {
+                    const name = (nameInput.value || '').trim();
+                    if (!name) continue;
+                    const cap = parseInt(capacityInput.value, 10) || 0;
+                    if (cap > 0) rooms.push({ name: String(name), capacity: cap });
+                }
+            }
+            return rooms;
+        }
+
+        function detectSingleColumn(headers, keywords) {
+            const normalized = headers.map(h => normalizeHeader(h));
+            for (let i = 0; i < normalized.length; i++) {
+                for (const k of keywords) {
+                    if (normalized[i].includes(k)) return i;
+                }
+            }
+            return -1;
+        }
+
+        // ====== UI: remplir les selects de mapping à l'ouverture du fichier ======
+        let columnHeaders = [];
+        const columnMapping = {
+            nameMode: 'separate', // or 'combined' — default to separated first/last
+            nameIdx: null,
+            firstIdx: null,
+            lastIdx: null,
+            niIdx: null,
+            emailIdx: null
+        };
+
+        // Accommodements
+        let accomHeaders = [];
+        let accomNISet = null; // Set of NI strings
+        let accomTimeMap = null; // Map of NI string -> { start, end }
+        // Filtres (exclusion via fichiers de liste)
+        let filterExcludeNISet = null; // Set of NI strings to exclude when TypeInscription != selected keep types
+        // Valeurs de Type conservées (normalisées). Par défaut on conserve 'campus ul'
+        let filterKeepSet = new Set(['campus ul']);
+
+        // === Fichiers extraits du dossier ===
+        let folderBrioFile = null;   // BRIO.xlsx
+        let folderAccomFile = null;  // accommodements.xlsx
+        let folderFilterFile = null; // horscampus.xlsx
+        let folderPdfFile = null;    // examen.pdf
+        let folderDirectoryHandle = null; // FileSystemDirectoryHandle for writing back
+
+        // Safe DOM listener registration: check elements exist before binding to avoid hard errors
+        const folderEl = document.getElementById('folderInput');
+        // Flag to avoid double-firing onFolderSelected when the hidden input is used as fallback
+        let folderHandledByPicker = false;
+
+        // Button that uses showDirectoryPicker (read+write) when available, otherwise the label naturally triggers the hidden input
+        const folderSelectBtn = document.getElementById('folderSelectBtn');
+        if (folderSelectBtn && window.showDirectoryPicker) {
+            // When showDirectoryPicker is available, intercept the label click
+            folderSelectBtn.addEventListener('click', async (e) => {
+                e.preventDefault(); // prevent the label from triggering the file input
+                try {
+                    folderDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                    // Read files from directory handle
+                    const files = [];
+                    for await (const entry of folderDirectoryHandle.values()) {
+                        if (entry.kind === 'file') {
+                            const file = await entry.getFile();
+                            files.push(file);
+                        }
+                    }
+                    // Update label text with folder name
+                    folderSelectBtn.textContent = '📂 ' + folderDirectoryHandle.name;
+                    folderSelectBtn.style.color = '#333';
+                    // Feed files to the existing handler
+                    folderHandledByPicker = true;
+                    await onFolderSelected({ target: { files } });
+                } catch (err) {
+                    if (err.name === 'AbortError') return; // user cancelled
+                    console.warn('showDirectoryPicker failed, falling back to file input:', err);
+                    folderDirectoryHandle = null;
+                    folderHandledByPicker = false;
+                    // Trigger the native file input as fallback
+                    if (folderEl) folderEl.click();
+                }
+            });
+        }
+
+        // Listen on the hidden file input (used as fallback or by browsers without showDirectoryPicker)
+        if (folderEl) {
+            folderEl.addEventListener('change', async function() {
+                if (folderHandledByPicker) { folderHandledByPicker = false; return; }
+                if (this.files && this.files.length > 0) {
+                    // Extract folder name from webkitRelativePath
+                    const relPath = this.files[0].webkitRelativePath || '';
+                    const folderName = relPath.split('/')[0] || 'Dossier sélectionné';
+                    if (folderSelectBtn) {
+                        folderSelectBtn.textContent = '📂 ' + folderName;
+                        folderSelectBtn.style.color = '#333';
+                    }
+                }
+                await onFolderSelected({ target: { files: Array.from(this.files || []) } });
+            });
+        }
+
+        // Info bubble toggle — folder
+        const infoIcon = document.getElementById('folderInfoIcon');
+        const infoBubble = document.getElementById('folderInfoBubble');
+        if (infoIcon && infoBubble) {
+            infoIcon.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                infoBubble.classList.toggle('show');
+            });
+            document.addEventListener('click', (e) => {
+                if (!infoIcon.contains(e.target)) {
+                    infoBubble.classList.remove('show');
+                }
+            });
+        }
+
+        // Info bubble toggle — répartition des locaux
+        const repartInfoIcon = document.getElementById('repartitionInfoIcon');
+        const repartInfoBubble = document.getElementById('repartitionInfoBubble');
+        if (repartInfoIcon && repartInfoBubble) {
+            repartInfoIcon.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                repartInfoBubble.classList.toggle('show');
+            });
+            document.addEventListener('click', (e) => {
+                if (!repartInfoIcon.contains(e.target)) {
+                    repartInfoBubble.classList.remove('show');
+                }
+            });
+        }
+
+        const nameSeparateEl = document.getElementById('nameSeparate');
+        if (nameSeparateEl) {
+            // Forcer l'état coché par défaut au chargement
+            nameSeparateEl.checked = true;
+            columnMapping.nameMode = 'separate';
+            const nameCombinedInit = document.getElementById('nameCombinedSelect'); if (nameCombinedInit) nameCombinedInit.disabled = true;
+            const firstNameInit = document.getElementById('firstNameSelect'); if (firstNameInit) firstNameInit.disabled = false;
+            const lastNameInit = document.getElementById('lastNameSelect'); if (lastNameInit) lastNameInit.disabled = false;
+
+            nameSeparateEl.addEventListener('change', (e) => {
+                const separate = e.target.checked;
+                columnMapping.nameMode = separate ? 'separate' : 'combined';
+                const nameCombinedSelect = document.getElementById('nameCombinedSelect'); if (nameCombinedSelect) nameCombinedSelect.disabled = separate;
+                const firstNameSelect = document.getElementById('firstNameSelect'); if (firstNameSelect) firstNameSelect.disabled = !separate;
+                const lastNameSelect = document.getElementById('lastNameSelect'); if (lastNameSelect) lastNameSelect.disabled = !separate;
+            });
+        }
+
+        ['nameCombinedSelect','firstNameSelect','lastNameSelect','niSelect','emailSelect']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', () => updateMappingFromUI()); });
+
+        async function onFolderSelected(e) {
+            const files = Array.from(e.target.files || []);
+            folderBrioFile = null;
+            folderAccomFile = null;
+            folderFilterFile = null;
+            folderPdfFile = null;
+
+            // Scan folder files by name (case-insensitive)
+            for (const f of files) {
+                const name = f.name.toLowerCase();
+                if (name === 'brio.xlsx') folderBrioFile = f;
+                else if (name === 'accommodements.xlsx') folderAccomFile = f;
+                else if (name === 'horscampus.xlsx') folderFilterFile = f;
+                else if (name === 'examen.pdf') folderPdfFile = f;
+            }
+
+            // Show status
+            const statusDiv = document.getElementById('folderStatus');
+            if (statusDiv) statusDiv.style.display = 'block';
+
+            const ok = (text) => `<span style="color:#28a745;">✅ ${text}</span>`;
+            const missing = (text) => `<span style="color:#dc3545;">❌ ${text}</span>`;
+            const optional = (text) => `<span style="color:#999;">⚪ ${text}</span>`;
+
+            const sBrio = document.getElementById('statusBrio');
+            const sAccom = document.getElementById('statusAccom');
+            const sFilter = document.getElementById('statusFilter');
+            const sPdf = document.getElementById('statusPdf');
+
+            if (sBrio) sBrio.innerHTML = folderBrioFile ? ok('BRIO.xlsx trouvé') : missing('BRIO.xlsx non trouvé (obligatoire)');
+            if (sAccom) sAccom.innerHTML = folderAccomFile ? ok('accommodements.xlsx trouvé') : optional('accommodements.xlsx non trouvé (optionnel)');
+            if (sFilter) sFilter.innerHTML = folderFilterFile ? ok('horscampus.xlsx trouvé') : optional('horscampus.xlsx non trouvé (optionnel)');
+            if (sPdf) sPdf.innerHTML = folderPdfFile ? ok('examen.pdf trouvé') : missing('examen.pdf non trouvé (obligatoire)');
+
+            // Trigger processing for each found file
+            if (folderBrioFile) {
+                // Simulate the csvFile change event
+                await onCsvFileSelected({ target: { files: [folderBrioFile] } });
+            }
+            if (folderAccomFile) {
+                await onAccomFileSelected({ target: { files: [folderAccomFile] } });
+            }
+            if (folderFilterFile) {
+                await onFilterFilesSelected({ target: { files: [folderFilterFile] } });
+            }
+        }
+
+        async function onCsvFileSelected(e) {
+            const file = (e.target.files && e.target.files[0]) || null;
+            if (!file) return;
+            let headers = [];
+            try {
+                if (file.name.toLowerCase().endsWith('.xlsx')) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    if (rows && rows.length > 5) headers = (rows[5] || []).map(h => h === undefined ? '' : h.toString());
+                } else {
+                    const text = await file.text();
+                    const raw = text.split(/\r?\n/);
+                    if (raw.length > 5) {
+                        const headerLine = raw[5];
+                        const sep = headerLine && headerLine.includes(';') ? ';' : (headerLine && headerLine.includes(',') ? ',' : ',');
+                        headers = headerLine.split(sep).map(h => h === undefined ? '' : h.toString().trim());
+                    }
+                }
+            } catch (err) {
+                console.error('Erreur lecture en-têtes:', err);
+            }
+
+            // If no headers detected at the expected line, attempt a more tolerant fallback
+            if (!headers || headers.length === 0) {
+                console.warn('onCsvFileSelected: headers empty — attempting fallback detection');
+                try {
+                    if (file.name.toLowerCase().endsWith('.xlsx')) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                        if (rows && rows.length) {
+                            // try first non-empty row as header
+                            for (let r = 0; r < rows.length; r++) {
+                                const candidate = rows[r] || [];
+                                if (candidate.some(c => c !== undefined && String(c).trim() !== '')) {
+                                    headers = candidate.map(h => h === undefined ? '' : String(h));
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        const text = await file.text();
+                        const raw = text.split(/\r?\n/).filter(Boolean);
+                        if (raw.length) {
+                            const headerLine = raw[0];
+                            const sep = headerLine.includes(';') ? ';' : (headerLine.includes(',') ? ',' : ',');
+                            headers = headerLine.split(sep).map(h => h === undefined ? '' : h.toString().trim());
+                        }
+                    }
+                } catch (err) {
+                    console.warn('onCsvFileSelected: fallback header detection failed', err);
+                }
+            }
+
+            columnHeaders = headers || [];
+            // continue even if headers are empty — populate selects with placeholder columns
+            if (!columnHeaders || columnHeaders.length === 0) {
+                console.warn('onCsvFileSelected: no headers after fallback — creating placeholder headers');
+                // create placeholder with arbitrary 8 columns
+                columnHeaders = Array.from({ length: 8 }, (_, i) => `Col ${i+1}`);
+            }
+
+            try {
+                populateAllSelects(headers);
+                const mappingEl = document.getElementById('mappingUI');
+                if (mappingEl) {
+                    try { mappingEl.style.display = 'block'; } catch(e) { console.warn('mappingEl show failed', e); }
+                    try {
+                        // move mapping UI immediately after the folder upload section
+                        const folderInput = document.getElementById('folderInput');
+                        const folderSection = folderInput ? folderInput.closest('.upload-section') : null;
+                        if (folderSection && mappingEl && folderSection.parentNode) {
+                            folderSection.parentNode.insertBefore(mappingEl, folderSection.nextSibling);
+                        }
+                    } catch (err) {
+                        console.warn('Impossible de repositionner mappingUI:', err);
+                    }
+                } else {
+                    console.warn('mappingUI element not found');
+                }
+            } catch (err) {
+                console.error('populateAllSelects/mapping error:', err);
+            }
+            // ensure separated-name mode is active by default
+            try {
+                const nameSeparateChk = document.getElementById('nameSeparate');
+                if (nameSeparateChk) nameSeparateChk.checked = true;
+                columnMapping.nameMode = 'separate';
+                // auto-select sensible first/last columns if detection finds them or by keyword search
+                const norm = headers.map(h => normalizeHeader(h));
+                const defaultFirst = detectSingleColumn(headers, ['prenom','prénom','first','given','given name']);
+                const defaultLast = detectSingleColumn(headers, ['nom','nom de famille','last','family','surname']);
+                const firstSel = document.getElementById('firstNameSelect');
+                const lastSel = document.getElementById('lastNameSelect');
+                if (firstSel) {
+                    // default to column index 1 (displayed as '2: ...') when available
+                    if (firstSel.options.length > 1) {
+                        try { firstSel.value = '1'; } catch (e) {}
+                    } else if (firstSel.value === '' || firstSel.value === null) {
+                        if (defaultFirst >= 0) firstSel.value = String(defaultFirst);
+                    }
+                }
+                if (lastSel && (lastSel.value === '' || lastSel.value === null)) {
+                    if (defaultLast >= 0) lastSel.value = String(defaultLast);
+                }
+                // If detection heuristic earlier found adjacent pair, prefer those
+                const detection = detectNameColumn(headers);
+                if (detection.type === 'separate' && detection.indices.length === 2) {
+                    // determine which is first/last
+                    const a = normalizeHeader(headers[detection.indices[0]] || '');
+                    const b = normalizeHeader(headers[detection.indices[1]] || '');
+                    const firstKeywords = ['prenom','prénom','first','given'];
+                    const lastKeywords = ['nom','last','family','surname'];
+                    let fi = detection.indices[0], li = detection.indices[1];
+                    if (firstKeywords.some(k=>a.includes(k)) || lastKeywords.some(k=>b.includes(k))) { fi = detection.indices[0]; li = detection.indices[1]; }
+                    else if (firstKeywords.some(k=>b.includes(k)) || lastKeywords.some(k=>a.includes(k))) { fi = detection.indices[1]; li = detection.indices[0]; }
+                    if (firstSel) firstSel.value = String(fi);
+                    if (lastSel) lastSel.value = String(li);
+                }
+                try { console.log('calling updateMappingFromUI'); updateMappingFromUI(); } catch(err) { console.warn('updateMappingFromUI failed', err); }
+            } catch (err) {
+                console.warn('Erreur auto-selection colonnes prénom/nom:', err);
+            }
+
+            // Pré-sélectionner à partir de la détection heuristique
+            const detection = detectNameColumn(headers);
+            if (detection.type === 'separate') {
+                // determine which index corresponds to prénom vs nom
+                const norm = headers.map(h => normalizeHeader(h));
+                const i0 = detection.indices[0];
+                const i1 = detection.indices[1];
+                const a = norm[i0] || '';
+                const b = norm[i1] || '';
+                const firstKeywords = ['prenom','prénom','first','given'];
+                const lastKeywords = ['nom','last','family','surname'];
+
+                let firstIdx = i0;
+                let lastIdx = i1;
+                if (firstKeywords.some(k => a.includes(k)) || lastKeywords.some(k => b.includes(k))) {
+                    firstIdx = i0; lastIdx = i1;
+                } else if (firstKeywords.some(k => b.includes(k)) || lastKeywords.some(k => a.includes(k))) {
+                    firstIdx = i1; lastIdx = i0;
+                }
+
+                document.getElementById('nameSeparate').checked = true;
+                columnMapping.nameMode = 'separate';
+                document.getElementById('firstNameSelect').value = String(firstIdx);
+                document.getElementById('lastNameSelect').value = String(lastIdx);
+            } else if (detection.type === 'combined') {
+                // Ne pas décocher — on garde le mode séparé par défaut
+                // document.getElementById('nameSeparate').checked = false;
+                // columnMapping.nameMode = 'combined';
+                document.getElementById('nameCombinedSelect').value = String(detection.indices[0]);
+            }
+
+            // autres champs
+            const ni = detectSingleColumn(headers, ['ni','matricule','identifiant','id','numero','num']);
+            if (ni >= 0) document.getElementById('niSelect').value = String(ni);
+
+            // courriel — défaut colonne 3 (index 2)
+            const emailSel = document.getElementById('emailSelect');
+            if (emailSel) {
+                const emailDetect = detectSingleColumn(headers, ['courriel','email','mail','adresse courriel','adresse']);
+                if (emailDetect >= 0) { emailSel.value = String(emailDetect); }
+                else if (emailSel.options.length > 2) { emailSel.value = '2'; }
+            }
+
+            updateMappingFromUI();
+        }
+
+        async function onAccomFileSelected(e) {
+            const file = (e.target.files && e.target.files[0]) || null;
+            accomHeaders = [];
+            accomNISet = null;
+            accomTimeMap = null;
+            const mapDiv = document.getElementById('accomMap');
+            const select = document.getElementById('accomNiSelect');
+            const accomStartSel = document.getElementById('accomStartSelect');
+            const accomEndSel = document.getElementById('accomEndSelect');
+            if (select) select.innerHTML = '';
+            if (accomStartSel) accomStartSel.innerHTML = '';
+            if (accomEndSel) accomEndSel.innerHTML = '';
+            if (!file) { if (mapDiv) try { mapDiv.style.display = 'none'; } catch(e){}; console.log('onAccomFileSelected: no file'); return; }
+
+            try {
+                if (file.name.toLowerCase().endsWith('.xlsx')) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    if (rows && rows.length) {
+                        // try to find a header row containing 'matricule' or 'ni', else use first non-empty row
+                        let headerRow = null;
+                        for (let r = 0; r < Math.min(rows.length, 10); r++) {
+                            const row = (rows[r] || []).map(c => normalizeHeader(String(c || '')));
+                            if (row.some(c => /matricul|ni|identif|dossier|numero/.test(c))) { headerRow = rows[r]; break; }
+                        }
+                        if (!headerRow) headerRow = rows[0];
+                        accomHeaders = (headerRow || []).map(h => h === undefined ? '' : String(h));
+                    }
+                } else {
+                    const text = await file.text();
+                    const raw = text.split(/\r?\n/).filter(Boolean);
+                    if (raw.length) {
+                        const first = raw[0];
+                        const sep = first.includes(';') ? ';' : (first.includes(',') ? ',' : ',');
+                        accomHeaders = first.split(sep).map(h => h === undefined ? '' : h.toString().trim());
+                    }
+                }
+            } catch (err) {
+                console.error('Erreur lecture accom:', err);
+            }
+
+            if (accomHeaders.length === 0) {
+                if (mapDiv) try { mapDiv.style.display = 'none'; } catch(e){}
+                console.log('onAccomFileSelected: no headers found');
+                return;
+            }
+
+            // populate select
+            const none = document.createElement('option'); none.value = ''; none.textContent = '-- choisir colonne --'; select.appendChild(none);
+            accomHeaders.forEach((h,idx) => {
+                const o = document.createElement('option'); o.value = String(idx); o.textContent = `${idx+1}: ${h}`; select.appendChild(o);
+            });
+
+            // populate start/end time selects
+            for (const sel of [accomStartSel, accomEndSel]) {
+                if (!sel) continue;
+                const noneOpt = document.createElement('option'); noneOpt.value = ''; noneOpt.textContent = '-- aucune --'; sel.appendChild(noneOpt);
+                accomHeaders.forEach((h,idx) => {
+                    const o = document.createElement('option'); o.value = String(idx); o.textContent = `${idx+1}: ${h}`; sel.appendChild(o);
+                });
+            }
+
+            // default to matricule-like header if present
+            const norm = accomHeaders.map(h => normalizeHeader(h));
+            const defaultIdx = norm.findIndex(h => /matricul|ni|identif|dossier|numero/.test(h));
+            if (defaultIdx >= 0) select.value = String(defaultIdx);
+
+            // default start/end columns if headers contain debut/fin
+            const defaultStartIdx = norm.findIndex(h => /debut|début|start|heure.*debut|heure.*début/.test(h));
+            const defaultEndIdx = norm.findIndex(h => /fin|end|heure.*fin/.test(h));
+            if (defaultStartIdx >= 0 && accomStartSel) accomStartSel.value = String(defaultStartIdx);
+            if (defaultEndIdx >= 0 && accomEndSel) accomEndSel.value = String(defaultEndIdx);
+
+            try { if (mapDiv) mapDiv.style.display = 'block'; } catch(e) { console.warn('could not show accomMap', e); }
+
+            // helper to get current column indices
+            const getAccomColIndices = () => ({
+                niCol: select.value === '' ? null : parseInt(select.value, 10),
+                startCol: (accomStartSel && accomStartSel.value !== '') ? parseInt(accomStartSel.value, 10) : null,
+                endCol: (accomEndSel && accomEndSel.value !== '') ? parseInt(accomEndSel.value, 10) : null
+            });
+
+            // when user changes selection, re-read selected columns
+            const rebuildAccom = async () => {
+                const cols = getAccomColIndices();
+                try { await buildAccomNISet(file, cols.niCol, cols.startCol, cols.endCol); } catch(e) { console.error('buildAccomNISet error on change', e); }
+            };
+            select.addEventListener('change', rebuildAccom, { once: false });
+            if (accomStartSel) accomStartSel.addEventListener('change', rebuildAccom, { once: false });
+            if (accomEndSel) accomEndSel.addEventListener('change', rebuildAccom, { once: false });
+
+            // build initial set
+            try { const cols = getAccomColIndices(); await buildAccomNISet(file, cols.niCol, cols.startCol, cols.endCol); } catch(e) { console.error('initial buildAccomNISet failed', e); }
+        }
+
+        async function buildAccomNISet(file, colIdx, startColIdx, endColIdx) {
+            accomNISet = new Set();
+            accomTimeMap = new Map();
+            if (!file || colIdx === null || typeof colIdx === 'undefined') return;
+
+            // Helper: convert Excel serial time or date-time to HH:MM string
+            function excelTimeToHHMM(val) {
+                if (val === undefined || val === null) return '';
+                // If it's a number (Excel serial time fraction, e.g. 0.375 = 09:00)
+                if (typeof val === 'number') {
+                    // Could be a fractional day (time only) or a full date serial
+                    let frac = val;
+                    if (frac > 1) frac = frac - Math.floor(frac); // strip date part
+                    const totalMinutes = Math.round(frac * 24 * 60);
+                    const hh = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+                    const mm = String(totalMinutes % 60).padStart(2, '0');
+                    return `${hh}:${mm}`;
+                }
+                // If it's already a string, try to extract HH:MM
+                const s = String(val).trim();
+                const m = s.match(/(\d{1,2})[h:](\d{2})/);
+                if (m) return m[1].padStart(2, '0') + ':' + m[2];
+                return s;
+            }
+
+            try {
+                if (file.name.toLowerCase().endsWith('.xlsx')) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    // find the header row index used earlier
+                    let headerRowIndex = 0;
+                    for (let r = 0; r < Math.min(rows.length, 10); r++) {
+                        const row = (rows[r] || []).map(c => normalizeHeader(String(c || '')));
+                        if (row.some(c => /matricul|ni|identif|dossier|numero/.test(c))) { headerRowIndex = r; break; }
+                    }
+                    for (let r = headerRowIndex + 1; r < rows.length; r++) {
+                        const row = rows[r] || [];
+                        const v = row[colIdx];
+                        if (v !== undefined && v !== null && String(v).trim() !== '') {
+                            const ni = String(v).trim();
+                            accomNISet.add(ni);
+                            const sTime = (startColIdx !== null && startColIdx !== undefined) ? excelTimeToHHMM(row[startColIdx]) : '';
+                            const eTime = (endColIdx !== null && endColIdx !== undefined) ? excelTimeToHHMM(row[endColIdx]) : '';
+                            accomTimeMap.set(ni, { start: sTime, end: eTime });
+                        }
+                    }
+                } else {
+                    const text = await file.text();
+                    const raw = text.split(/\r?\n/);
+                    if (raw.length) {
+                        const headerLine = raw[0];
+                        const sep = headerLine.includes(';') ? ';' : (headerLine.includes(',') ? ',' : ',');
+                        for (let i = 1; i < raw.length; i++) {
+                            const parts = raw[i].split(sep);
+                            const v = parts[colIdx];
+                            if (v !== undefined && v !== null && String(v).trim() !== '') {
+                                const ni = String(v).trim();
+                                accomNISet.add(ni);
+                                const sTime = (startColIdx !== null && startColIdx !== undefined && parts[startColIdx]) ? String(parts[startColIdx]).trim() : '';
+                                const eTime = (endColIdx !== null && endColIdx !== undefined && parts[endColIdx]) ? String(parts[endColIdx]).trim() : '';
+                                accomTimeMap.set(ni, { start: sTime, end: eTime });
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Erreur buildAccomNISet:', err);
+            }
+        }
+
+        let filterHeaders = [];
+
+        async function onFilterFilesSelected(e) {
+            const files = Array.from(e.target.files || []);
+            filterExcludeNISet = new Set();
+            const filterMapDiv = document.getElementById('filterMap');
+            // Place the filter mapping UI in the folder upload section
+            try {
+                const folderInput = document.getElementById('folderInput');
+                const folderSection = folderInput ? folderInput.closest('.upload-section') : null;
+                if (folderSection && filterMapDiv) {
+                    folderSection.parentNode.insertBefore(filterMapDiv, folderSection.nextSibling.nextSibling || folderSection.nextSibling);
+                }
+            } catch (err) {
+                console.warn('Impossible de repositionner filterMap:', err);
+            }
+            const resultDiv = document.getElementById('filterResult');
+            const niSelect = document.getElementById('filterNiSelect');
+            const typeSelect = document.getElementById('filterTypeSelect');
+            if (!files || files.length === 0) { if (filterMapDiv) filterMapDiv.style.display = 'none'; return; }
+
+            // Read headers from the first file to populate selects
+            let headers = [];
+            const firstFile = files[0];
+            try {
+                if (firstFile.name.toLowerCase().endsWith('.xlsx')) {
+                    const arrayBuffer = await firstFile.arrayBuffer();
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                    if (rows && rows.length) {
+                        // header is on line 4 (index 3) — ignore first 3 lines
+                        const headerRow = rows[3] || rows[0];
+                        headers = (headerRow || []).map(h => h === undefined ? '' : String(h));
+                    }
+                } else {
+                    const text = await firstFile.text();
+                    const raw = text.split(/\r?\n/).filter(Boolean);
+                    if (raw.length > 3) {
+                        const headerLine = raw[3];
+                        const sep = headerLine.includes(';') ? ';' : (headerLine.includes(',') ? ',' : ',');
+                        headers = headerLine.split(sep).map(h => h === undefined ? '' : h.toString().trim());
+                    } else if (raw.length) {
+                        headers = raw[0].split(',').map(h=>h.trim());
+                    }
+                }
+            } catch (err) {
+                console.error('Erreur lecture headers filter file:', err);
+            }
+
+            filterHeaders = headers;
+            console.log('filter headers:', filterHeaders);
+            if (!filterHeaders || filterHeaders.length === 0) {
+                // fallback: still build set using detection logic
+                await buildFilterExcludeNISet(files, null, null);
+                if (resultDiv) { resultDiv.style.display = 'block'; resultDiv.textContent = `Fichiers: ${files.length} — étudiants exclus détectés: ${filterExcludeNISet.size}`; }
+                return;
+            }
+
+            // populate selects
+            try {
+                populateSelect('filterNiSelect', filterHeaders);
+                populateSelect('filterTypeSelect', filterHeaders);
+            } catch (err) { console.error('populateSelect for filter selects failed', err); }
+            // create or reset the keep-types multi-select inside the filterMap
+            let keepSelect = document.getElementById('filterKeepSelect');
+            let keepLabel = document.getElementById('filterKeepLabel');
+            if (!keepLabel) {
+                keepLabel = document.createElement('label');
+                keepLabel.id = 'filterKeepLabel';
+                keepLabel.textContent = 'Conserver les valeurs de Type:';
+                keepLabel.style.display = 'block';
+                keepLabel.style.marginTop = '8px';
+                document.getElementById('filterMap').appendChild(keepLabel);
+            }
+            if (!keepSelect) {
+                keepSelect = document.createElement('select');
+                keepSelect.id = 'filterKeepSelect';
+                keepSelect.multiple = true;
+                keepSelect.size = 6;
+                keepSelect.style.width = '100%';
+                keepSelect.style.marginTop = '4px';
+                document.getElementById('filterMap').appendChild(keepSelect);
+            }
+            try { if (filterMapDiv) filterMapDiv.style.display = 'block'; } catch(e) { console.warn('could not show filterMapDiv', e); }
+
+            // default selections
+            const norm = filterHeaders.map(h => normalizeHeader(h));
+            const defaultNi = norm.findIndex(h => /ni|matricul|identif|dossier|numero|num/.test(h));
+            const defaultType = norm.findIndex(h => /typeinscription|type_inscription|type inscription|type/.test(h));
+            // Prefer fixed defaults: column 4 (index 3) for NI and column 6 (index 5) for TypeInscription when available
+            const niSelectEl = document.getElementById('filterNiSelect');
+            const typeSelectEl = document.getElementById('filterTypeSelect');
+            if (niSelectEl && niSelectEl.options.length > 3) {
+                niSelectEl.value = '3';
+            } else if (defaultNi >= 0) {
+                niSelectEl.value = String(defaultNi);
+            }
+            if (typeSelectEl && typeSelectEl.options.length > 5) {
+                typeSelectEl.value = '5';
+            } else if (defaultType >= 0) {
+                typeSelectEl.value = String(defaultType);
+            }
+
+            // when either select changes, rebuild the exclusion set
+            const parseSel = (s) => (s && s.value !== '' ? parseInt(s.value, 10) : null);
+            try { niSelect.addEventListener('change', () => buildFilterExcludeNISet(files, parseSel(niSelect), parseSel(typeSelect))); } catch(e) { console.error('niSelect listener failed', e); }
+            // when type column changes, re-collect available Type values and update keep-select, then rebuild exclusion set
+            try {
+                typeSelect.addEventListener('change', async () => {
+                const selTypeIdx = parseSel(typeSelect);
+                // collect types for the newly selected column
+                const typesForCol = await collectFilterTypes(files, selTypeIdx);
+                // repopulate keepSelect preserving previous selections when possible
+                const keepSelectEl = document.getElementById('filterKeepSelect');
+                if (keepSelectEl) {
+                    const prevSelected = new Set(Array.from(keepSelectEl.selectedOptions).map(o => o.value));
+                    keepSelectEl.innerHTML = '';
+                    const addedTypes = new Set();
+                    typesForCol.forEach(t => {
+                        const norm = normalizeHeader(t || '');
+                        if (addedTypes.has(norm)) return;
+                        addedTypes.add(norm);
+                        const o = document.createElement('option');
+                        o.value = norm;
+                        o.textContent = String(t || '').trim() || '(vide)';
+                        if (prevSelected.has(norm) || (prevSelected.size === 0 && norm === 'campus ul')) o.selected = true;
+                        keepSelectEl.appendChild(o);
+                    });
+                    // ensure something is selected
+                    if (keepSelectEl.selectedOptions.length === 0 && keepSelectEl.options.length > 0) keepSelectEl.options[0].selected = true;
+                    // update filterKeepSet
+                    filterKeepSet = new Set(Array.from(keepSelectEl.selectedOptions).map(o => o.value));
+                }
+                // rebuild exclusion set with updated keepSet
+                buildFilterExcludeNISet(files, parseSel(niSelect), selTypeIdx);
+            });
+            } catch(e) { console.error('typeSelect listener setup failed', e); }
+
+            // initial build using the actual selected Type index (may have been set to column 6 default)
+            const parseSelLocal = (s) => (s && s.value !== '' ? parseInt(s.value, 10) : null);
+            const selNiIdx = parseSelLocal(document.getElementById('filterNiSelect'));
+            const selTypeIdx = parseSelLocal(document.getElementById('filterTypeSelect'));
+            await buildFilterExcludeNISet(files, selNiIdx, selTypeIdx);
+            // collect distinct type values for the actually selected Type column and populate the keep-select
+            const types = await collectFilterTypes(files, selTypeIdx);
+            // clear existing options
+            keepSelect.innerHTML = '';
+            // present the types (use normalized value as option value, display original)
+            const added = new Set();
+            types.forEach(t => {
+                const norm = normalizeHeader(t || '');
+                if (added.has(norm)) return;
+                added.add(norm);
+                const o = document.createElement('option');
+                o.value = norm;
+                o.textContent = String(t || '').trim() || '(vide)';
+                keepSelect.appendChild(o);
+            });
+            // default-select 'campus ul' if present, else select the first option
+            let haveCampus = Array.from(keepSelect.options).some(o => o.value === 'campus ul');
+            if (haveCampus) {
+                for (const o of keepSelect.options) o.selected = (o.value === 'campus ul');
+                filterKeepSet = new Set(['campus ul']);
+            } else if (keepSelect.options.length > 0) {
+                keepSelect.options[0].selected = true;
+                filterKeepSet = new Set([keepSelect.options[0].value]);
+            } else {
+                filterKeepSet = new Set(['campus ul']);
+            }
+
+            // when keep-select changes, rebuild exclusion set
+            try {
+                keepSelect.addEventListener('change', () => {
+                    const sel = Array.from(keepSelect.selectedOptions).map(o => o.value);
+                    filterKeepSet = new Set(sel.length > 0 ? sel : ['campus ul']);
+                    buildFilterExcludeNISet(files, parseInt(document.getElementById('filterNiSelect').value || '-1',10) >=0 ? parseInt(document.getElementById('filterNiSelect').value,10) : null,
+                        parseInt(document.getElementById('filterTypeSelect').value || '-1',10) >=0 ? parseInt(document.getElementById('filterTypeSelect').value,10) : null);
+                }, { once: false });
+            } catch(e) { console.error('keepSelect listener setup failed', e); }
+
+            if (resultDiv) { resultDiv.style.display = 'block'; resultDiv.textContent = `Fichiers: ${files.length} — étudiants exclus détectés: ${filterExcludeNISet.size}`; }
+        }
+
+        async function buildFilterExcludeNISet(files, niColIdx, typeColIdx) {
+            filterExcludeNISet = new Set();
+            function normNI(v) { return v === undefined || v === null ? '' : String(v).trim(); }
+            for (const file of files) {
+                try {
+                    if (file.name.toLowerCase().endsWith('.xlsx')) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                        if (!rows || rows.length === 0) continue;
+
+                        // header is on line 4 (index 3) — ignore first 3 lines
+                        const headerRowIndex = rows.length > 3 ? 3 : (rows.length - 1);
+                        const headerRow = (rows[headerRowIndex] || []).map(h => h === undefined ? '' : String(h));
+                        // find column indices in this file by matching normalized header text
+                        const normHeaderRow = headerRow.map(h => normalizeHeader(h));
+                        let niIdx = -1, typeIdx = -1;
+                        if (niColIdx !== null && niColIdx !== undefined && filterHeaders[niColIdx]) {
+                            const target = normalizeHeader(filterHeaders[niColIdx]);
+                            niIdx = normHeaderRow.findIndex(h => h === target);
+                            if (niIdx === -1) niIdx = normHeaderRow.findIndex(h => h.includes(target) || target.includes(h));
+                        }
+                        if (niIdx === -1) niIdx = detectSingleColumn(headerRow, ['ni','matricule','identifiant','id','numero','num','dossier']);
+
+                        if (typeColIdx !== null && typeColIdx !== undefined && filterHeaders[typeColIdx]) {
+                            const targetT = normalizeHeader(filterHeaders[typeColIdx]);
+                            typeIdx = normHeaderRow.findIndex(h => h === targetT);
+                            if (typeIdx === -1) typeIdx = normHeaderRow.findIndex(h => h.includes(targetT) || targetT.includes(h));
+                        }
+                        if (typeIdx === -1) typeIdx = detectSingleColumn(headerRow, ['typeexamen','typeexamen','typeinscription','type inscription','type','type_inscription']);
+
+                        const startRow = Math.max(4, headerRowIndex + 1);
+                        const keepSet = (filterKeepSet && filterKeepSet.size > 0) ? filterKeepSet : new Set(['campus ul']);
+                        for (let r = startRow; r < rows.length; r++) {
+                            const row = rows[r] || [];
+                            const typeValRaw = (typeIdx >=0 ? row[typeIdx] : undefined);
+                            const typeVal = typeValRaw === undefined || typeValRaw === null ? '' : String(typeValRaw).trim();
+                            if (!typeVal) continue;
+                            const normType = normalizeHeader(typeVal);
+                            // exclude when type is explicitly present and NOT in the keep-set
+                            if (normType && !keepSet.has(normType)) {
+                                const niValRaw = (niIdx >= 0 ? row[niIdx] : undefined);
+                                const niVal = normNI(niValRaw);
+                                if (niVal) filterExcludeNISet.add(niVal);
+                            }
+                        }
+                    } else {
+                        const text = await file.text();
+                        const raw = text.split(/\r?\n/);
+                        if (raw.length <= 4) continue;
+                        const headerLine = raw[3] || '';
+                        const sep = headerLine.includes(';') ? ';' : (headerLine.includes(',') ? ',' : ',');
+                        const headerParts = headerLine.split(sep).map(h => (h===undefined?'':h.trim()));
+                        const normHeaderParts = headerParts.map(h => normalizeHeader(h));
+
+                        let niIdx = -1, typeIdx = -1;
+                        if (niColIdx !== null && niColIdx !== undefined && filterHeaders[niColIdx]) {
+                            const target = normalizeHeader(filterHeaders[niColIdx]);
+                            niIdx = normHeaderParts.findIndex(h => h === target);
+                            if (niIdx === -1) niIdx = normHeaderParts.findIndex(h => h.includes(target) || target.includes(h));
+                        }
+                        if (niIdx === -1) niIdx = detectSingleColumn(headerParts, ['ni','matricule','identifiant','id','numero','num','dossier']);
+
+                        if (typeColIdx !== null && typeColIdx !== undefined && filterHeaders[typeColIdx]) {
+                            const targetT = normalizeHeader(filterHeaders[typeColIdx]);
+                            typeIdx = normHeaderParts.findIndex(h => h === targetT);
+                            if (typeIdx === -1) typeIdx = normHeaderParts.findIndex(h => h.includes(targetT) || targetT.includes(h));
+                        }
+                        if (typeIdx === -1) typeIdx = detectSingleColumn(headerParts, ['typeexamen','typeinscription','type inscription','type','type_inscription']);
+
+                        const keepSet = (filterKeepSet && filterKeepSet.size > 0) ? filterKeepSet : new Set(['campus ul']);
+                        for (let i = 4; i < raw.length; i++) {
+                            const line = raw[i] || ''; if (!line.trim()) continue;
+                            const parts = line.split(sep);
+                            const typeValRaw = (typeIdx >= 0 ? parts[typeIdx] : undefined);
+                            const typeVal = typeValRaw === undefined || typeValRaw === null ? '' : String(typeValRaw).trim();
+                            if (!typeVal) continue;
+                            const normType = normalizeHeader(typeVal);
+                            if (normType && !keepSet.has(normType)) {
+                                const niValRaw = (niIdx >= 0 ? parts[niIdx] : undefined);
+                                const niVal = normNI(niValRaw);
+                                if (niVal) filterExcludeNISet.add(niVal);
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error('Erreur lecture filter file', file.name, err);
+                }
+            }
+            // update result div if present
+            const resultDiv = document.getElementById('filterResult');
+            if (resultDiv) { resultDiv.style.display = 'block'; resultDiv.textContent = `Étudiants exclus détectés: ${filterExcludeNISet.size}`; }
+        }
+
+        // Parcours les fichiers de filtre pour collecter les valeurs distinctes trouvées
+        async function collectFilterTypes(files, typeColIdx) {
+            const found = new Set();
+            for (const file of files) {
+                try {
+                    if (file.name.toLowerCase().endsWith('.xlsx')) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                        if (!rows || rows.length === 0) continue;
+                        const headerRowIndex = rows.length > 3 ? 3 : (rows.length - 1);
+                        const headerRow = (rows[headerRowIndex] || []).map(h => h === undefined ? '' : String(h));
+                        const normHeaderRow = headerRow.map(h => normalizeHeader(h));
+                        let typeIdx = -1;
+                        if (typeColIdx !== null && typeColIdx !== undefined && filterHeaders[typeColIdx]) {
+                            const targetT = normalizeHeader(filterHeaders[typeColIdx]);
+                            typeIdx = normHeaderRow.findIndex(h => h === targetT);
+                            if (typeIdx === -1) typeIdx = normHeaderRow.findIndex(h => h.includes(targetT) || targetT.includes(h));
+                        }
+                        if (typeIdx === -1) typeIdx = detectSingleColumn(headerRow, ['typeexamen','typeexamen','typeinscription','type inscription','type','type_inscription']);
+                        const startRow = Math.max(4, headerRowIndex + 1);
+                        for (let r = startRow; r < rows.length; r++) {
+                            const row = rows[r] || [];
+                            const typeValRaw = (typeIdx >=0 ? row[typeIdx] : undefined);
+                            const typeVal = typeValRaw === undefined || typeValRaw === null ? '' : String(typeValRaw).trim();
+                            if (typeVal) found.add(typeVal);
+                        }
+                    } else {
+                        const text = await file.text();
+                        const raw = text.split(/\r?\n/);
+                        if (raw.length <= 4) continue;
+                        const headerLine = raw[3] || '';
+                        const sep = headerLine.includes(';') ? ';' : (headerLine.includes(',') ? ',' : ',');
+                        const headerParts = headerLine.split(sep).map(h => (h===undefined?'':h.trim()));
+                        const normHeaderParts = headerParts.map(h => normalizeHeader(h));
+                        let typeIdx = -1;
+                        if (typeColIdx !== null && typeColIdx !== undefined && filterHeaders[typeColIdx]) {
+                            const targetT = normalizeHeader(filterHeaders[typeColIdx]);
+                            typeIdx = normHeaderParts.findIndex(h => h === targetT);
+                            if (typeIdx === -1) typeIdx = normHeaderParts.findIndex(h => h.includes(targetT) || targetT.includes(h));
+                        }
+                        if (typeIdx === -1) typeIdx = detectSingleColumn(headerParts, ['typeexamen','typeinscription','type inscription','type','type_inscription']);
+                        for (let i = 4; i < raw.length; i++) {
+                            const line = raw[i] || ''; if (!line.trim()) continue;
+                            const parts = line.split(sep);
+                            const typeValRaw = (typeIdx >= 0 ? parts[typeIdx] : undefined);
+                            const typeVal = typeValRaw === undefined || typeValRaw === null ? '' : String(typeValRaw).trim();
+                            if (typeVal) found.add(typeVal);
+                        }
+                    }
+                } catch (err) {
+                    console.error('Erreur lecture filter file for types', file.name, err);
+                }
+            }
+            return Array.from(found);
+        }
+
+        function populateAllSelects(headers) {
+            const ids = ['nameCombinedSelect','firstNameSelect','lastNameSelect','niSelect','emailSelect'];
+            ids.forEach(id => populateSelect(id, headers));
+            // enable/disable according to current mode (guard existence)
+            const nameSeparateEl = document.getElementById('nameSeparate');
+            const separate = nameSeparateEl ? nameSeparateEl.checked : true;
+            const nameCombinedEl = document.getElementById('nameCombinedSelect'); if (nameCombinedEl) nameCombinedEl.disabled = separate;
+            const firstNameEl = document.getElementById('firstNameSelect'); if (firstNameEl) firstNameEl.disabled = !separate;
+            const lastNameEl = document.getElementById('lastNameSelect'); if (lastNameEl) lastNameEl.disabled = !separate;
+        }
+
+        function populateSelect(id, headers) {
+            const sel = document.getElementById(id);
+            if (!sel) { console.warn('populateSelect: element not found', id); return; }
+            sel.innerHTML = '';
+            headers.forEach((h, idx) => {
+                const o = document.createElement('option');
+                o.value = String(idx);
+                o.textContent = `${idx+1}: ${h}`;
+                sel.appendChild(o);
+            });
+            const none = document.createElement('option');
+            none.value = '';
+            none.textContent = '-- non défini --';
+            sel.insertBefore(none, sel.firstChild);
+        }
+
+        function updateMappingFromUI() {
+            const separate = document.getElementById('nameSeparate').checked;
+            columnMapping.nameMode = separate ? 'separate' : 'combined';
+            columnMapping.nameIdx = document.getElementById('nameCombinedSelect').value === '' ? null : parseInt(document.getElementById('nameCombinedSelect').value,10);
+            columnMapping.firstIdx = document.getElementById('firstNameSelect').value === '' ? null : parseInt(document.getElementById('firstNameSelect').value,10);
+            columnMapping.lastIdx = document.getElementById('lastNameSelect').value === '' ? null : parseInt(document.getElementById('lastNameSelect').value,10);
+            columnMapping.niIdx = document.getElementById('niSelect').value === '' ? null : parseInt(document.getElementById('niSelect').value,10);
+            const emailSelEl = document.getElementById('emailSelect');
+            columnMapping.emailIdx = (emailSelEl && emailSelEl.value !== '') ? parseInt(emailSelEl.value, 10) : null;
+        }
+
+        function parseCSV(csvText) {
+            csvText = csvText.replace(/^\uFEFF/, '');
+            const rawLines = csvText.split(/\r?\n/);
+            const students = [];
+            if (rawLines.length <= 5) return students;
+
+            // Détecter séparateur à partir de la ligne d'en-tête (ligne 6)
+            const headerLine = rawLines[5] || '';
+            const sep = headerLine.includes(';') ? ';' : (headerLine.includes(',') ? ',' : ',');
+            const headers = headerLine.split(sep).map(h => (h === undefined ? '' : h.trim()));
+
+            const detection = detectNameColumn(headers);
+
+            const niKeywords = ['ni','matricule','identifiant','id','numero','num','matricule'];
+            const niIndex = detectSingleColumn(headers, niKeywords);
+
+            // Afficher le résultat de la détection pour l'utilisateur (nom + NI)
+            const mappingLines = [];
+            if (detection.type !== 'none') {
+                mappingLines.push(`<strong>Détection nom:</strong> ${detection.match} (type: ${detection.type}, score: ${Math.round(detection.score*100)}%)`);
+            } else {
+                mappingLines.push('<strong>Détection nom:</strong> non trouvée — utilisation des positions par défaut');
+            }
+            mappingLines.push(`<strong>NI:</strong> ${niIndex>=0 ? headers[niIndex] : 'non détecté'}`);
+            const detDiv = document.getElementById('detectionResult');
+            if (detDiv) detDiv.innerHTML = mappingLines.join('<br>');
+
+            // Fallback indices par défaut
+            const fallback = { nameIdx: 0, niIdx: 1 };
+            const nameIsSeparate = (detection.type === 'separate' && detection.indices.length === 2);
+
+            for (let i = 6; i < rawLines.length; i++) {
+                const line = rawLines[i] || '';
+                if (!line.trim()) continue;
+                const parts = line.split(sep);
+
+                let name = '';
+                if (columnMapping.nameMode === 'separate') {
+                    const a = (columnMapping.firstIdx !== null ? parts[columnMapping.firstIdx] : '') || '';
+                    const b = (columnMapping.lastIdx !== null ? parts[columnMapping.lastIdx] : '') || '';
+                    name = (a + ' ' + b).trim();
+                } else {
+                    if (columnMapping.nameIdx !== null) {
+                        name = (parts[columnMapping.nameIdx] || '').trim();
+                    } else if (detection.indices.length === 1 && detection.indices[0] >= 0) {
+                        name = (parts[detection.indices[0]] || '').trim();
+                    } else {
+                        name = (parts[fallback.nameIdx] || '').trim();
+                    }
+                }
+
+                const ni = (columnMapping.niIdx !== null ? (parts[columnMapping.niIdx] || '') : (niIndex >= 0 ? (parts[niIndex] || '') : (parts[fallback.niIdx] || ''))).trim();
+                const email = (columnMapping.emailIdx !== null ? (parts[columnMapping.emailIdx] || '') : '').trim();
+                const table = '';
+                const local = '';
+                const section = '';
+
+                if (name || ni) {
+                    students.push({ name: name || ni, ni, table, local, section, email });
+                }
+            }
+
+            console.log('Étudiants parsés:', students);
+            return students;
+        }
+
+        function toggleListFields() {
+                    // legacy: removed listOption select; no-op
+        }
+
+        async function generateAttendancePDF(studentsGroup, groupBy, groupValue, evalName, courseName, startTime, endTime) {
+            const pdfDoc = await PDFDocument.create();
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+            function getAttendanceDisplayName(student) {
+                const first = String(student.first || '').trim();
+                const last = String(student.last || '').trim();
+                if (last && first) return `${last}, ${first}`;
+                if (last) return last;
+                if (first) return first;
+
+                const full = String(student.name || '').trim();
+                if (!full) return '';
+                const parts = full.split(/\s+/).filter(Boolean);
+                if (parts.length <= 1) return full;
+                const inferredLast = parts[parts.length - 1];
+                const inferredFirst = parts.slice(0, parts.length - 1).join(' ');
+                return `${inferredLast}, ${inferredFirst}`;
+            }
+
+            // Trier : par numéro de table (croissant) si par local, alphabétique si par section
+            const sorted = [...studentsGroup].sort((a, b) => {
+                if (groupBy === 'local') {
+                    return parseInt(a.table, 10) - parseInt(b.table, 10);
+                }
+                return getAttendanceDisplayName(a).localeCompare(getAttendanceDisplayName(b), 'fr', { sensitivity: 'base' });
+            });
+
+            // Configuration du tableau
+            const pageWidth = 612; // Lettre portrait
+            const pageHeight = 792;
+            const margin = 40;
+            const titleSize = 13;
+            const headerSize = 10;
+            const rowSize = 10;
+            const rowHeight = 22;
+            const headerHeight = 25;
+            const colWidths = [190, 75, 55, 75, 65]; // Nom, Matricule, Table, Section/Local, Présence
+            const tableTop = pageHeight - margin - 45;
+
+            // En-têtes selon le mode
+            let headers, fourthColLabel;
+            if (groupBy === 'local') {
+                headers = ['Nom', 'Matricule', 'Table', 'Section', 'Présence'];
+                fourthColLabel = 'section';
+            } else {
+                headers = ['Nom', 'Matricule', 'Table', 'Local', 'Présence'];
+                fourthColLabel = 'local';
+            }
+
+            // Titre
+            const titleLabel = groupBy === 'local' ? 'Local' : 'Section';
+            const timeStr = (startTime && endTime) ? ` (${startTime} - ${endTime})` : (startTime ? ` (début: ${startTime})` : (endTime ? ` (fin: ${endTime})` : ''));
+            const title = `Feuille de présence - ${evalName} - ${courseName}${timeStr} - ${titleLabel} ${groupValue}`;
+
+            // Nombre d'étudiants par page
+            const rowsPerPage = Math.floor((tableTop - margin - headerHeight) / rowHeight);
+
+            let pageIndex = 0;
+            let studentIndex = 0;
+
+            while (studentIndex < sorted.length) {
+                const page = pdfDoc.addPage([pageWidth, pageHeight]);
+                let y = pageHeight - margin;
+
+                // Titre
+                const titleWidth = fontBold.widthOfTextAtSize(title, titleSize);
+                page.drawText(title, {
+                    x: (pageWidth - titleWidth) / 2,
+                    y: y,
+                    size: titleSize,
+                    font: fontBold,
+                    color: rgb(0, 0, 0),
+                });
+                y -= 35;
+
+                // Calculer le début X du tableau (centré)
+                const totalTableWidth = colWidths.reduce((a, b) => a + b, 0);
+                const tableX = (pageWidth - totalTableWidth) / 2;
+
+                // En-tête du tableau - fond gris
+                page.drawRectangle({
+                    x: tableX,
+                    y: y - headerHeight + 5,
+                    width: totalTableWidth,
+                    height: headerHeight,
+                    color: rgb(0.85, 0.85, 0.85),
+                });
+
+                // Dessiner les en-têtes
+                let colX = tableX;
+                for (let c = 0; c < headers.length; c++) {
+                    page.drawText(headers[c], {
+                        x: colX + 5,
+                        y: y - 12,
+                        size: headerSize,
+                        font: fontBold,
+                        color: rgb(0, 0, 0),
+                    });
+                    colX += colWidths[c];
+                }
+
+                // Ligne sous l'en-tête
+                y -= headerHeight;
+
+                // Lignes de données
+                const rowsOnThisPage = Math.min(rowsPerPage, sorted.length - studentIndex);
+                for (let r = 0; r < rowsOnThisPage; r++) {
+                    const student = sorted[studentIndex];
+                    const rowY = y - (r * rowHeight);
+
+                    // Alternance de couleur de fond
+                    if (r % 2 === 0) {
+                        page.drawRectangle({
+                            x: tableX,
+                            y: rowY - rowHeight + 5,
+                            width: totalTableWidth,
+                            height: rowHeight,
+                            color: rgb(0.95, 0.95, 1),
+                        });
+                    }
+
+                    // Données
+                    const rowData = [
+                        getAttendanceDisplayName(student),
+                        student.ni,
+                        student.table,
+                        student[fourthColLabel],
+                        '' // case vide pour présence
+                    ];
+
+                    colX = tableX;
+                    for (let c = 0; c < rowData.length; c++) {
+                        if (c === 4) {
+                            // Case à cocher vide (petit carré)
+                            page.drawRectangle({
+                                x: colX + 25,
+                                y: rowY - 12,
+                                width: 14,
+                                height: 14,
+                                borderColor: rgb(0, 0, 0),
+                                borderWidth: 1,
+                                color: rgb(1, 1, 1),
+                            });
+                        } else {
+                            // Tronquer le texte si trop long
+                            let text = rowData[c];
+                            const maxWidth = colWidths[c] - 10;
+                            while (font.widthOfTextAtSize(text, rowSize) > maxWidth && text.length > 1) {
+                                text = text.slice(0, -1);
+                            }
+                            page.drawText(text, {
+                                x: colX + 5,
+                                y: rowY - 12,
+                                size: rowSize,
+                                font,
+                                color: rgb(0, 0, 0),
+                            });
+                        }
+                        colX += colWidths[c];
+                    }
+
+                    // Lignes horizontales
+                    page.drawLine({
+                        start: { x: tableX, y: rowY - rowHeight + 5 },
+                        end: { x: tableX + totalTableWidth, y: rowY - rowHeight + 5 },
+                        thickness: 0.5,
+                        color: rgb(0.8, 0.8, 0.8),
+                    });
+
+                    studentIndex++;
+                }
+
+                // Bordures verticales du tableau
+                const tableBottom = y - (rowsOnThisPage * rowHeight) + 5;
+                const tableTopY = y + 5;
+                colX = tableX;
+                for (let c = 0; c <= colWidths.length; c++) {
+                    page.drawLine({
+                        start: { x: colX, y: tableTopY },
+                        end: { x: colX, y: tableBottom },
+                        thickness: 0.5,
+                        color: rgb(0.6, 0.6, 0.6),
+                    });
+                    if (c < colWidths.length) colX += colWidths[c];
+                }
+
+                // Bordure extérieure
+                page.drawRectangle({
+                    x: tableX,
+                    y: tableBottom,
+                    width: totalTableWidth,
+                    height: tableTopY - tableBottom,
+                    borderColor: rgb(0.4, 0.4, 0.4),
+                    borderWidth: 1,
+                });
+
+                pageIndex++;
+            }
+
+            return await pdfDoc.save();
+        }
+
+        function sanitizeFileName(name) {
+            // Remplacer les caractères spéciaux par des underscores
+            return name
+                .replace(/[^a-zA-Z0-9À-ÿ\-]/g, '_')
+                .replace(/_+/g, '_')
+                .replace(/^_|_$/g, '');
+        }
+
+        function buildFileBase(student) {
+            const name = (student && student.name) ? String(student.name).trim() : '';
+            let first = student && student.first ? String(student.first).trim() : '';
+            let last = student && student.last ? String(student.last).trim() : '';
+
+            if (!last && name) {
+                const parts = name.split(/\s+/).filter(Boolean);
+                if (parts.length > 1) {
+                    last = parts[parts.length - 1];
+                    first = parts.slice(0, parts.length - 1).join(' ');
+                } else {
+                    last = parts[0] || '';
+                    first = '';
+                }
+            }
+
+            const parts = [];
+            if (last) parts.push(last);
+            if (first) parts.push(first);
+            const base = parts.join('_') || (student && student.ni ? String(student.ni) : 'student');
+            return sanitizeFileName(base);
+        }
+
+        // Permettre le glisser-déposer sur le sélecteur de dossier
+        {
+            const input = document.getElementById('folderInput');
+            if (input) {
+                const parent = input.parentElement;
+
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    parent.addEventListener(eventName, preventDefaults, false);
+                });
+
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    parent.addEventListener(eventName, () => {
+                        input.style.borderColor = '#764ba2';
+                        input.style.background = '#f0f1ff';
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    parent.addEventListener(eventName, () => {
+                        input.style.borderColor = '#667eea';
+                        input.style.background = '#f8f9ff';
+                    }, false);
+                });
+            }
+        }
+
+        // Robust click wrapper for the generate button to surface errors
+        const generateBtnEl = document.getElementById('generateBtn');
+        if (generateBtnEl) {
+            generateBtnEl.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                try {
+                    // immediate visual feedback
+                    try {
+                        const pd = document.getElementById('progress');
+                        const pf = document.getElementById('progressFill');
+                        const pt = document.getElementById('progressText');
+                        if (pd) pd.style.display = 'block';
+                        if (pf) pf.style.width = '5%';
+                        if (pt) pt.textContent = 'Démarrage...';
+                    } catch (inner) { /* ignore */ }
+                    console.log('generateBtn clicked — invoking generateAll()');
+                    const p = generateAll();
+                    if (p && p.catch) p.catch(err => { console.error('generateAll error (async):', err); alert('Erreur lors de la génération: ' + (err && err.message ? err.message : err)); });
+                } catch (err) {
+                    console.error('generateAll error (sync):', err);
+                    alert('Erreur lors de la génération: ' + (err && err.message ? err.message : err));
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

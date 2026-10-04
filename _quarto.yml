@@ -1,6 +1,10 @@
 project:
   type: website
   output-dir: docs
+  resources:
+    - "apps/PDFExamens/**"
+    - "apps/PartageDMS/**"
+    - "apps/GS-vers-Brio/**"
 
 website:
   title: "Julien Miron"
@@ -29,6 +33,14 @@ website:
             text: STT-4300
           - href: cours/STT-2902/STT-2902.qmd
             text: STT-2902
+      - text: Outils
+        menu:
+          - href: apps/PDFExamens/index.html
+            text: Générateur de PDF d'examens
+          - href: apps/PartageDMS/index.html
+            text: Partage DMS
+          - href: apps/GS-vers-Brio/index.html
+            text: GS vers Brio
       - href: index.qmd#sites
         text: Sites
       - href: index.qmd#depots

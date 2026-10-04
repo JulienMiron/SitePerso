@@ -20,3 +20,18 @@
   description: "Notes et exemples en R du cours STT-4300."
   path: https://julienmiron.github.io/STT-4300/
   categories: [Cours]
+
+- title: "Générateur de PDF d'examens"
+  description: "Génère des PDF d'examens personnalisés avec nom, matricule et numéro de table pour chaque étudiant."
+  path: apps/PDFExamens/index.html
+  categories: [Outils]
+
+- title: "Partage DMS"
+  description: "Documents et guides partagés pour les auxiliaires d'enseignement et surveillants d'examens du département."
+  path: apps/PartageDMS/index.html
+  categories: [Outils]
+
+- title: "GS vers Brio"
+  description: "Convertit un fichier de notes GradeScope en format CorrectionOptique pour BRIO."
+  path: apps/GS-vers-Brio/index.html
+  categories: [Outils]
