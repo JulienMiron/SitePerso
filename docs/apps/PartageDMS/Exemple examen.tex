@@ -1,0 +1,104 @@
+\def\Ponderation{XX}
+\def\SigleNumero{LE SIGLE DU COURS}
+\def\NomCours{Le nom du cours}
+\def\DateEvaluation{La date}
+\def\HeureEvaluation{L'heure de début et l'heure de fin}
+\def\Session{}
+\def\NomEvaluation{Le nom de l'évaluation}
+
+% Ne rien mettre entre les accolades si l'enseignant (ou l'enseignante) est aussi le coordonnateur (ou la coordonnatrice)
+\def\Coordonnatrice{}
+\def\Coordonnateur{}
+
+% Ne rien mettre entre les accolades s'il y a plus d'une section
+\def\Enseignant{Enseignant}
+\def\Enseignante{}
+
+% Ne rien mettre entre les accolades s'il s'agit d'un cours à section unique
+% Mettre le nom de chacun des enseignants et enseignantes entre les accolades
+% Une case à cocher sera générée pour chacune des sections
+\def\SectionA{}
+\def\SectionB{}
+\def\SectionC{}
+\def\SectionD{}
+
+
+\def\Directives{
+\begin{enumerate}
+\item Matériel autorisé:
+\begin{itemize}
+\item Premier item;
+\item Deuxième item.
+\end{itemize}
+\item La liste des directives.
+\item Une autre directive.
+\end{enumerate}
+\begin{itemize}
+\item[$\rightarrow$] Une précision très importante.
+\end{itemize}
+}
+
+\newcommand{\affichepoints}{}     % ← Si on veut que les # des exercices et le pointage apparaîssent
+% \renewcommand{\affichepoints}{on} % ← Si on ne veut pas que les # des exercices et le pointage apparaîssent. Il faut simplement ajouter quelque chose dans l'accolade.                                     % on peut aussi changer où on commente
+
+\documentclass{Evaluation}
+
+\begin{document}
+
+\pageblanche
+
+%%%%%%%%%%%%%%%% QUESTION %%%%%%%%%%%%%%%%
+\begin{questions}
+\question[10] Une question de 10 points.
+
+\vspace{10cm} % de l'espace pour répondre
+
+\question Une question avec des parties (a), (b),...
+
+\begin{parts}
+    \part[3] Une partie de 3 points.
+    \part[2] Une partie de 2 points.
+\end{parts}
+
+\pageblanche % on ajoute \pageblanche à la place de \newpage, car si on veut le format à importer dans Gradescope, on change \def\Gradescope{} dans Evaluation.cls pour la même chose mais qui contient quelque chose dans l'accolade
+
+\question\label{questiondeuxpages} Une question avec des parties (a), (b),...et des sous-parties, sur deux pages qui contient un label pour pouvoir y faire référence plus bas
+
+\begin{parts}
+    \part[3] Une partie de 3 points.
+    \vspace{15cm}
+    \part
+    \begin{subparts}
+        \subpart[3] Une sous-partie de 3 points
+
+\vfill % pour s'assurer que le texte soit dans le bas de la page
+\pagesuivante{\ref{questiondeuxpages}}
+
+\subpart[2] La suite sur la page suivante.
+
+    \end{subparts}
+\end{parts}
+
+\vspace{15cm}
+
+\question[3] Une question à choix multiple.
+
+\begin{checkboxes}
+\choice Mauvais choix
+\correctchoice Bon choix
+\choice Mauvais choix
+\choice Mauvais choix
+\end{checkboxes}
+
+\vspace{1cm}
+
+\question[3] Une question à choix multiple avec les choix à l'horizontal.
+
+\begin{oneparcheckboxes}
+\choice Mauvais choix
+\correctchoice Bon choix
+\choice Mauvais choix
+\choice Mauvais choix
+\end{oneparcheckboxes}
+\end{questions}
+\end{document} 

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partage DMS — Département de mathématiques et de statistique</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --ulaval-red: #E30513;
+            --ulaval-red-dark: #B8040F;
+            --ulaval-gold: #FFD100;
+            --ulaval-gold-soft: #FFF3C4;
+            --bg-light: #F7F8FA;
+            --text-dark: #1A1A2E;
+            --text-muted: #5A5A72;
+            --card-bg: #FFFFFF;
+            --border-light: #E8E8EF;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-light);
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        /* ── Header / Banner ── */
+        .header {
+            background: linear-gradient(135deg, var(--ulaval-red) 0%, var(--ulaval-red-dark) 100%);
+            color: #fff;
+            padding: 40px 24px 36px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--ulaval-gold);
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 15px;
+            opacity: 0.88;
+            font-weight: 400;
+        }
+
+        /* ── Main content ── */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 20px 60px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 15px;
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+            padding: 0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 22px 0;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .card-icon.red    { background: #FDEBED; color: var(--ulaval-red); }
+        .card-icon.gold   { background: var(--ulaval-gold-soft); color: #B07D00; }
+        .card-icon.blue   { background: #E8F0FE; color: #1A56DB; }
+        .card-icon.green  { background: #EAF8EE; color: #1E8E3E; }
+
+        .card-header h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .card-body {
+            padding: 14px 22px 22px;
+            flex: 1;
+        }
+
+        .card-body p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.65;
+            margin-bottom: 4px;
+        }
+
+        .card-body a {
+            color: var(--ulaval-red);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.15s;
+        }
+
+        .card-body a:hover {
+            color: var(--ulaval-red-dark);
+            text-decoration: underline;
+        }
+
+        .link-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .link-list li {
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 14px;
+        }
+
+        .link-list li:last-child {
+            border-bottom: none;
+        }
+
+        .link-list li a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .link-list li a i {
+            font-size: 12px;
+            opacity: 0.5;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 13px;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-label i {
+            color: var(--ulaval-red);
+            font-size: 13px;
+        }
+
+        .date-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .date-list li {
+            font-size: 13px;
+            color: var(--text-muted);
+            padding: 3px 0 3px 20px;
+            position: relative;
+        }
+
+        .date-list li::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--ulaval-gold);
+        }
+
+        .card.placeholder {
+            border: 2px dashed var(--border-light);
+            background: transparent;
+            box-shadow: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+            color: #B0B0C0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .card.placeholder:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 21px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>Partage DMS</h1>
+        <p>Département de mathématiques et de statistique — Université Laval</p>
+    </header>
+
+    <main class="container">
+        <div class="grid">
+
+            <!-- Examens -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon red"><i class="fa-solid fa-pen-clip"></i></div>
+                    <h2>Examens AUTOMNE 2026</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="link-list">
+                        <li><a href="calendrier examen A26 CDA.pdf" target="_blank"><i class="fa-solid fa-chevron-right"></i> Calendrier des examens du DMS</a></li>
+
+
+                        <li><a href="calendrier-SSE-A26.pdf" target="_blank"><i class="fa-solid fa-chevron-right"></i> Calendrier des examens du SSE</a></li>
+                        <li><a href="Informations_reprises_DMS.pdf" target="_blank"><i class="fa-solid fa-chevron-right"></i> Informations sur les reprises DMS</a></li>
+                        <li><a href="Tableau à compléter - reprise d'examen DMS - Gabarit.docx" target="_blank"><i class="fa-solid fa-chevron-right"></i> Tableau à remplir reprises DMS</a></li>
+                    </ul>
+
+
+                    <p class="info-label"><i class="fa-solid fa-calendar-days"></i> Dates des reprises FSG</p>
+                    <ul class="date-list">
+                        <li>Jeudi 5 mars 2026</li>
+                        <li>Samedi 14 mars 2026</li>
+                        <li>Jeudi 30 avril 2026</li>
+                        <li>Mercredi 6 mai 2026</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Guides -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon gold"><i class="fa-solid fa-book-open"></i></div>
+                    <h2>Documents</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="link-list">
+                        <li><a href="Guide enseignant DMS 25-26.pdf" target="_blank"><i class="fa-solid fa-chevron-right"></i> Guide de l'enseignant 2025-2026</a></li>
+                        <li><a href="Guide auxiliaire d'enseignement H26.pdf" target="_blank"><i class="fa-solid fa-chevron-right"></i> Guide de l'auxiliaire d'enseignement 2025-2026</a></li>
+                        <li><a href="Consigne pour les surveillants.pdf"><i class="fa-solid fa-chevron-right"></i> Consignes pour les surveillants</a></li>
+                        <li><a href="Politique d'aide pédagogique du DMS.pdf" target="_blank"><i class="fa-solid fa-chevron-right"></i> Politique d'aide pédagogique du DMS</a></li>
+                        <li><a href="Tab_aux_ens_H26-final.pdf" target="_blank"><i class="fa-solid fa-chevron-right"></i> Tableau des auxiliaires d'enseignement H26</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Gestion des copies d'examen -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon green"><i class="fa-solid fa-file-pen"></i></div>
+                    <h2>Gestion des copies d'examen</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="link-list">
+                                                <li><a href="Evaluation.cls"><i class="fa-solid fa-chevron-right"></i> Classe LaTeX pour le gabarit examen</a></li>
+                        <li><a href="Exemple examen.tex"><i class="fa-solid fa-chevron-right"></i> Exemple d'examen (classe LaTeX)</a></li>
+                        <li><a href="https://julienmiron.github.io/PDFExamens/" target="_blank"><i class="fa-solid fa-chevron-right"></i> Copies nominatives &amp; listes de présence</a></li>
+                    </ul>
+                </div>
+            </div>
+                        <!-- Informations générales -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon blue"><i class="fa-solid fa-circle-info"></i></div>
+                    <h2>Informations générales</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="link-list">
+                        <li><a href="https://www.fsg.ulaval.ca/departements/departement-de-mathematiques-et-de-statistique" target="_blank"><i class="fa-solid fa-chevron-right"></i> Site web du CDA</a></li>
+                        <li><a href="Journee-passerelle_H26.pdf" target="_blank"><i class="fa-solid fa-chevron-right"></i> Journées passerelles H26</a></li>
+                        <li><a href="https://ulavaldti.sharepoint.com/sites/AuxiliaireduDMS" target="_blank"><i class="fa-solid fa-chevron-right"></i> Espace des auxiliaires du DMS (recrutement et formation)</a></li>
+                    </ul>
+                                        <p class="info-label"><i class="fa-solid fa-calendar-days"></i> Dates importantes</p>
+                    <ul class="date-list">
+                        <li>Début des cours : 12 janvier </li>
+                        <li>Abandon avec remb. : 26 janvier </li>
+                        <li>Abandon sans remb. : 23 mars</li>
+                        <li>Date limite notes: 15 mai</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Placeholders -->
+            <div class="card placeholder">À venir</div>
+            <div class="card placeholder">À venir</div>
+            <div class="card placeholder">À venir</div>
+            <div class="card placeholder">À venir</div>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        Pour toute question ou suggestion, contactez <a href="mailto:contact@dms.ulaval.ca">julien.miron@mat.ulaval.ca</a>.
+    </footer>
+
+</body>
+</html>

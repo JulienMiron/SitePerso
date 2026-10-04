@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GS vers BRIO — Convertisseur de notes</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --ulaval-red: #E30513;
+            --ulaval-red-dark: #B8040F;
+            --ulaval-gold: #FFD100;
+            --ulaval-gold-soft: #FFF3C4;
+            --bg-light: #F7F8FA;
+            --text-dark: #1A1A2E;
+            --text-muted: #5A5A72;
+            --card-bg: #FFFFFF;
+            --border-light: #E8E8EF;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes bgShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(
+                135deg,
+                #2A0A0E 0%,
+                var(--ulaval-red-dark) 20%,
+                var(--ulaval-red) 38%,
+                #C8860A 52%,
+                var(--ulaval-gold) 65%,
+                #FFF3C4 80%,
+                var(--ulaval-gold) 90%,
+                var(--ulaval-red) 100%
+            );
+            background-size: 300% 300%;
+            animation: bgShift 12s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            width: 520px;
+            height: 520px;
+            background: radial-gradient(circle, var(--ulaval-gold) 0%, transparent 70%);
+            top: -120px;
+            right: -100px;
+        }
+
+        body::after {
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, var(--ulaval-red) 0%, transparent 70%);
+            bottom: -120px;
+            left: -80px;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 720px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .upload-section {
+            margin-bottom: 24px;
+        }
+
+        label.field-label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .file-drop {
+            width: 100%;
+            padding: 20px 16px;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            user-select: none;
+        }
+
+        .file-drop:hover,
+        .file-drop.dragover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+            color: #555;
+        }
+
+        .file-drop.has-file {
+            border-color: #28a745;
+            background: #f0fff4;
+            color: #1a5c2a;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #2A0A12, #9F1239, #FDA4AF);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(159, 18, 57, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .info-box {
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+            border-left: 4px solid #667eea;
+            background: #e8f4ff;
+            color: #555;
+        }
+
+        .info-box.success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #1a5c2a;
+        }
+
+        .info-box.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+
+        .info-box.warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+
+        #messageBox {
+            display: none;
+        }
+
+        /* Preview table */
+        .preview-section {
+            margin-top: 24px;
+            display: none;
+        }
+
+        .preview-section h3 {
+            font-size: 14px;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .table-wrapper {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            background: #f0f1ff;
+            color: #333;
+            font-weight: 700;
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        tbody td {
+            padding: 8px 14px;
+            border-bottom: 1px solid #eee;
+            color: #444;
+        }
+
+        .count-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 20px;
+            padding: 2px 10px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 GradeScope → BRIO</h1>
+        <p class="subtitle">Convertit un fichier de notes GradeScope en format CorrectionOptique pour BRIO</p>
+
+        <div class="info-box">
+            <strong>Fichier attendu :</strong> export GradeScope (ex. <em>Examen_3_scores.xlsx</em>)<br>
+            Le fichier doit contenir les colonnes <strong>SID</strong> et <strong>Total Score</strong> en première ligne.
+        </div>
+
+        <div class="upload-section">
+            <label class="field-label" for="scoresFile">📁 Fichier de notes GradeScope</label>
+            <div class="file-drop" id="fileDrop" role="button" tabindex="0" aria-label="Sélectionner un fichier Excel">
+                Cliquer ou glisser-déposer un fichier <strong>.xlsx</strong> ici
+            </div>
+            <input type="file" id="scoresFile" accept=".xlsx,.xls,.csv">
+        </div>
+
+        <div id="messageBox" class="info-box"></div>
+
+        <button id="downloadBtn" disabled>⬇️ Générer et télécharger le fichier BRIO</button>
+
+        <div class="preview-section" id="previewSection">
+            <h3>Aperçu <span class="count-badge" id="rowCount">0</span></h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>NUMÉRO D'IDENTIFICATION ÉTUDES</th>
+                            <th>TOTAL DES POINTS ACQUIS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileDrop = document.getElementById('fileDrop');
+        const scoresFileInput = document.getElementById('scoresFile');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const messageBox = document.getElementById('messageBox');
+        const previewSection = document.getElementById('previewSection');
+        const previewBody = document.getElementById('previewBody');
+        const rowCount = document.getElementById('rowCount');
+
+        let extractedRows = []; // [{sid, score}, ...]
+
+        // --- File drop zone ---
+        fileDrop.addEventListener('click', () => scoresFileInput.click());
+        fileDrop.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') scoresFileInput.click();
+        });
+        fileDrop.addEventListener('dragover', e => {
+            e.preventDefault();
+            fileDrop.classList.add('dragover');
+        });
+        fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('dragover'));
+        fileDrop.addEventListener('drop', e => {
+            e.preventDefault();
+            fileDrop.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) processFile(file);
+        });
+
+        scoresFileInput.addEventListener('change', () => {
+            if (scoresFileInput.files[0]) processFile(scoresFileInput.files[0]);
+        });
+
+        // --- Process uploaded file ---
+        function processFile(file) {
+            const name = file.name;
+            showMessage('Lecture du fichier…', 'info');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+                    if (rows.length < 2) {
+                        showMessage('Le fichier semble vide ou ne contient pas assez de lignes.', 'error');
+                        return;
+                    }
+
+                    // Find SID and Total Score column indices in header row
+                    const header = rows[0].map(h => String(h).trim().toLowerCase());
+                    const sidIdx = header.findIndex(h => h === 'sid');
+                    const scoreIdx = header.findIndex(h => h === 'total score');
+
+                    if (sidIdx === -1) {
+                        showMessage('Colonne <strong>SID</strong> introuvable dans la première ligne du fichier.', 'error');
+                        return;
+                    }
+                    if (scoreIdx === -1) {
+                        showMessage('Colonne <strong>Total Score</strong> introuvable dans la première ligne du fichier.', 'error');
+                        return;
+                    }
+
+                    // Extract data rows (skip header)
+                    extractedRows = [];
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        const sid = row[sidIdx];
+                        const score = row[scoreIdx];
+                        // Skip completely empty rows
+                        if (sid === '' && score === '') continue;
+                        extractedRows.push({ sid: sid, score: score });
+                    }
+
+                    if (extractedRows.length === 0) {
+                        showMessage('Aucune donnée trouvée après la ligne d\'en-tête.', 'error');
+                        return;
+                    }
+
+                    // Update UI
+                    fileDrop.textContent = '✅ ' + name;
+                    fileDrop.classList.add('has-file');
+                    showMessage(
+                        extractedRows.length + ' étudiant(s) chargé(s) — colonnes SID (col. ' + (sidIdx+1) + ') et Total Score (col. ' + (scoreIdx+1) + ') détectées.',
+                        'success'
+                    );
+                    downloadBtn.disabled = false;
+                    renderPreview();
+
+                } catch (err) {
+                    showMessage('Erreur lors de la lecture du fichier : ' + err.message, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- Render preview table ---
+        function renderPreview() {
+            previewBody.innerHTML = '';
+            const maxRows = 50;
+            const display = extractedRows.slice(0, maxRows);
+            display.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td>' + escapeHtml(String(r.sid)) + '</td><td>' + escapeHtml(String(r.score)) + '</td>';
+                previewBody.appendChild(tr);
+            });
+            rowCount.textContent = extractedRows.length;
+            if (extractedRows.length > maxRows) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="2" style="color:#888;font-style:italic;text-align:center;">… ' + (extractedRows.length - maxRows) + ' lignes supplémentaires non affichées</td>';
+                previewBody.appendChild(tr);
+            }
+            previewSection.style.display = 'block';
+        }
+
+        // --- Download button ---
+        downloadBtn.addEventListener('click', () => {
+            if (extractedRows.length === 0) return;
+
+            // Build workbook with CorrectionOptique format
+            const wb = XLSX.utils.book_new();
+
+            const wsData = [
+                ["NUMÉRO D'IDENTIFICATION ÉTUDES", "TOTAL DES POINTS ACQUIS"],
+                ...extractedRows.map(r => [r.sid, r.score])
+            ];
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // Set column widths
+            ws['!cols'] = [{ wch: 38 }, { wch: 26 }];
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Notes');
+
+            // Determine output filename based on input filename
+            const inputName = scoresFileInput.files[0]
+                ? scoresFileInput.files[0].name.replace(/\.[^.]+$/, '')
+                : 'notes';
+            const outputName = 'CorrectionOptique_' + inputName + '.xlsx';
+
+            XLSX.writeFile(wb, outputName);
+        });
+
+        // --- Helpers ---
+        function showMessage(html, type) {
+            messageBox.innerHTML = html;
+            messageBox.className = 'info-box ' + (type === 'info' ? '' : type);
+            messageBox.style.display = 'block';
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+    </script>
+</body>
+</html>
