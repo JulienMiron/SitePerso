@@ -11,6 +11,8 @@ website:
   open-graph: true
   twitter-card: true
   navbar:
+    background: "#0E9E6C"
+    foreground: "#ffffff"
     logo: img/logo.png
     left:
       - href: index.qmd
@@ -46,8 +48,7 @@ website:
 format:
   html:
     theme:
-      #light: cosmo
-      light: [morph, custom.scss]
+      light: lumen
       dark: darkly
     css: styles.css
     toc: true

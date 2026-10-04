@@ -12,7 +12,30 @@ listing:
     categories: true
 ---
 
-Bienvenue. Cette page regroupe mes cours, mes autres sites et mes dépôts GitHub.
+<script>document.body.classList.add('page-home');</script>
+
+<div class="home-page">
+<div class="home-hero">
+<div class="home-hero__inner">
+<div class="home-hero-copy">
+
+<h1 class="home-title">Julien Miron</h1>
+<p class="home-course-code">Chargé d'enseignement en statistique</p>
+<p class="home-lead">Département de mathématiques et de statistique, Université Laval. Cette page regroupe mes cours, mes autres sites et mes dépôts GitHub.</p>
+
+<div class="home-actions">
+<a class="home-action home-action--primary" href="#sites"><span>Mes cours</span></a>
+<a class="home-action home-action--secondary" href="about.qmd"><span>À propos</span></a>
+<a class="home-action home-action--secondary" href="#depots"><span>Dépôts GitHub</span></a>
+</div>
+
+</div>
+<div class="home-visual">
+<img src="img/logo.png" alt="">
+</div>
+</div>
+</div>
+</div>
 
 ## Sites {#sites}
 

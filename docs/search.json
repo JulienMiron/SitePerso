@@ -1,31 +1,10 @@
 [
   {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "À propos",
-    "section": "",
-    "text": "Julien Miron est chargé d’enseignement au Département de mathématiques et de statistique de l’Université Laval, où il enseigne des cours de probabilités et de statistique aux premier et deuxième cycles (voir la section Cours).\nCe site regroupe le matériel de cours, les applications interactives et les dépôts publics liés à cet enseignement."
-  },
-  {
-    "objectID": "about.html#contact",
-    "href": "about.html#contact",
-    "title": "À propos",
-    "section": "Contact",
-    "text": "Contact\n\nCourriel : julien.miron@mat.ulaval.ca\nGitHub : github.com/JulienMiron\n\nUne erreur à signaler sur ce site ? Ouvrez une issue sur GitHub."
-  },
-  {
-    "objectID": "cours/STT-1000/STT-1000.html",
-    "href": "cours/STT-1000/STT-1000.html",
-    "title": "STT-1000",
-    "section": "",
-    "text": "Voici les différentes informations pour le cours STT-1000 de l’automne 2025. Veuillez noter que ce site est complémentaire au site de cours sur monPortail. Les informations de monPortail sont celles qui prévalent.\n\nPlan de cours \n\n\n\n\n Retour au sommet"
-  },
-  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Julien Miron",
     "section": "",
-    "text": "Bienvenue. Cette page regroupe mes cours, mes autres sites et mes dépôts GitHub."
+    "text": "Chargé d’enseignement en statistique\n\n\nDépartement de mathématiques et de statistique, Université Laval. Cette page regroupe mes cours, mes autres sites et mes dépôts GitHub.\n\n\nMes cours À propos Dépôts GitHub"
   },
   {
     "objectID": "index.html#sites",
@@ -42,6 +21,13 @@
     "text": "Dépôts GitHub\nListe mise à jour automatiquement à partir de mon profil GitHub.\n\nChargement des dépôts…\n\n\n\nUne question ou une erreur à signaler ? Ouvrez une issue sur GitHub."
   },
   {
+    "objectID": "cours/STT-1000/STT-1000.html",
+    "href": "cours/STT-1000/STT-1000.html",
+    "title": "STT-1000",
+    "section": "",
+    "text": "Voici les différentes informations pour le cours STT-1000 de l’automne 2025. Veuillez noter que ce site est complémentaire au site de cours sur monPortail. Les informations de monPortail sont celles qui prévalent.\n\nPlan de cours \n\n\n\n\n Retour au sommet"
+  },
+  {
     "objectID": "cours/STT-1900/STT-1900.html",
     "href": "cours/STT-1900/STT-1900.html",
     "title": "STT-1900",
@@ -54,5 +40,19 @@
     "title": "STT-2902",
     "section": "",
     "text": "Voici les différentes informations pour le cours STT-2902 de l’automne 2025. Veuillez noter que ce site est complémentaire au site de cours sur monPortail. Les informations de monPortail sont celles qui prévalent.\n\n\n\n Retour au sommet"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "À propos",
+    "section": "",
+    "text": "Julien Miron est chargé d’enseignement au Département de mathématiques et de statistique de l’Université Laval, où il enseigne des cours de probabilités et de statistique aux premier et deuxième cycles (voir la section Cours).\nCe site regroupe le matériel de cours, les applications interactives et les dépôts publics liés à cet enseignement."
+  },
+  {
+    "objectID": "about.html#contact",
+    "href": "about.html#contact",
+    "title": "À propos",
+    "section": "Contact",
+    "text": "Contact\n\nCourriel : julien.miron@mat.ulaval.ca\nGitHub : github.com/JulienMiron\n\nUne erreur à signaler sur ce site ? Ouvrez une issue sur GitHub."
   }
 ]
