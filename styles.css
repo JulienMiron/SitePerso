@@ -1,4 +1,8 @@
-/* Thème du portail de cours STT-4300 */
+/* Thème commun des sites de Julien Miron.
+   Base partagée mot pour mot entre SitePerso, STT-1000, STT-1900, STT-1920 et
+   STT-4300 : toute modification faite ici doit être recopiée dans les 5 dépôts.
+   Les ajouts spécifiques à un seul site sont isolés dans une section
+   « AJOUTS PROPRES À ... » en fin de fichier, quand elle existe. */
 :root {
   --ulaval-yellow: #ffc103;
   --ink: #202124;
