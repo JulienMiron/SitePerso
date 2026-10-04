@@ -51,6 +51,15 @@ main,
   white-space: nowrap;
 }
 
+.navbar .dropdown-menu .dropdown-item {
+  color: var(--ink);
+}
+.navbar .dropdown-menu .dropdown-item:hover,
+.navbar .dropdown-menu .dropdown-item:focus {
+  color: var(--ink);
+  background-color: var(--soft);
+}
+
 h1, h2, h3 { color: #2f2f2f; letter-spacing: 0; }
 h1 { margin-top: 1rem; }
 h2 { margin-top: 2.2rem; border-bottom: 2px solid var(--line); padding-bottom: .25rem; }
