@@ -687,38 +687,7 @@
                     // Lire le CSV ou XLSX
                     let students = [];
                     if (csvFile.name.toLowerCase().endsWith('.xlsx')) {
-                        const arrayBuffer = await csvFile.arrayBuffer();
-                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                        // parcourir toutes les feuilles, section = nom de la feuille
-                        for (const sheetName of workbook.SheetNames) {
-                            const sheet = workbook.Sheets[sheetName];
-                            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                            if (!rows || rows.length <= 6) continue; // header at line 6, data from 7
-                            const headerRow = (rows[5] || []).map(h => (h === undefined ? '' : String(h).trim()));
-                            const detection = detectNameColumn(headerRow);
-                            const niIndex = detectSingleColumn(headerRow, ['ni','matricule','identifiant','id','numero','num','dossier']);
-                            const emailIndex = (columnMapping.emailIdx !== null && columnMapping.emailIdx !== undefined) ? columnMapping.emailIdx : detectSingleColumn(headerRow, ['courriel','email','mail','adresse courriel','adresse']);
-                            for (let r = 6; r < rows.length; r++) {
-                                const row = rows[r] || [];
-                                let name = '';
-                                if (columnMapping.nameMode === 'separate' && columnMapping.firstIdx !== null && columnMapping.lastIdx !== null) {
-                                    name = String(row[columnMapping.firstIdx] || '') + ' ' + String(row[columnMapping.lastIdx] || '');
-                                } else if (columnMapping.nameIdx !== null) {
-                                    name = String(row[columnMapping.nameIdx] || '');
-                                } else if (detection.type === 'separate') {
-                                    name = String(row[detection.indices[0]] || '') + ' ' + String(row[detection.indices[1]] || '');
-                                } else if (detection.type === 'combined' && detection.indices.length === 1) {
-                                    name = String(row[detection.indices[0]] || '');
-                                } else {
-                                    name = String(row[0] || '');
-                                }
-                                const ni = (niIndex >= 0 ? String(row[niIndex] || '') : (columnMapping.niIdx !== null ? String(row[columnMapping.niIdx] || '') : ''));
-                                const email = (emailIndex >= 0 ? String(row[emailIndex] || '') : '').trim();
-                                const status = 'Présent';
-                                if (String(status).toLowerCase().includes('abandon')) {}
-                                if (name || ni) students.push({ name: name.trim(), ni: ni.trim(), table: '', local: '', section: sheetName, email });
-                            }
-                        }
+                        students = await readXlsxRegistrationStudents(csvFile);
                     } else {
                         const csvText = await csvFile.text();
                         students = parseCSV(csvText);
@@ -745,25 +714,45 @@
                     progressText.textContent = 'Application des attributions de places...';
                     const byNI = Object.create(null);
                     const byName = Object.create(null);
+                    const bySectionNI = Object.create(null);
+                    const bySectionName = Object.create(null);
+                    let unmatchedAssignments = 0;
                     for (const a of lastAssignments) {
                         const niKey = (a.ni || '').toString().trim();
-                        if (niKey) byNI[niKey] = a;
+                        const sectionKey = normalizeHeader(a.section || '');
+                        if (niKey) {
+                            const key = normalizeNI(niKey);
+                            const sectionNIKey = `${sectionKey}\u0000${key}`;
+                            bySectionNI[sectionNIKey] = a;
+                            if (Object.prototype.hasOwnProperty.call(byNI, key)) byNI[key] = null;
+                            else byNI[key] = a;
+                        }
                         const nameKey = normalizeHeader(a.name || '');
-                        if (nameKey) byName[nameKey] = a;
+                        if (nameKey) {
+                            bySectionName[`${sectionKey}\u0000${nameKey}`] = a;
+                            if (Object.prototype.hasOwnProperty.call(byName, nameKey)) byName[nameKey] = null;
+                            else byName[nameKey] = a;
+                        }
                     }
                     for (const s of students) {
-                        let match = null;
+                        const sectionKey = normalizeHeader(s.section || '');
                         const niKey = normalizeNI(s.ni);
-                        if (niKey && byNI[niKey]) match = byNI[niKey];
-                        else {
-                            const nameKey = normalizeHeader(s.name || '');
-                            if (nameKey && byName[nameKey]) match = byName[nameKey];
+                        const nameKey = normalizeHeader(s.name || '');
+                        const match = (niKey && bySectionNI[`${sectionKey}\u0000${niKey}`])
+                            || (nameKey && bySectionName[`${sectionKey}\u0000${nameKey}`])
+                            || (niKey && byNI[niKey])
+                            || (nameKey && byName[nameKey])
+                            || null;
+                        if (!match) {
+                            unmatchedAssignments++;
+                            continue;
                         }
-                        if (match) {
-                            s.place = match.place || '';
-                            s.table = match.place || '';
-                            s.local = match.local || '';
-                        }
+                        s.place = match.place || '';
+                        s.table = match.place || '';
+                        s.local = match.local || '';
+                    }
+                    if (unmatchedAssignments > 0) {
+                        throw new Error(`Impossible de retrouver l’attribution pour ${unmatchedAssignments} étudiant(s). Vérifiez les colonnes NI et nom du fichier BRIO.`);
                     }
                 }
 
@@ -1202,40 +1191,10 @@
             }
 
             try {
-                const arrayBuffer = await file.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const allStudents = [];
-
-                for (const sheetName of workbook.SheetNames) {
-                    const sheet = workbook.Sheets[sheetName];
-                    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                    if (!rows || rows.length <= 6) continue; // need header at row 6 and data starting row 7
-
-                    const headerRow = rows[5].map(h => (h === undefined ? '' : String(h)));
-
-                    const idxNom = detectSingleColumn(headerRow, ['nom','nom de famille','lastname','surname']);
-                    const idxPrenom = detectSingleColumn(headerRow, ['prenom','prénom','first','given','given name']);
-                    const idxEmail = (columnMapping.emailIdx !== null && columnMapping.emailIdx !== undefined) ? columnMapping.emailIdx : detectSingleColumn(headerRow, ['mail','email','courriel','adresse courriel','adresse']);
-                    const idxNI = detectSingleColumn(headerRow, ['ni','matricule','identifiant','id','numero','numero dossier','dossier','num']);
-                    const idxStatut = detectSingleColumn(headerRow, ['statut','inscription','status','etat']);
-
-                    for (let r = 6; r < rows.length; r++) {
-                        const row = rows[r] || [];
-                        const last = (idxNom >= 0 ? (row[idxNom] || '') : '') || '';
-                        const first = (idxPrenom >= 0 ? (row[idxPrenom] || '') : '') || '';
-                        const email = (idxEmail >= 0 ? (row[idxEmail] || '') : '') || '';
-                        const ni = (idxNI >= 0 ? (row[idxNI] || '') : '') || '';
-                        const rawStatus = (idxStatut >= 0 ? (row[idxStatut] || '') : '') || '';
-
-                        const status = normalizeHeader(rawStatus).includes('abandon') ? 'Abandon' : 'Présent';
-                        const fullName = (String(first).trim() + ' ' + String(last).trim()).trim();
-                        if (!fullName && !ni) continue;
-                        allStudents.push({ name: fullName || ni, first: first, last: last, ni: String(ni).trim(), email: String(email).trim(), status, section: sheetName });
-                    }
-                }
+                const allStudents = await readXlsxRegistrationStudents(file);
 
                 if (allStudents.length === 0) {
-                    alert('Aucun étudiant détecté dans le fichier d\'inscription. Vérifiez la structure (en-têtes en ligne 6).');
+                    alert('Aucun étudiant détecté dans le fichier d’inscription. Vérifiez les en-têtes et les colonnes de BRIO.xlsx.');
                     return;
                 }
 
@@ -1657,32 +1616,7 @@
                 let allStudents = [];
                 if (csvFile.name.toLowerCase().endsWith('.xlsx')) {
                     console.log('generateAll: reading XLSX registration file');
-                    const arrayBuffer = await csvFile.arrayBuffer();
-                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                    for (const sheetName of workbook.SheetNames) {
-                        const sheet = workbook.Sheets[sheetName];
-                        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                        if (!rows || rows.length <= 6) continue;
-                        const headerRow = rows[5].map(h => (h === undefined ? '' : String(h)));
-                        const idxNom = detectSingleColumn(headerRow, ['nom','nom de famille','lastname','surname']);
-                        const idxPrenom = detectSingleColumn(headerRow, ['prenom','prénom','first','given','given name']);
-                        const idxEmail = (columnMapping.emailIdx !== null && columnMapping.emailIdx !== undefined) ? columnMapping.emailIdx : detectSingleColumn(headerRow, ['mail','email','courriel','adresse courriel','adresse']);
-                        const idxNI = detectSingleColumn(headerRow, ['ni','matricule','identifiant','id','numero','numero dossier','dossier','num']);
-                        const idxStatut = detectSingleColumn(headerRow, ['statut','inscription','status','etat']);
-
-                        for (let r = 6; r < rows.length; r++) {
-                            const row = rows[r] || [];
-                            const last = (idxNom >= 0 ? (row[idxNom] || '') : '') || '';
-                            const first = (idxPrenom >= 0 ? (row[idxPrenom] || '') : '') || '';
-                            const email = (idxEmail >= 0 ? (row[idxEmail] || '') : '') || '';
-                            const ni = (idxNI >= 0 ? (row[idxNI] || '') : '') || '';
-                            const rawStatus = (idxStatut >= 0 ? (row[idxStatut] || '') : '') || '';
-                            const status = normalizeHeader(rawStatus).includes('abandon') ? 'Abandon' : 'Présent';
-                            const fullName = (String(first).trim() + ' ' + String(last).trim()).trim();
-                            if (!fullName && !ni) continue;
-                            allStudents.push({ name: fullName || ni, first: first, last: last, ni: String(ni).trim(), email: String(email).trim(), status, section: sheetName });
-                        }
-                    }
+                    allStudents = await readXlsxRegistrationStudents(csvFile);
                     console.log('generateAll: finished reading XLSX, total students so far:', allStudents.length);
                 } else {
                     console.log('generateAll: reading CSV registration file');
@@ -1841,6 +1775,101 @@
                 }
             }
             return -1;
+        }
+
+        function findRegistrationHeaderInfo(rows) {
+            const firstNameHeaders = ['prenom', 'first name', 'given name'];
+            const lastNameHeaders = ['nom', 'nom de famille', 'last name', 'lastname', 'surname', 'family name'];
+            const fullNameHeaders = ['nom complet', 'nom et prenom', 'prenom et nom', 'full name', 'fullname', 'name'];
+            const niHeaders = [
+                'ni', 'matricule', 'identifiant', 'numero de dossier', 'numero dossier',
+                'no de dossier', 'no dossier', 'numero d identification', 'student id'
+            ];
+            const emailHeaders = ['courriel', 'adresse courriel', 'email', 'e mail', 'mail'];
+            const statusHeaders = ['statut', 'statut d inscription', 'inscription', 'status', 'etat'];
+            const scanLimit = Math.min(rows.length, 20);
+
+            for (let rowIndex = 0; rowIndex < scanLimit; rowIndex++) {
+                const headers = (rows[rowIndex] || []).map(value => normalizeHeader(value));
+                const findIndex = aliases => headers.findIndex(header => aliases.includes(header));
+                const firstNameIndex = findIndex(firstNameHeaders);
+                const lastNameIndex = findIndex(lastNameHeaders);
+                const fullNameIndex = findIndex(fullNameHeaders);
+                const niIndex = findIndex(niHeaders);
+
+                if (niIndex >= 0 && (fullNameIndex >= 0 || (firstNameIndex >= 0 && lastNameIndex >= 0))) {
+                    return {
+                        rowIndex,
+                        headers: rows[rowIndex].map(value => value === undefined ? '' : String(value).trim()),
+                        firstNameIndex,
+                        lastNameIndex,
+                        fullNameIndex,
+                        niIndex,
+                        emailIndex: findIndex(emailHeaders),
+                        statusIndex: findIndex(statusHeaders)
+                    };
+                }
+            }
+            return null;
+        }
+
+        async function readXlsxRegistrationStudents(file) {
+            const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+            const students = [];
+
+            for (const sheetName of workbook.SheetNames) {
+                const sheet = workbook.Sheets[sheetName];
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                if (!rows || rows.length === 0) continue;
+
+                const headerInfo = findRegistrationHeaderInfo(rows);
+                if (!headerInfo) {
+                    const hasData = rows.some(row => row && row.some(value => value !== undefined && value !== null && String(value).trim() !== ''));
+                    if (hasData) {
+                        throw new Error(`Impossible de détecter les en-têtes Nom, Prénom et NI dans la feuille « ${sheetName} » de BRIO.xlsx.`);
+                    }
+                    continue;
+                }
+
+                const firstNameIndex = columnMapping.nameMode === 'separate' && columnMapping.firstIdx !== null
+                    ? columnMapping.firstIdx
+                    : headerInfo.firstNameIndex;
+                const lastNameIndex = columnMapping.nameMode === 'separate' && columnMapping.lastIdx !== null
+                    ? columnMapping.lastIdx
+                    : headerInfo.lastNameIndex;
+                const fullNameIndex = columnMapping.nameMode !== 'separate' && columnMapping.nameIdx !== null
+                    ? columnMapping.nameIdx
+                    : headerInfo.fullNameIndex;
+                const niIndex = columnMapping.niIdx !== null ? columnMapping.niIdx : headerInfo.niIndex;
+                const emailIndex = columnMapping.emailIdx !== null ? columnMapping.emailIdx : headerInfo.emailIndex;
+
+                for (let rowIndex = headerInfo.rowIndex + 1; rowIndex < rows.length; rowIndex++) {
+                    const row = rows[rowIndex] || [];
+                    const last = lastNameIndex >= 0 ? String(row[lastNameIndex] || '').trim() : '';
+                    const first = firstNameIndex >= 0 ? String(row[firstNameIndex] || '').trim() : '';
+                    const combinedName = fullNameIndex >= 0 ? String(row[fullNameIndex] || '').trim() : '';
+                    const name = columnMapping.nameMode === 'separate' && firstNameIndex >= 0 && lastNameIndex >= 0
+                        ? `${first} ${last}`.trim()
+                        : (combinedName || `${first} ${last}`.trim());
+                    const ni = niIndex >= 0 ? String(row[niIndex] || '').trim() : '';
+                    if (!name && !ni) continue;
+
+                    const email = emailIndex >= 0 ? String(row[emailIndex] || '').trim() : '';
+                    const rawStatus = headerInfo.statusIndex >= 0 ? String(row[headerInfo.statusIndex] || '') : '';
+                    const status = normalizeHeader(rawStatus).includes('abandon') ? 'Abandon' : 'Présent';
+                    students.push({
+                        name: name || ni,
+                        first,
+                        last,
+                        ni,
+                        email,
+                        status,
+                        section: sheetName
+                    });
+                }
+            }
+
+            return students;
         }
 
         // ====== UI: remplir les selects de mapping à l'ouverture du fichier ======
@@ -2378,7 +2407,8 @@
                     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                    if (rows && rows.length > 5) headers = (rows[5] || []).map(h => h === undefined ? '' : h.toString());
+                    const headerInfo = rows ? findRegistrationHeaderInfo(rows) : null;
+                    if (headerInfo) headers = headerInfo.headers;
                 } else {
                     const text = await file.text();
                     const raw = text.split(/\r?\n/);
