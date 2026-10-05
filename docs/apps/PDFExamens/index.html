@@ -608,7 +608,7 @@
         </div>
 
 
-        <button id="generateBtn" onclick="generateAll()">
+        <button id="generateBtn">
             🚀 Générer et Télécharger le ZIP
         </button>
 
@@ -1605,6 +1605,12 @@
             const courseName = document.getElementById('courseName').value.trim();
             const startTime = document.getElementById('startTime').value.trim();
             const endTime = document.getElementById('endTime').value.trim();
+            const generateBtn = document.getElementById('generateBtn');
+            const progressDiv = document.getElementById('progress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            if (generateBtn.disabled) return;
 
             if (!csvFile || !pdfFile) {
                 alert('⚠️ Veuillez sélectionner un dossier contenant BRIO.xlsx et examen.pdf');
@@ -1614,31 +1620,40 @@
                 alert('⚠️ Veuillez saisir le nom de l\'évaluation et le numéro du cours.');
                 return;
             }
-            await waitForScreenshotOCR();
-            const capturesWithFiles = screenshotCaptures.filter(capture => capture.file);
-            if (capturesWithFiles.length > 0) {
-                const invalidCaptures = capturesWithFiles.filter(capture =>
-                    capture.error || !capture.section || capture.rows.length === 0
-                );
-                if (invalidCaptures.length > 0) {
-                    const issues = invalidCaptures.map(capture => {
-                        if (!capture.section) return `Choisissez la section pour « ${capture.file.name} ».`;
-                        return `Vérifiez la capture « ${capture.file.name} » : ${capture.error || 'aucun résultat OCR valide'}`;
-                    });
-                    alert(`⚠️ Corrigez les captures d’accommodements avant de continuer.\n${issues.join('\n')}`);
-                    return;
-                }
-                const confirmation = document.getElementById('accomScreenshotConfirmed');
-                if (!confirmation || !confirmation.checked) {
-                    alert('⚠️ Vérifiez les NI, les sections et les étudiants sélectionnés dans toutes les captures, puis confirmez avant de générer.');
-                    return;
-                }
-            }
 
             // read students from registration file (XLSX multi-sheet or CSV)
+            generateBtn.disabled = true;
+            progressDiv.style.display = 'block';
+            progressFill.style.width = '5%';
+            progressText.textContent = screenshotCaptures.some(capture => capture.file)
+                ? 'Attente de la fin de l’analyse des captures...'
+                : 'Préparation de l’attribution...';
+            let handedOffToPdfGeneration = false;
             try {
+                await waitForScreenshotOCR();
+                const capturesWithFiles = screenshotCaptures.filter(capture => capture.file);
+                if (capturesWithFiles.length > 0) {
+                    const invalidCaptures = capturesWithFiles.filter(capture =>
+                        capture.error || !capture.section || capture.rows.length === 0
+                    );
+                    if (invalidCaptures.length > 0) {
+                        const issues = invalidCaptures.map(capture => {
+                            if (!capture.section) return `Choisissez la section pour « ${capture.file.name} ».`;
+                            return `Vérifiez la capture « ${capture.file.name} » : ${capture.error || 'aucun résultat OCR valide'}`;
+                        });
+                        alert(`⚠️ Corrigez les captures d’accommodements avant de continuer.\n${issues.join('\n')}`);
+                        return;
+                    }
+                    const confirmation = document.getElementById('accomScreenshotConfirmed');
+                    if (!confirmation || !confirmation.checked) {
+                        alert('⚠️ Vérifiez les NI, les sections et les étudiants sélectionnés dans toutes les captures, puis confirmez avant de générer.');
+                        return;
+                    }
+                }
+
                 console.log('generateAll: starting processing');
-                try { document.getElementById('progressText').textContent = 'Lecture du fichier d\'inscription...'; document.getElementById('progressFill').style.width = '15%'; } catch(e){}
+                progressText.textContent = 'Lecture du fichier d’inscription...';
+                progressFill.style.width = '15%';
                 let allStudents = [];
                 if (csvFile.name.toLowerCase().endsWith('.xlsx')) {
                     console.log('generateAll: reading XLSX registration file');
@@ -1756,11 +1771,21 @@
 
                 // proceed to generate PDFs (and lists if requested)
                 console.log('generateAll: calling generatePDFs() with', lastAssignments.length, 'assignments');
-                try { document.getElementById('progressText').textContent = 'Génération des PDFs...'; document.getElementById('progressFill').style.width = '60%'; } catch(e){}
+                progressText.textContent = 'Génération des PDFs...';
+                progressFill.style.width = '60%';
+                handedOffToPdfGeneration = true;
                 await generatePDFs();
             } catch (err) {
                 console.error(err);
                 alert('Erreur lors du traitement : ' + err.message);
+                progressDiv.style.display = 'none';
+                progressFill.style.width = '0%';
+            } finally {
+                if (!handedOffToPdfGeneration) {
+                    generateBtn.disabled = false;
+                    progressDiv.style.display = 'none';
+                    progressFill.style.width = '0%';
+                }
             }
         }
 
@@ -3398,28 +3423,12 @@
             }
         }
 
-        // Robust click wrapper for the generate button to surface errors
+        // Route generation through one handler so a click cannot start two concurrent runs.
         const generateBtnEl = document.getElementById('generateBtn');
         if (generateBtnEl) {
             generateBtnEl.addEventListener('click', (ev) => {
                 ev.preventDefault();
-                try {
-                    // immediate visual feedback
-                    try {
-                        const pd = document.getElementById('progress');
-                        const pf = document.getElementById('progressFill');
-                        const pt = document.getElementById('progressText');
-                        if (pd) pd.style.display = 'block';
-                        if (pf) pf.style.width = '5%';
-                        if (pt) pt.textContent = 'Démarrage...';
-                    } catch (inner) { /* ignore */ }
-                    console.log('generateBtn clicked — invoking generateAll()');
-                    const p = generateAll();
-                    if (p && p.catch) p.catch(err => { console.error('generateAll error (async):', err); alert('Erreur lors de la génération: ' + (err && err.message ? err.message : err)); });
-                } catch (err) {
-                    console.error('generateAll error (sync):', err);
-                    alert('Erreur lors de la génération: ' + (err && err.message ? err.message : err));
-                }
+                generateAll();
             });
         }
 
