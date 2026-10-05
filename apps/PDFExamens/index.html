@@ -3313,9 +3313,9 @@
                     // Données
                     const rowData = [
                         getAttendanceDisplayName(student),
-                        student.ni,
-                        student.table,
-                        student[fourthColLabel],
+                        String(student.ni || ''),
+                        String(student.table || ''),
+                        String(student[fourthColLabel] || ''),
                         '' // case vide pour présence
                     ];
 
