@@ -925,8 +925,10 @@
                 progressText.textContent = 'Génération des listes de présence...';
 
                 const groupBy = listFormat; // 'local' ou 'section'
+                const accomStudents = students.filter(student => isAccommodementStudent(student));
+                const regularStudents = students.filter(student => !isAccommodementStudent(student));
                 const groups = {};
-                for (const student of students) {
+                for (const student of regularStudents) {
                     const key = student[groupBy];
                     if (!groups[key]) groups[key] = [];
                     groups[key].push(student);
@@ -949,7 +951,6 @@
                     if (idx % 5 === 0) await new Promise(r => setTimeout(r, 0));
                 }
 
-                const accomStudents = students.filter(student => isAccommodementStudent(student));
                 if (accomStudents.length > 0) {
                     try {
                         console.log('generatePDFs: generating accommodation attendance PDF for', accomStudents.length, 'students');
