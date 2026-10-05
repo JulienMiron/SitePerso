@@ -1587,9 +1587,9 @@
                 alert('⚠️ Veuillez saisir le nom de l\'évaluation et le numéro du cours.');
                 return;
             }
+            await waitForScreenshotOCR();
             const capturesWithFiles = screenshotCaptures.filter(capture => capture.file);
             if (capturesWithFiles.length > 0) {
-                await screenshotOCRPromise;
                 const invalidCaptures = capturesWithFiles.filter(capture =>
                     capture.error || !capture.section || capture.rows.length === 0
                 );
@@ -1949,6 +1949,14 @@
             }
         }
 
+        async function waitForScreenshotOCR() {
+            let pendingOCR;
+            do {
+                pendingOCR = screenshotOCRPromise;
+                await pendingOCR;
+            } while (pendingOCR !== screenshotOCRPromise);
+        }
+
         function updateScreenshotSectionOptions(select, selectedSection = '') {
             if (!select) return;
             select.replaceChildren();
@@ -2018,7 +2026,12 @@
             fileInput.addEventListener('change', () => {
                 const file = fileInput.files && fileInput.files[0];
                 if (!file) return;
+                capture.file = file;
+                capture.rows = [];
+                capture.error = '';
                 resetScreenshotConfirmation();
+                refreshAccommodementData();
+                updateScreenshotAccomStatus();
                 screenshotOCRPromise = screenshotOCRPromise.then(() => onAccomScreenshotSelected(capture, file));
             });
 
