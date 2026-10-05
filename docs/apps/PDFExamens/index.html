@@ -600,6 +600,13 @@
             <input type="number" id="numberingStart" value="1" min="1" step="1" style="width:100px;padding:8px;border:2px solid #9467bd;border-radius:8px;background:#f5f1fa;text-align:right;">
         </div>
 
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+            <input type="checkbox" id="numberingResetPerRoom">
+            <label for="numberingResetPerRoom" style="font-size:13px;font-weight:600;margin:0;">
+                Recommencer la numérotation à 1 dans chaque local
+            </label>
+        </div>
+
 
         <button id="generateBtn" onclick="generateAll()">
             🚀 Générer et Télécharger le ZIP
@@ -1429,8 +1436,15 @@
             return start;
         }
 
+        function shouldResetNumberingPerRoom() {
+            const checkbox = document.getElementById('numberingResetPerRoom');
+            return Boolean(checkbox && checkbox.checked);
+        }
+
         function assignSeatsToRooms(students, rooms, startFrom = 1, modeOverride = null) {
             const mode = modeOverride || getDistributionMode();
+            const resetPerRoom = shouldResetNumberingPerRoom();
+            const roomStart = resetPerRoom ? 1 : (Number(startFrom) || 1);
 
             if (mode === 'uniform') {
                 // Répartition uniforme : proportionnelle à la capacité de chaque salle
@@ -1474,9 +1488,11 @@
                 let studentIndex = 0;
                 let globalSeat = Number(startFrom) || 1;
                 for (const alloc of roomAllocs) {
+                    let roomSeat = roomStart;
                     for (let seat = 1; seat <= alloc.count && studentIndex < students.length; seat++) {
                         const s = students[studentIndex++];
-                        assigned.push({ ...s, local: alloc.name, place: String(globalSeat++) });
+                        const place = resetPerRoom ? roomSeat++ : globalSeat++;
+                        assigned.push({ ...s, local: alloc.name, place: String(place) });
                     }
                 }
                 while (studentIndex < students.length) {
@@ -1494,9 +1510,11 @@
             let studentIndex = 0;
             let globalSeat = Number(startFrom) || 1;
             for (const room of sortedRooms) {
+                let roomSeat = roomStart;
                 for (let seat = 1; seat <= room.capacity && studentIndex < students.length; seat++) {
                     const s = students[studentIndex++];
-                    assigned.push({ ...s, local: room.name, place: String(globalSeat++) });
+                    const place = resetPerRoom ? roomSeat++ : globalSeat++;
+                    assigned.push({ ...s, local: room.name, place: String(place) });
                 }
                 if (studentIndex >= students.length) break;
             }
@@ -1550,11 +1568,20 @@
             }
 
             let seatNumber = Number(startFrom) || 1;
-            return students.map(student => ({
-                ...student,
-                local: sectionRoomAssignments[String(student.section || '').trim()],
-                place: String(seatNumber++)
-            }));
+            const resetPerRoom = shouldResetNumberingPerRoom();
+            const roomSeatNumbers = new Map();
+            return students.map(student => {
+                const local = sectionRoomAssignments[String(student.section || '').trim()];
+                let place;
+                if (resetPerRoom) {
+                    const roomSeat = roomSeatNumbers.get(local) || 1;
+                    place = String(roomSeat);
+                    roomSeatNumbers.set(local, roomSeat + 1);
+                } else {
+                    place = String(seatNumber++);
+                }
+                return { ...student, local, place };
+            });
         }
 
         function ensureLocalIndexMap() {
