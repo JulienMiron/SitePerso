@@ -10,7 +10,7 @@ website:
   title: "Julien Miron"
   description: "Chargé d'enseignement en statistique — cours, sites et dépôts de Julien Miron, Université Laval."
   site-url: https://julienmiron.github.io
-  favicon: img/favicon.png
+  favicon: img/logo.png
   image: img/social-preview.png
   open-graph: true
   twitter-card: true

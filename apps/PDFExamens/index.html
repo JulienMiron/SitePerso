@@ -431,13 +431,22 @@
             <label>🏷️ Choisir les locaux à utiliser</label>
                         <div style="margin-top:10px;">
                 <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block;">Mode de répartition : <span class="info-icon" id="repartitionInfoIcon" title="Informations">i
-                <span class="info-bubble" id="repartitionInfoBubble">Gros→Petit : remplit les plus gros locaux en premier. <br>
+                <span class="info-bubble" id="repartitionInfoBubble">Par section : attribue chaque section (feuille Excel) au local choisi. <br>
+                    Gros→Petit : remplit les plus gros locaux en premier. <br>
                     Petit→Gros : remplit les plus petits en premier. <br>
                     Uniforme : répartit les étudiants proportionnellement dans tous les locaux.</span></span></label>
-                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+                    <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="section"> Par section → local</label>
+                </div>
+                <div id="distributionModeChoices" style="display:flex;gap:12px;flex-wrap:wrap;">
                     <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="large-first" checked> Gros → Petit</label>
                     <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="small-first"> Petit → Gros</label>
                     <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="uniform"> Uniforme</label>
+                </div>
+                <div id="sectionDistributionUI" style="display:none;margin:12px 0;padding:12px;background:#f5f1fa;border:1px solid #d9c9e8;border-radius:8px;">
+                    <div style="font-size:13px;color:#555;margin-bottom:8px;">Choisissez le local de chaque section du fichier BRIO :</div>
+                    <div id="sectionRoomMapping"></div>
+                    <div style="font-size:12px;color:#666;margin-top:8px;">Les capacités des locaux sont vérifiées avant l'attribution. Les étudiants avec accommodement conservent leur répartition dédiée.</div>
                 </div>
 
             <div id="roomList" style="margin-top:8px;display:flex;gap:24px;align-items:flex-start;">
@@ -987,6 +996,15 @@
                     });
                     const recapWB = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(recapWB, recapSheet, 'Récapitulatif');
+                    if (lastDistributionMode === 'section') {
+                        const sectionAssignmentRows = [['Section', 'Local attribué']];
+                        for (const [sectionIndex, section] of brioSections.entries()) {
+                            sectionAssignmentRows.push([section, sectionRoomAssignments[section] || '']);
+                        }
+                        const sectionAssignmentSheet = XLSX.utils.aoa_to_sheet(sectionAssignmentRows);
+                        sectionAssignmentSheet['!cols'] = [{ wch: 30 }, { wch: 24 }];
+                        XLSX.utils.book_append_sheet(recapWB, sectionAssignmentSheet, 'Attribution sections');
+                    }
                     const recapArray = XLSX.write(recapWB, { bookType: 'xlsx', type: 'array' });
                     zip.file('listes_presence/Recapitulatif_etudiants.xlsx', recapArray);
                     console.log('Fichier récapitulatif Excel ajouté au ZIP');
@@ -1140,9 +1158,12 @@
             { name: 'VCH-2850', capacity: 201 },
             { name: 'VCH-2880', capacity: 110 }
         ];
+        let brioSections = [];
+        let sectionRoomAssignments = Object.create(null);
 
         // dernière attribution en mémoire (appliquée lors de la génération des PDFs)
         let lastAssignments = null;
+        let lastDistributionMode = 'large-first';
         // mapping local -> index (1..n) according to local population (most students = 1)
         let lastLocalIndexMap = null;
         // workbook binaire (Array) de l'attribution, à inclure dans le ZIP final
@@ -1301,6 +1322,97 @@
             return el ? el.value : 'large-first';
         }
 
+        function updateDistributionModeUI() {
+            const bySection = getDistributionMode() === 'section';
+            const choices = document.getElementById('distributionModeChoices');
+            const sectionUI = document.getElementById('sectionDistributionUI');
+            if (choices) choices.style.display = bySection ? 'none' : 'flex';
+            if (sectionUI) sectionUI.style.display = bySection ? 'block' : 'none';
+        }
+
+        function renderSectionRoomAssignments() {
+            const container = document.getElementById('sectionRoomMapping');
+            if (!container) return;
+
+            const selectedRooms = getSelectedRooms();
+            const previousSelections = { ...sectionRoomAssignments };
+            container.querySelectorAll('select[data-section]').forEach(select => {
+                previousSelections[select.dataset.section] = select.value;
+            });
+            sectionRoomAssignments = Object.create(null);
+            container.replaceChildren();
+
+            if (brioSections.length === 0) {
+                const message = document.createElement('div');
+                message.textContent = 'Chargez le fichier BRIO.xlsx pour afficher ses sections.';
+                message.style.color = '#666';
+                container.appendChild(message);
+                return;
+            }
+
+            for (const [sectionIndex, section] of brioSections.entries()) {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;gap:10px;margin:6px 0;flex-wrap:wrap;';
+
+                const sectionLabel = document.createElement('label');
+                sectionLabel.textContent = section;
+                sectionLabel.style.minWidth = '150px';
+                const assignmentLabel = document.createElement('span');
+                assignmentLabel.textContent = 'sera dans le local';
+                const select = document.createElement('select');
+                select.id = `sectionRoom_${sectionIndex}`;
+                sectionLabel.htmlFor = select.id;
+                select.dataset.section = section;
+                select.style.cssText = 'width:auto;min-width:180px;padding:7px;';
+
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = '-- choisir un local --';
+                select.appendChild(placeholder);
+                for (const room of selectedRooms) {
+                    const option = document.createElement('option');
+                    option.value = room.name;
+                    option.textContent = room.name;
+                    select.appendChild(option);
+                }
+
+                const previous = previousSelections[section] || '';
+                if (selectedRooms.some(room => room.name === previous)) {
+                    select.value = previous;
+                }
+                sectionRoomAssignments[section] = select.value;
+                select.addEventListener('change', () => {
+                    sectionRoomAssignments[section] = select.value;
+                });
+
+                row.append(sectionLabel, assignmentLabel, select);
+                container.appendChild(row);
+            }
+        }
+
+        async function loadBrioSections(file) {
+            brioSections = [];
+            sectionRoomAssignments = Object.create(null);
+            if (file && file.name.toLowerCase().endsWith('.xlsx')) {
+                const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+                brioSections = workbook.SheetNames.slice();
+            }
+            renderSectionRoomAssignments();
+        }
+
+        document.querySelectorAll('input[name="distMode"]').forEach(input => {
+            input.addEventListener('change', updateDistributionModeUI);
+        });
+        const roomListElement = document.getElementById('roomList');
+        if (roomListElement) {
+            roomListElement.addEventListener('change', event => {
+                if (event.target.matches('.roomCheckbox, .customRoomName')) {
+                    renderSectionRoomAssignments();
+                }
+            });
+        }
+        updateDistributionModeUI();
+
         function getSeatNumberStart() {
             const input = document.getElementById('numberingStart');
             const value = input ? parseInt(input.value, 10) : 1;
@@ -1386,6 +1498,44 @@
                 assigned.push({ ...s, local: '', place: '' });
             }
             return assigned;
+        }
+
+        function assignSectionsToRooms(students, rooms, startFrom = 1) {
+            if (new Set(rooms.map(room => room.name)).size !== rooms.length) {
+                throw new Error('Chaque local sélectionné doit avoir un nom unique.');
+            }
+            const roomByName = new Map(rooms.map(room => [room.name, room]));
+            const missingMappings = brioSections.filter(section => {
+                const roomName = sectionRoomAssignments[section];
+                return !roomName || !roomByName.has(roomName);
+            });
+            if (missingMappings.length > 0) {
+                throw new Error(`Choisissez un local pour chaque section : ${missingMappings.join(', ')}.`);
+            }
+
+            const roomCounts = new Map();
+            for (const student of students) {
+                const section = String(student.section || '').trim();
+                const roomName = sectionRoomAssignments[section];
+                if (!roomName || !roomByName.has(roomName)) {
+                    throw new Error(`La section « ${section || '(sans nom)'} » n'a pas de local valide.`);
+                }
+                roomCounts.set(roomName, (roomCounts.get(roomName) || 0) + 1);
+            }
+
+            for (const [roomName, count] of roomCounts) {
+                const room = roomByName.get(roomName);
+                if (count > room.capacity) {
+                    throw new Error(`Le local ${roomName} ne peut accueillir que ${room.capacity} étudiants, mais ${count} lui sont attribués par section.`);
+                }
+            }
+
+            let seatNumber = Number(startFrom) || 1;
+            return students.map(student => ({
+                ...student,
+                local: sectionRoomAssignments[String(student.section || '').trim()],
+                place: String(seatNumber++)
+            }));
         }
 
         function ensureLocalIndexMap() {
@@ -1510,7 +1660,10 @@
                 });
 
                 const startSeatNumber = getSeatNumberStart();
-                const assignedRegular = assignSeatsToRooms(remaining, roomsToUse, startSeatNumber);
+                lastDistributionMode = getDistributionMode();
+                const assignedRegular = lastDistributionMode === 'section'
+                    ? assignSectionsToRooms(remaining, roomsToUse, startSeatNumber)
+                    : assignSeatsToRooms(remaining, roomsToUse, startSeatNumber);
                 console.log('generateAll: assignedRegular count=', assignedRegular.length);
                 // Attribuer les accommodements à leurs salles si disponibles
                 const accomRoomsToUse = getSelectedAccomRooms();
@@ -1772,6 +1925,14 @@
             if (sAccom) sAccom.innerHTML = folderAccomFile ? ok('accommodements.xlsx trouvé') : optional('accommodements.xlsx non trouvé (optionnel)');
             if (sFilter) sFilter.innerHTML = folderFilterFile ? ok('horscampus.xlsx trouvé') : optional('horscampus.xlsx non trouvé (optionnel)');
             if (sPdf) sPdf.innerHTML = folderPdfFile ? ok('examen.pdf trouvé') : missing('examen.pdf non trouvé (obligatoire)');
+
+            try {
+                await loadBrioSections(folderBrioFile);
+            } catch (err) {
+                console.error('Erreur lors de la lecture des sections de BRIO:', err);
+                alert('Impossible de lire les feuilles de BRIO.xlsx : ' + err.message);
+                return;
+            }
 
             // Trigger processing for each found file
             if (folderBrioFile) {
