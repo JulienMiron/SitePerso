@@ -949,6 +949,20 @@
                     if (idx % 5 === 0) await new Promise(r => setTimeout(r, 0));
                 }
 
+                const accomStudents = students.filter(student => isAccommodementStudent(student));
+                if (accomStudents.length > 0) {
+                    try {
+                        console.log('generatePDFs: generating accommodation attendance PDF for', accomStudents.length, 'students');
+                        const accomAttendancePdfBytes = await generateAttendancePDF(
+                            accomStudents, 'section', 'Accommodements', evalName, courseName, startTime, endTime
+                        );
+                        zip.file('listes_presence/Presence_Accommodements.pdf', accomAttendancePdfBytes);
+                    } catch (errAccomList) {
+                        console.error('Erreur génération liste des accommodements:', errAccomList);
+                        throw errAccomList;
+                    }
+                }
+
                 // Générer une liste pour les étudiants exclus (si présents)
                 if (filterExcludeNISet && filterExcludeNISet.size > 0) {
                     const excludedStudents = preFilterStudents.filter(s => {
