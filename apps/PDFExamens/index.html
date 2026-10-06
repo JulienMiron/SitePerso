@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Générateur de PDFs d'Examen</title>
+    <link rel="icon" href="../../img/logo.png">
+    <link rel="stylesheet" href="../../styles.css">
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -32,86 +34,86 @@
             box-sizing: border-box;
         }
 
-        @keyframes bgShift {
-            0%   { background-position: 0% 50%; }
-            50%  { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
         body {
             font-family: Helvetica, Arial, sans-serif;
-            background: linear-gradient(
-                135deg,
-                #281C33 0%,
-                var(--ulaval-red-dark) 20%,
-                var(--ulaval-red) 38%,
-                #CA9460 52%,
-                var(--ulaval-gold) 65%,
-                #FFF3C4 80%,
-                var(--ulaval-gold) 90%,
-                var(--ulaval-red) 100%
-            );
-            background-size: 300% 300%;
-            animation: bgShift 12s ease infinite;
+            color: var(--text-dark);
+            line-height: 1.6;
+            background: var(--bg-light);
             min-height: 100vh;
+            padding: 0 20px 40px;
+        }
+
+        .app-topbar {
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-            position: relative;
+            gap: 10px;
+            background: #0E9E6C;
+            color: #ffffff;
+            margin: 0 -20px 28px;
+            padding: 12px 20px;
         }
 
-        /* Decorative blurred orbs */
-        body::before,
-        body::after {
-            content: '';
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.35;
-            pointer-events: none;
-            z-index: 0;
+        .app-topbar img {
+            height: 26px;
+            width: 26px;
+            border-radius: 4px;
         }
 
-        body::before {
-            width: 520px;
-            height: 520px;
-            background: radial-gradient(circle, var(--ulaval-gold) 0%, transparent 70%);
-            top: -120px;
-            right: -100px;
+        .app-topbar-brand {
+            color: #ffffff;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 15px;
         }
 
-        body::after {
-            width: 480px;
-            height: 480px;
-            background: radial-gradient(circle, var(--ulaval-red) 0%, transparent 70%);
-            bottom: -120px;
-            left: -80px;
+        .app-topbar-back {
+            margin-left: auto;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .app-topbar-back:hover {
+            text-decoration: underline;
+            opacity: 1;
         }
 
         .container {
-            position: relative;
-            z-index: 1;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
+            background: transparent;
             max-width: 900px;
             width: 100%;
+            margin: 0 auto;
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-            text-align: center;
+            color: var(--text-dark);
+            margin: 0.2rem 0 0.6rem;
+            font-size: 26px;
         }
 
         .subtitle {
-            color: #666;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 14px;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            max-width: 70ch;
+            margin-bottom: 0;
+        }
+
+        .app-hero {
+            border-left: 6px solid var(--ulaval-red);
+            background: linear-gradient(90deg, #fff7f7 0%, #ffffff 55%, #f7fbfc 100%);
+            padding: 1.3rem 1.5rem;
+            margin: 1rem 0 1.5rem;
+            border-radius: 0 var(--radius) var(--radius) 0;
+        }
+
+        .app-eyebrow {
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--ulaval-red);
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin: 0 0 0.35rem;
         }
 
         .upload-section {
@@ -143,25 +145,25 @@
 
         button {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #281C33, #9467BD, #CFBBE1);
+            padding: 13px;
+            background: var(--ulaval-red);
             color: white;
-            border: none;
-            border-radius: 10px;
+            border: 1px solid var(--ulaval-red);
+            border-radius: 7px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: filter 0.15s ease;
             margin-top: 20px;
         }
 
         button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            filter: brightness(0.95);
         }
 
         button:disabled {
             background: #ccc;
+            border-color: #ccc;
             cursor: not-allowed;
         }
 
@@ -328,9 +330,11 @@
         }
 
         .intro-guide {
-            background: #f5f1fa;
-            border: 1px solid #d9c9e8;
-            border-radius: 10px;
+            border: 1px solid var(--border-light);
+            border-left: 5px solid var(--ulaval-red);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            background: #ffffff;
+            box-shadow: var(--shadow-sm);
             margin-bottom: 25px;
             overflow: hidden;
         }
@@ -339,7 +343,7 @@
             cursor: pointer;
             padding: 14px 16px;
             font-weight: 700;
-            color: var(--ulaval-red-dark);
+            color: var(--text-dark);
             list-style: none;
         }
 
@@ -350,7 +354,7 @@
         .intro-guide-body {
             padding: 0 18px 18px;
             font-size: 13px;
-            color: #444;
+            color: var(--text-muted);
             line-height: 1.6;
         }
 
@@ -363,7 +367,7 @@
         }
 
         .intro-guide-body code {
-            background: #ece2f4;
+            background: var(--bg-light);
             padding: 1px 5px;
             border-radius: 4px;
             font-size: 12px;
@@ -371,10 +375,11 @@
 
         .step-card {
             border: 1px solid var(--border-light);
-            border-radius: 12px;
+            border-radius: var(--radius);
             padding: 20px;
             margin-bottom: 22px;
-            background: #fcfcfd;
+            background: #ffffff;
+            box-shadow: var(--shadow-sm);
         }
 
         .step-header {
@@ -389,26 +394,28 @@
             width: 26px;
             height: 26px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #281C33, #9467BD);
+            background: var(--ulaval-red);
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 13px;
             font-weight: 700;
+            line-height: 1;
         }
 
         .step-title {
             font-size: 17px;
             font-weight: 700;
-            color: #333;
+            color: var(--text-dark);
         }
 
         .step-tag {
             font-size: 11px;
-            font-weight: 600;
-            color: #735093;
-            background: #efe6f7;
+            font-weight: 700;
+            color: var(--ulaval-red);
+            background: var(--bg-light);
+            border: 1px solid var(--border-light);
             padding: 2px 8px;
             border-radius: 10px;
             margin-left: 2px;
@@ -423,22 +430,30 @@
 
         .field-help {
             font-size: 12px;
-            color: #777;
+            color: var(--text-muted);
             margin-top: 4px;
             line-height: 1.5;
         }
 
         .field-help code {
-            background: #f0ecf5;
+            background: var(--bg-light);
             padding: 1px 5px;
             border-radius: 4px;
         }
     </style>
 </head>
 <body>
+    <header class="app-topbar">
+        <img src="../../img/logo.png" alt="">
+        <a class="app-topbar-brand" href="../../index.html">Julien Miron</a>
+        <a class="app-topbar-back" href="../../index.html">← Retour au site</a>
+    </header>
     <div class="container">
-        <h1>📄 Générateur d'examens avec nom, matricule et numéro de table</h1>
-        <div class="subtitle">Génère les PDFs individualisés, les listes de présence et le récapitulatif Excel d'un examen, à partir du dossier exporté de BRIO.</div>
+        <div class="app-hero">
+            <p class="app-eyebrow">Outil interne — Département de mathématiques et de statistique</p>
+            <h1>📄 Générateur d'examens avec nom, matricule et numéro de table</h1>
+            <p class="subtitle">Génère les PDFs individualisés, les listes de présence et le récapitulatif Excel d'un examen, à partir du dossier exporté de BRIO.</p>
+        </div>
 
         <details class="intro-guide" open>
             <summary>ℹ️ Comment utiliser cet outil (cliquer pour replier)</summary>
