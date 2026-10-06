@@ -3,19 +3,18 @@ Sujet: {cours} – {examen} : votre local et votre place
 
 Bonjour {prenom_nom},
 
-Voici les informations pour votre {examen} du cours {cours} :
+Pour l'{examen} du cours {cours}, vous avez la place {place} au {local}.
+Votre examen est prévu de {heure_debut} à {heure_fin}.
 
-  • Local : {local}
-  • Place : {place}
-  • Section : {section}
-  • Heure de début : {heure_debut}
-  • Heure de fin : {heure_fin}
+Pour la prise de présence, vous devez avoir une pièce d'identité physique avec photo (carte UL acceptée en format physique). La carte UL sur téléphone n'est pas acceptée.
+
+Comme nous vous demandons de déposer tous les effets personnels qui ne sont pas nécessaires pour l'examen à l'avant du local, nous vous suggérons de venir avec le moins de matériel possible.
 
 {bloc_acc}
 
-{bloc_copie}
+Si une reprise vous a été accordée, vous devez ignorer ce message.
 
-Bon examen !
+{bloc_copie}
 
 Julien Miron
 Département de mathématiques et de statistique
