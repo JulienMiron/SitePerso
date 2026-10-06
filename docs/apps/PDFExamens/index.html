@@ -322,41 +322,185 @@
         .info-bubble.show {
             display: block;
         }
+
+        .subtitle {
+            display: block;
+        }
+
+        .intro-guide {
+            background: #f5f1fa;
+            border: 1px solid #d9c9e8;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .intro-guide summary {
+            cursor: pointer;
+            padding: 14px 16px;
+            font-weight: 700;
+            color: var(--ulaval-red-dark);
+            list-style: none;
+        }
+
+        .intro-guide summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .intro-guide-body {
+            padding: 0 18px 18px;
+            font-size: 13px;
+            color: #444;
+            line-height: 1.6;
+        }
+
+        .intro-guide-body ol {
+            margin: 0 0 10px 18px;
+        }
+
+        .intro-guide-body li {
+            margin-bottom: 6px;
+        }
+
+        .intro-guide-body code {
+            background: #ece2f4;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .step-card {
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 22px;
+            background: #fcfcfd;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        .step-badge {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #281C33, #9467BD);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .step-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .step-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: #735093;
+            background: #efe6f7;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 2px;
+        }
+
+        .step-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 6px 0 16px;
+        }
+
+        .field-help {
+            font-size: 12px;
+            color: #777;
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+
+        .field-help code {
+            background: #f0ecf5;
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📄 Générateur d'examens avec nom, matricule et numéro de table</h1>
-        <div class="upload-section">
-            <label for="evalName">📝 Nom de l'évaluation (obligatoire)</label>
-            <input type="text" id="evalName" placeholder="Ex: Examen 1">
-        </div>
-        <div class="upload-section">
-            <label for="courseName">📚 Numéro du cours (obligatoire)</label>
-            <input type="text" id="courseName" placeholder="Ex: STT-1900">
-        </div>
-        <div class="upload-section">
-            <label>🕐 Heures de l'examen (optionnel)</label>
-            <div style="display:flex;gap:16px;align-items:center;">
-                <div style="flex:1;">
-                    <label for="startTime" style="font-size:13px;">Début</label>
-                    <input type="time" id="startTime" style="width:100%;padding:12px;border:2px solid #9467bd;border-radius:10px;background:#f5f1fa;font-size:14px;color:#333;">
-                </div>
-                <div style="flex:1;">
-                    <label for="endTime" style="font-size:13px;">Fin</label>
-                    <input type="time" id="endTime" style="width:100%;padding:12px;border:2px solid #9467bd;border-radius:10px;background:#f5f1fa;font-size:14px;color:#333;">
+        <div class="subtitle">Génère les PDFs individualisés, les listes de présence et le récapitulatif Excel d'un examen, à partir du dossier exporté de BRIO.</div>
+
+        <details class="intro-guide" open>
+            <summary>ℹ️ Comment utiliser cet outil (cliquer pour replier)</summary>
+            <div class="intro-guide-body">
+                <p>Tout se passe dans votre navigateur : aucun fichier n'est envoyé sur un serveur. Suivez les étapes ci-dessous dans l'ordre :</p>
+                <ol>
+                    <li><strong>Étape 1 — Informations générales :</strong> le nom de l'évaluation et le cours, imprimés sur chaque PDF.</li>
+                    <li><strong>Étape 2 — Fichiers de l'examen :</strong> sélectionnez le dossier contenant <code>BRIO.xlsx</code> et <code>examen.pdf</code> (obligatoires), et au besoin <code>accommodements.xlsx</code>, <code>horscampus.xlsx</code> ou des captures d'écran d'accommodements.</li>
+                    <li><strong>Étape 3 — Locaux et répartition :</strong> choisissez les locaux réguliers et, si nécessaire, les locaux d'accommodement, puis le mode de répartition des étudiants.</li>
+                    <li><strong>Étape 4 — Options d'impression :</strong> format des listes de présence, pourcentage de copies vierges, numérotation.</li>
+                    <li><strong>Étape 5 — Génération :</strong> cliquez sur « Générer et Télécharger le ZIP ». Il contiendra les PDFs, les listes de présence et <code>Recapitulatif_etudiants.xlsx</code>.</li>
+                </ol>
+                <p><strong>Après la génération :</strong> pour envoyer automatiquement un courriel à chaque étudiant avec son local et sa place, utilisez <code>envoi_courriels.py</code> (dossier <code>envoi_courriels/</code> à côté de cette page) avec le <code>Recapitulatif_etudiants.xlsx</code> extrait du ZIP. Voir <code>LISEZMOI.md</code> dans ce dossier pour la marche à suivre complète.</p>
+            </div>
+        </details>
+
+        <div class="step-card">
+            <div class="step-header"><span class="step-badge">1</span><span class="step-title">Informations générales</span></div>
+            <div class="step-desc">Ces renseignements apparaissent sur la page de couverture de chaque PDF et dans le récapitulatif Excel final.</div>
+            <div class="upload-section">
+                <label for="evalName">📝 Nom de l'évaluation (obligatoire)</label>
+                <input type="text" id="evalName" placeholder="Ex: Examen 1">
+                <div class="field-help">Ex. : « Examen 1 », « Intra », « Final ». Ce texte est imprimé tel quel sur chaque PDF.</div>
+            </div>
+            <div class="upload-section">
+                <label for="courseName">📚 Numéro du cours (obligatoire)</label>
+                <input type="text" id="courseName" placeholder="Ex: STT-1900">
+                <div class="field-help">Le sigle du cours tel qu'il doit apparaître sur les documents (ex. STT-1900).</div>
+            </div>
+            <div class="upload-section">
+                <label>🕐 Heures de l'examen (optionnel)</label>
+                <div class="field-help">Utilisées dans le récapitulatif et pour les courriels de convocation. Les étudiants en accommodement conserveront automatiquement leurs propres heures si celles-ci sont fournies dans <code>accommodements.xlsx</code>.</div>
+                <div style="display:flex;gap:16px;align-items:center;">
+                    <div style="flex:1;">
+                        <label for="startTime" style="font-size:13px;">Début</label>
+                        <input type="time" id="startTime" style="width:100%;padding:12px;border:2px solid #9467bd;border-radius:10px;background:#f5f1fa;font-size:14px;color:#333;">
+                    </div>
+                    <div style="flex:1;">
+                        <label for="endTime" style="font-size:13px;">Fin</label>
+                        <input type="time" id="endTime" style="width:100%;padding:12px;border:2px solid #9467bd;border-radius:10px;background:#f5f1fa;font-size:14px;color:#333;">
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="step-card">
+            <div class="step-header"><span class="step-badge">2</span><span class="step-title">Fichiers de l'examen</span></div>
+            <div class="step-desc">Un seul dossier à sélectionner : l'outil détecte automatiquement chaque fichier d'après son nom. Préparez-le à l'avance avec les fichiers ci-dessous.</div>
         <div class="upload-section">
             <label for="folderInput" style="display:inline;">📁 Sélectionner le dossier contenant tous les fichiers</label>
             <span class="info-icon" id="folderInfoIcon" title="Informations">i
-                <span class="info-bubble" id="folderInfoBubble">Le dossier sélectionné doit contenir les fichiers suivants 
+                <span class="info-bubble" id="folderInfoBubble">Le dossier sélectionné doit contenir les fichiers suivants
                     :<br><br><strong>BRIO.xlsx</strong> — liste d'étudiants exportée de BRIO (obligatoire)
                     <br><strong>examen.pdf</strong> — modèle PDF de l'examen selon le .cls créé par Jérôme Soucy ou Julien Miron (obligatoire)
                     <br><strong>accommodements.xlsx</strong> — liste des accommodements fournie par l'agente de secrétariat (optionnel)
                     <br><strong>horscampus.xlsx</strong> — liste examen hors campus qui se trouve sur le site du SSE (optionnel)</span></span>
-            <label for="folderInput" id="folderSelectBtn" style="display:block;width:100%;padding:12px;border:2px dashed #9467bd;border-radius:10px;background:#f5f1fa;cursor:pointer;transition:all 0.3s ease;text-align:left;color:#888;font-size:14px;">Cliquer pour sélectionner un dossier...</label>
+            <div class="field-help">
+                <strong>BRIO.xlsx</strong> <span class="step-tag">obligatoire</span> — export de la liste des étudiants depuis BRIO.<br>
+                <strong>examen.pdf</strong> <span class="step-tag">obligatoire</span> — modèle PDF de l'examen (gabarit .cls de Jérôme Soucy ou Julien Miron).<br>
+                <strong>accommodements.xlsx</strong> <span class="step-tag">optionnel</span> — liste fournie par l'agente de secrétariat ; permet d'attribuer des heures et locaux dédiés.<br>
+                <strong>horscampus.xlsx</strong> <span class="step-tag">optionnel</span> — liste des étudiants hors campus (site du SSE) ; ces étudiants sont exclus de l'attribution de places.
+            </div>
+            <label for="folderInput" id="folderSelectBtn" style="display:block;width:100%;padding:12px;border:2px dashed #9467bd;border-radius:10px;background:#f5f1fa;cursor:pointer;transition:all 0.3s ease;text-align:left;color:#888;font-size:14px;margin-top:10px;">Cliquer pour sélectionner un dossier...</label>
             <input type="file" id="folderInput" webkitdirectory directory multiple style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none;">
             <div id="folderStatus" style="margin-top:10px;font-size:13px;color:#333;display:none;">
                 <div id="statusBrio" style="margin-bottom:4px;"></div>
@@ -369,7 +513,8 @@
 
         <div class="upload-section">
             <label>🖼️ Captures des accommodements (optionnel, une par section)</label>
-            <div style="font-size:12px;color:#666;margin-bottom:8px;">Ajoutez une capture pour chaque section et indiquez sa section BRIO. Les NI des étudiants ayant une activation aux examens supérieure à 0 seront présélectionnés. Vérifiez et corrigez les résultats avant de générer. Les images sont analysées dans votre navigateur et ne sont pas téléversées.</div>
+            <div class="field-help">Alternative (ou complément) à <code>accommodements.xlsx</code> : si vous n'avez qu'une capture d'écran du système d'accommodements pour chaque section, ajoutez-la ici. L'outil y reconnaît automatiquement le texte (OCR, dans votre navigateur) pour présélectionner les étudiants ayant une activation aux examens supérieure à 0.</div>
+            <div style="font-size:12px;color:#666;margin-bottom:8px;">Ajoutez une capture pour chaque section et indiquez sa section BRIO. Les NI des étudiants ayant une activation aux examens supérieure à 0 seront présélectionnés. <strong>Vérifiez et corrigez les résultats avant de générer</strong> — l'OCR peut se tromper. Les images sont analysées dans votre navigateur et ne sont pas téléversées.</div>
             <div id="accomScreenshotCaptures"></div>
             <button type="button" id="addAccomScreenshotBtn" style="width:auto;padding:8px 12px;margin-top:6px;font-size:13px;">＋ Ajouter une capture de section</button>
             <div id="accomScreenshotStatus" role="status" aria-live="polite" style="font-size:13px;margin:8px 0;"></div>
@@ -439,7 +584,11 @@
         <!-- pdfFile is now loaded from the folder -->
 
         <!-- attribution handled automatically by the single action button -->
+        </div>
 
+        <div class="step-card">
+            <div class="step-header"><span class="step-badge">3</span><span class="step-title">Locaux et répartition des étudiants</span></div>
+            <div class="step-desc">Sélectionnez les locaux disponibles et la façon de répartir les étudiants entre eux. Les étudiants en accommodement sont toujours placés dans les locaux d'accommodement dédiés ci-dessous, indépendamment de ce mode.</div>
         <div id="roomsUI" style="margin-bottom:16px;">
             <label>🏷️ Choisir les locaux à utiliser</label>
                         <div style="margin-top:10px;">
@@ -543,9 +692,11 @@
             <div style="font-size:12px;color:#666">Cochez les locaux à utiliser et modifiez la capacité si besoin.</div>
 
         </div>
+        </div>
 
         <div id="accomRoomsUI" style="margin-bottom:16px;">
             <label>🟪 Salles d'accommodement (optionnel)</label>
+            <div class="field-help">Locaux réservés exclusivement aux étudiants identifiés en accommodement (via <code>accommodements.xlsx</code> ou une capture). Ils sont remplis du plus grand au plus petit, séparément des locaux réguliers.</div>
             <div id="accomRoomList" style="margin-top:8px;">
                 <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                     <input type="checkbox" class="accomRoomCheckbox" id="accom_room_1">
@@ -574,9 +725,14 @@
             </div>
             <div style="font-size:12px;color:#666">Si aucune salle n'est sélectionnée, les accommodements restent sans attribution de place.</div>
         </div>
+        </div>
 
+        <div class="step-card">
+            <div class="step-header"><span class="step-badge">4</span><span class="step-title">Options d'impression</span></div>
+            <div class="step-desc">Réglages fins pour les listes de présence et la numérotation des copies.</div>
         <div class="upload-section">
             <label>📋 Format de la liste de présence</label>
+            <div class="field-help"><strong>Par local</strong> : une liste de présence par local utilisé. <strong>Par section</strong> : une liste par section BRIO, même si une section est répartie dans plusieurs locaux.</div>
             <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
 
                 <div style="display:flex;align-items:center;gap:8px;margin-left:12px;">
@@ -588,17 +744,19 @@
             </div>
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
-            <label for="blankPercent" style="font-size:13px;font-weight:600;">Nombre de copies vierges en pourcentage <br> 
+            <label for="blankPercent" style="font-size:13px;font-weight:600;">Nombre de copies vierges en pourcentage <br>
                 du nombre total d'étudiants</label>
             <input type="number" id="blankPercent" value="2.5" min="0" max="100" step="0.1" style="width:100px;padding:8px;border:2px solid #9467bd;border-radius:8px;background:#f5f1fa;text-align:right;">
             <label > %</label>
         </div>
+        <div class="field-help">Des copies supplémentaires non attribuées à un étudiant, à prévoir pour les retardataires ou imprévus (ex. 2,5 % = environ 3 copies pour 100 étudiants).</div>
 
         <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
             <label for="numberingStart" style="font-size:13px;font-weight:600;">Numéro de départ pour la numérotation <br>
                 des examens et des places</label>
             <input type="number" id="numberingStart" value="1" min="1" step="1" style="width:100px;padding:8px;border:2px solid #9467bd;border-radius:8px;background:#f5f1fa;text-align:right;">
         </div>
+        <div class="field-help">Le premier numéro imprimé sur les examens et les places. Laissez à 1 sauf si vous poursuivez une numérotation déjà commencée.</div>
 
         <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
             <input type="checkbox" id="numberingResetPerRoom">
@@ -606,19 +764,24 @@
                 Recommencer la numérotation à 1 dans chaque local
             </label>
         </div>
+        <div class="field-help">Si coché, chaque local recommence sa propre numérotation au lieu de continuer la séquence globale.</div>
+        </div>
 
+        <div class="step-card">
+            <div class="step-header"><span class="step-badge">5</span><span class="step-title">Génération</span></div>
+            <div class="step-desc">Vérifiez les étapes précédentes, puis générez le ZIP final. Selon le nombre d'étudiants, l'opération peut prendre de quelques secondes à quelques minutes.</div>
 
         <button id="generateBtn">
             🚀 Générer et Télécharger le ZIP
         </button>
-
-
 
         <div class="progress" id="progress">
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
             <div class="progress-text" id="progressText">Initialisation...</div>
+        </div>
+        <div class="field-help" style="margin-top:12px;">Le ZIP contient : les PDFs d'examen personnalisés, les listes de présence et <code>listes_presence/Recapitulatif_etudiants.xlsx</code>. Ce dernier fichier sert ensuite à l'envoi des courriels de convocation (voir le guide en haut de page).</div>
         </div>
     </div>
 
@@ -1117,7 +1280,7 @@
                     progressDiv.style.display = 'none';
                     progressFill.style.width = '0%';
                     const destMsg = folderDirectoryHandle ? ` dans le dossier « ${folderDirectoryHandle.name} »` : '';
-                    alert(`✅ Succès ! ${students.length} PDFs ont été générés et téléchargés dans le ZIP${destMsg}.`);
+                    alert(`✅ Succès ! ${students.length} PDFs ont été générés et téléchargés dans le ZIP${destMsg}.\n\nProchaine étape (facultative) : pour envoyer les courriels de convocation, utilisez Recapitulatif_etudiants.xlsx (dans listes_presence/) avec le script envoi_courriels.py.`);
                     generateBtn.disabled = false;
                 }, 1000);
 
