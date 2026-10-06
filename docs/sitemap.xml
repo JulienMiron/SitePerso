@@ -2,26 +2,30 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://julienmiron.github.io/about.html</loc>
-    <lastmod>2026-10-05T23:28:22.129Z</lastmod>
+    <lastmod>2026-10-06T13:58:41.077Z</lastmod>
   </url>
   <url>
     <loc>https://julienmiron.github.io/cours/STT-1000/STT-1000.html</loc>
-    <lastmod>2026-10-05T23:28:22.141Z</lastmod>
+    <lastmod>2026-10-06T13:58:41.091Z</lastmod>
   </url>
   <url>
-    <loc>https://julienmiron.github.io/apps/STT-1900/ANOVA.html</loc>
-    <lastmod>2026-10-05T23:28:22.139Z</lastmod>
+    <loc>https://julienmiron.github.io/apps/PDFExamens/envoi_courriels/LISEZMOI.html</loc>
+    <lastmod>2026-10-06T13:58:41.078Z</lastmod>
   </url>
   <url>
     <loc>https://julienmiron.github.io/index.html</loc>
-    <lastmod>2026-10-05T23:28:22.159Z</lastmod>
+    <lastmod>2026-10-06T13:58:41.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://julienmiron.github.io/apps/STT-1900/ANOVA.html</loc>
+    <lastmod>2026-10-06T13:58:41.089Z</lastmod>
   </url>
   <url>
     <loc>https://julienmiron.github.io/cours/STT-1900/STT-1900.html</loc>
-    <lastmod>2026-10-05T23:28:22.141Z</lastmod>
+    <lastmod>2026-10-06T13:58:41.091Z</lastmod>
   </url>
   <url>
     <loc>https://julienmiron.github.io/cours/STT-2902/STT-2902.html</loc>
-    <lastmod>2026-10-05T23:28:22.141Z</lastmod>
+    <lastmod>2026-10-06T13:58:41.091Z</lastmod>
   </url>
 </urlset>

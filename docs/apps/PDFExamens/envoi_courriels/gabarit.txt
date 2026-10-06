@@ -1,0 +1,39 @@
+[NORMAL]
+Sujet: {cours} – {examen} : votre local et votre place
+
+Bonjour {prenom_nom},
+
+Voici les informations pour votre {examen} du cours {cours} :
+
+  • Local : {local}
+  • Place : {place}
+  • Section : {section}
+  • Heure de début : {heure_debut}
+  • Heure de fin : {heure_fin}
+
+{bloc_acc}
+
+{bloc_copie}
+
+Bon examen !
+
+Julien Miron
+Département de mathématiques et de statistique
+Université Laval
+
+[BLOC_ACC]
+
+[BLOC_COPIE]
+
+[HORS_CAMPUS]
+Sujet: {cours} – {examen} : examen hors campus
+
+Bonjour {prenom_nom},
+
+Vous êtes inscrit(e) à l'examen hors campus pour le cours {cours} ({examen}). Vous ne recevez donc pas de local ni de place sur le campus.
+
+Les modalités de passation vous seront communiquées par le Service de soutien à l'étudiant (SSE).
+
+Julien Miron
+Département de mathématiques et de statistique
+Université Laval
