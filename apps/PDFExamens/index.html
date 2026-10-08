@@ -770,7 +770,7 @@
             niY: 147,  // Distance depuis le haut de la page
             niSize: 16,
             
-            // Position du numéro de table (coin bas droit)
+            // Position du numéro de table (coin bas droit de la page couverture)
             tableX: 88,  // Distance depuis le bord droit
             tableY: 38,  // Distance depuis le bas
             tableSize: 16
@@ -778,7 +778,12 @@
             // Position du local (coin bas gauche sur la page de couverture)
             localX: 40,
             localY: 38,
-            localSize: 12
+            localSize: 12,
+
+            // Autres pages : ligne « local · nom · place » en haut à droite, en plus petit
+            otherPagesRight: 40,  // Distance depuis le bord droit (texte aligné à droite)
+            otherPagesTop: 28,    // Distance depuis le haut de la page
+            otherPagesSize: 9
         };
         // ==================================================
 
@@ -992,20 +997,38 @@
                             });
                         }
 
-                        // Table number on every page
-                        for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
-                            const page = pages[pageIndex];
-                            const { width: pageWidth } = page.getSize();
-                            const tableText = student.table || '';
+                        // --- PLACE (coin bas droit de la page couverture) ---
+                        const tableText = String(student.table || '');
+                        if (tableText) {
                             const tableWidth = font.widthOfTextAtSize(tableText, CONFIG.tableSize);
-                            const tableCenterX = pageWidth - CONFIG.tableX;
-                            page.drawText(tableText, {
-                                x: tableCenterX - tableWidth / 2,
+                            firstPage.drawText(tableText, {
+                                x: (width - CONFIG.tableX) - tableWidth / 2,
                                 y: CONFIG.tableY,
                                 size: CONFIG.tableSize,
                                 font,
                                 color: pdfColor('--pdf-text'),
                             });
+                        }
+
+                        // --- AUTRES PAGES : local · nom · place, en petit en haut à droite ---
+                        const otherPagesText = [
+                            student.local || '',
+                            nameText,
+                            tableText ? `Place ${tableText}` : ''
+                        ].filter(Boolean).join('  ·  ');
+                        if (otherPagesText) {
+                            const otherWidth = font.widthOfTextAtSize(otherPagesText, CONFIG.otherPagesSize);
+                            for (let pageIndex = 1; pageIndex < pages.length; pageIndex++) {
+                                const page = pages[pageIndex];
+                                const { width: pageWidth, height: pageHeight } = page.getSize();
+                                page.drawText(otherPagesText, {
+                                    x: Math.max(CONFIG.otherPagesRight, pageWidth - CONFIG.otherPagesRight - otherWidth),
+                                    y: pageHeight - CONFIG.otherPagesTop,
+                                    size: CONFIG.otherPagesSize,
+                                    font,
+                                    color: pdfColor('--pdf-text'),
+                                });
+                            }
                         }
 
                         // Sauvegarder le PDF
