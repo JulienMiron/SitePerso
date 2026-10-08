@@ -409,6 +409,12 @@
             color: var(--text-dark);
         }
 
+        details.column-mapping { margin-top:12px; border:1px dashed #d9c9e8; border-radius:8px; padding:0 14px; background:#faf8fc; }
+        details.column-mapping summary { cursor:pointer; padding:10px 0; font-weight:600; color:#735093; font-size:13px; }
+        details.column-mapping summary .summary-hint { font-weight:normal; color:#666; margin-left:6px; }
+        details.column-mapping[open] summary { border-bottom:1px solid #e4dced; margin-bottom:8px; }
+        details.column-mapping .mapping-block { margin-bottom:14px; }
+        details.column-mapping .mapping-title { font-size:13px; font-weight:600; color:#555; margin-bottom:4px; }
         .room-cards { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
         .room-card { display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid #d9c9e8; background:#f5f1fa; border-radius:8px; }
         .room-card-name { font-weight:700; color:#735093; }
@@ -532,8 +538,12 @@
             <div id="detectionResult" style="margin-top:10px;font-size:13px;color:#333"></div>
         </div>
 
-        <!-- Hidden accom mapping UI (shown when accommodements.xlsx found) -->
-        <div id="accomMap" style="margin-top:10px;font-size:13px;color:#333;display:none;">
+        <details class="column-mapping" id="columnMappingDetails" style="display:none;">
+            <summary>🔧 Vérifier / choisir les colonnes<span class="summary-hint">(détection automatique ; à ouvrir seulement si les noms, NI, heures ou locaux ne sont pas reconnus)</span></summary>
+
+        <!-- Mappage des colonnes de accommodements.xlsx (affiché si le fichier est présent) -->
+        <div id="accomMap" class="mapping-block" style="font-size:13px;color:#333;display:none;">
+            <div class="mapping-title">accommodements.xlsx</div>
             <label for="accomNiSelect">Colonne contenant le numéro de dossier (NI) — accommodements</label>
             <select id="accomNiSelect"></select>
             <div style="display:flex;gap:12px;margin-top:8px;">
@@ -552,8 +562,9 @@
             </div>
         </div>
 
-        <!-- Hidden filter mapping UI (shown when horscampus.xlsx found) -->
-        <div id="filterMap" style="margin-top:10px;font-size:13px;color:#333;display:none;">
+        <!-- Mappage des colonnes de horscampus.xlsx (affiché si le fichier est présent) -->
+        <div id="filterMap" class="mapping-block" style="font-size:13px;color:#333;display:none;">
+            <div class="mapping-title">horscampus.xlsx</div>
             <label for="filterNiSelect">Colonne NI (numéro dossier) dans le fichier hors campus</label>
             <select id="filterNiSelect"></select>
             <label for="filterTypeSelect" style="margin-top:6px;display:block;">Colonne TypeInscription (ligne 4 et suivantes)</label>
@@ -561,8 +572,8 @@
             <div id="filterResult" style="margin-top:8px;font-size:13px;color:#333;display:none;"></div>
         </div>
 
-        <div class="upload-section" id="mappingUI" style="display:none;">
-            <label>🔧 Vérifier / choisir les colonnes</label>
+        <div class="mapping-block" id="mappingUI" style="display:none;">
+            <div class="mapping-title">BRIO.xlsx</div>
             <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
                 <input type="checkbox" id="nameSeparate" checked> <label for="nameSeparate" style="margin:0;font-weight:600;">Nom séparé en Prénom / Nom</label>
             </div>
@@ -592,6 +603,7 @@
             </div>
             <div style="font-size:12px;color:#666">Conseil : vérifiez et modifiez si nécessaire avant de générer.</div>
         </div>
+        </details>
 
         <!-- pdfFile is now loaded from the folder -->
 
@@ -2613,6 +2625,18 @@
                 await onFilterFilesSelected({ target: { files: [folderFilterFile] } });
             }
             await refreshBrioStudentCache();
+            updateColumnMappingVisibility();
+        }
+
+        // Le volet « Vérifier / choisir les colonnes » reste replié ; il n'apparaît que si au moins un mappage est disponible
+        function updateColumnMappingVisibility() {
+            const details = document.getElementById('columnMappingDetails');
+            if (!details) return;
+            const anyVisible = ['mappingUI', 'accomMap', 'filterMap'].some(id => {
+                const el = document.getElementById(id);
+                return el && el.style.display !== 'none';
+            });
+            details.style.display = anyVisible ? '' : 'none';
         }
 
         async function onCsvFileSelected(e) {
@@ -2686,16 +2710,7 @@
                 const mappingEl = document.getElementById('mappingUI');
                 if (mappingEl) {
                     try { mappingEl.style.display = 'block'; } catch(e) { console.warn('mappingEl show failed', e); }
-                    try {
-                        // move mapping UI immediately after the folder upload section
-                        const folderInput = document.getElementById('folderInput');
-                        const folderSection = folderInput ? folderInput.closest('.upload-section') : null;
-                        if (folderSection && mappingEl && folderSection.parentNode) {
-                            folderSection.parentNode.insertBefore(mappingEl, folderSection.nextSibling);
-                        }
-                    } catch (err) {
-                        console.warn('Impossible de repositionner mappingUI:', err);
-                    }
+                    updateColumnMappingVisibility();
                 } else {
                     console.warn('mappingUI element not found');
                 }
@@ -2870,6 +2885,7 @@
             if (defaultRoomIdx >= 0 && accomRoomSel) accomRoomSel.value = String(defaultRoomIdx);
 
             try { if (mapDiv) mapDiv.style.display = 'block'; } catch(e) { console.warn('could not show accomMap', e); }
+            updateColumnMappingVisibility();
 
             // helper to get current column indices
             const getAccomColIndices = () => ({
@@ -2985,16 +3001,6 @@
             const files = Array.from(e.target.files || []);
             filterExcludeNISet = new Set();
             const filterMapDiv = document.getElementById('filterMap');
-            // Place the filter mapping UI in the folder upload section
-            try {
-                const folderInput = document.getElementById('folderInput');
-                const folderSection = folderInput ? folderInput.closest('.upload-section') : null;
-                if (folderSection && filterMapDiv) {
-                    folderSection.parentNode.insertBefore(filterMapDiv, folderSection.nextSibling.nextSibling || folderSection.nextSibling);
-                }
-            } catch (err) {
-                console.warn('Impossible de repositionner filterMap:', err);
-            }
             const resultDiv = document.getElementById('filterResult');
             const niSelect = document.getElementById('filterNiSelect');
             const typeSelect = document.getElementById('filterTypeSelect');
@@ -3064,6 +3070,7 @@
                 document.getElementById('filterMap').appendChild(keepSelect);
             }
             try { if (filterMapDiv) filterMapDiv.style.display = 'block'; } catch(e) { console.warn('could not show filterMapDiv', e); }
+            updateColumnMappingVisibility();
 
             // default selections
             const norm = filterHeaders.map(h => normalizeHeader(h));
