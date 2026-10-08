@@ -27,7 +27,9 @@
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
             --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
             --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
-            --radius: 8px;
+            --radius: 8px;      /* conteneurs, champs, boutons */
+            --radius-sm: 4px;   /* petits éléments : code, logo, petits champs */
+            --radius-pill: 999px; /* pastilles : badges, barre de progression */
         }
         * {
             margin: 0;
@@ -57,7 +59,7 @@
         .app-topbar img {
             height: 26px;
             width: 26px;
-            border-radius: 4px;
+            border-radius: var(--radius-sm);
         }
 
         .app-topbar-brand {
@@ -133,7 +135,7 @@
             width: 100%;
             padding: 12px;
             border: 2px dashed #9467bd;
-            border-radius: 10px;
+            border-radius: var(--radius);
             background: #f5f1fa;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -150,7 +152,7 @@
             background: var(--ulaval-red);
             color: white;
             border: 1px solid var(--ulaval-red);
-            border-radius: 7px;
+            border-radius: var(--radius);
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
@@ -177,7 +179,7 @@
             width: 100%;
             height: 30px;
             background: #f0f0f0;
-            border-radius: 15px;
+            border-radius: var(--radius-pill);
             overflow: hidden;
             margin-bottom: 10px;
         }
@@ -205,7 +207,7 @@
             background: #e8f4ff;
             border-left: 4px solid #9467bd;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: var(--radius);
             margin-bottom: 20px;
         }
 
@@ -234,7 +236,7 @@
             width: 100%;
             padding: 12px;
             border: 2px solid #9467bd;
-            border-radius: 10px;
+            border-radius: var(--radius);
             background: #f5f1fa;
             font-size: 14px;
             color: #333;
@@ -289,7 +291,7 @@
             width: 300px;
             background: #fff;
             border: 1px solid #ccc;
-            border-radius: 10px;
+            border-radius: var(--radius);
             box-shadow: 0 4px 16px rgba(0,0,0,0.18);
             padding: 14px 16px;
             font-size: 13px;
@@ -370,7 +372,7 @@
         .intro-guide-body code {
             background: var(--bg-light);
             padding: 1px 5px;
-            border-radius: 4px;
+            border-radius: var(--radius-sm);
             font-size: 12px;
         }
 
@@ -411,7 +413,7 @@
             color: var(--text-dark);
         }
 
-        details.column-mapping { margin-top:12px; border:1px dashed #d9c9e8; border-radius:8px; padding:0 14px; background:#faf8fc; }
+        details.column-mapping { margin-top:12px; border:1px dashed #d9c9e8; border-radius:var(--radius); padding:0 14px; background:#faf8fc; }
         details.column-mapping summary { cursor:pointer; padding:10px 0; font-weight:600; color:#735093; font-size:13px; }
         details.column-mapping summary .summary-hint { font-weight:normal; color:#666; margin-left:6px; }
         details.column-mapping[open] summary { border-bottom:1px solid #e4dced; margin-bottom:8px; }
@@ -419,16 +421,16 @@
         details.column-mapping .mapping-title { font-size:13px; font-weight:600; color:#555; margin-bottom:4px; }
         .pick-choice { width:auto; margin:0; padding:8px 14px; font-size:13px; }
         .room-cards { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
-        .room-card { display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid #d9c9e8; background:#f5f1fa; border-radius:8px; }
+        .room-card { display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid #d9c9e8; background:#f5f1fa; border-radius:var(--radius); }
         .room-card-name { font-weight:700; color:#735093; }
         .room-card-capacity { font-size:12px; color:#666; }
-        .room-card-capacity input { width:90px; padding:4px 6px; border:1px solid #c62828; border-radius:4px; font-size:13px; }
-        .room-card-badge { font-size:11px; color:#735093; background:#e9e0f3; border-radius:10px; padding:1px 7px; margin-left:4px; }
+        .room-card-capacity input { width:90px; padding:4px 6px; border:1px solid #c62828; border-radius:var(--radius-sm); font-size:13px; }
+        .room-card-badge { font-size:11px; color:#735093; background:#e9e0f3; border-radius:var(--radius-pill); padding:1px 7px; margin-left:4px; }
         .room-card-remove { width:auto; margin:0; padding:0 6px; background:none; border:none; color:#c62828; font-size:18px; line-height:1; cursor:pointer; box-shadow:none; }
         .room-card-remove:hover { color:#8e1b1b; background:none; transform:none; }
         .room-add-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px; }
         .room-add-row select { flex:1; min-width:220px; width:auto; }
-        .room-add-row input[type="number"] { padding:12px; border:2px solid #9467bd; border-radius:10px; background:#f5f1fa; font-size:14px; }
+        .room-add-row input[type="number"] { padding:12px; border:2px solid #9467bd; border-radius:var(--radius); background:#f5f1fa; font-size:14px; }
         .room-add-row input[type="text"] { width:170px; }
         .room-add-row button { width:auto; margin:0; padding:12px 20px; }
         .nrc-table { border-collapse:collapse; font-size:13px; margin-top:10px; }
@@ -445,7 +447,7 @@
             background: var(--bg-light);
             border: 1px solid var(--border-light);
             padding: 2px 8px;
-            border-radius: 10px;
+            border-radius: var(--radius-pill);
             margin-left: 2px;
         }
 
@@ -466,7 +468,7 @@
         .field-help code {
             background: var(--bg-light);
             padding: 1px 5px;
-            border-radius: 4px;
+            border-radius: var(--radius-sm);
         }
     </style>
 </head>
@@ -515,8 +517,8 @@
                 <strong>Accommodements</strong> <span class="step-tag">optionnel</span> — liste fournie par l'agente de secrétariat (NI, heures, local) ; permet d'attribuer des heures et locaux dédiés.<br>
                 <strong>Hors campus</strong> <span class="step-tag">optionnel</span> — liste des étudiants hors campus (site du SSE, colonne TypeInscription) ; ces étudiants sont exclus de l'attribution de places.
             </div>
-            <div id="folderSelectBtn" role="button" tabindex="0" style="display:block;width:100%;padding:12px;border:2px dashed #9467bd;border-radius:10px;background:#f5f1fa;cursor:pointer;transition:all 0.3s ease;text-align:left;color:#888;font-size:14px;margin-top:10px;">Cliquer pour sélectionner un dossier ou un fichier, ou glisser ici un dossier ou des fichiers...</div>
-            <div id="pickMenu" style="display:none;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:10px 12px;border:1px solid #d9c9e8;border-radius:8px;background:#faf8fc;font-size:13px;">
+            <div id="folderSelectBtn" role="button" tabindex="0" style="display:block;width:100%;padding:12px;border:2px dashed #9467bd;border-radius:var(--radius);background:#f5f1fa;cursor:pointer;transition:all 0.3s ease;text-align:left;color:#888;font-size:14px;margin-top:10px;">Cliquer pour sélectionner un dossier ou un fichier, ou glisser ici un dossier ou des fichiers...</div>
+            <div id="pickMenu" style="display:none;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:10px 12px;border:1px solid #d9c9e8;border-radius:var(--radius);background:#faf8fc;font-size:13px;">
                 <span style="color:#666;">Que voulez-vous ajouter ?</span>
                 <button type="button" id="pickFolderBtn" class="pick-choice">📂 Un dossier</button>
                 <button type="button" id="pickFileBtn" class="pick-choice">📄 Un fichier</button>
@@ -650,7 +652,7 @@
             </div>
             <div id="accomRoomTotal" class="field-help"></div>
 
-            <div id="accomManualUI" style="margin-top:14px;padding:12px;background:#f5f1fa;border:1px solid #d9c9e8;border-radius:8px;">
+            <div id="accomManualUI" style="margin-top:14px;padding:12px;background:#f5f1fa;border:1px solid #d9c9e8;border-radius:var(--radius);">
                 <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:4px;">Placement manuel de certains étudiants en accommodement (optionnel)</div>
                 <div class="field-help">Les étudiants dont le local figure dans <code>accommodements.xlsx</code> y sont placés d'office (mention « fichier »). Les autres sont répartis automatiquement dans les salles d'accommodement ci-dessus. Vous pouvez modifier le local de chacun : une salle d'accommodement, ou un autre local saisi librement (par exemple le Centre d'aide aux étudiants).</div>
                 <div id="accomManualList" style="margin-top:8px;"></div>
@@ -677,7 +679,7 @@
         <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
             <label for="blankPercent" style="font-size:13px;font-weight:600;">Nombre de copies vierges en pourcentage <br>
                 du nombre total d'étudiants</label>
-            <input type="number" id="blankPercent" value="2.5" min="0" max="100" step="0.1" style="width:100px;padding:8px;border:2px solid #9467bd;border-radius:8px;background:#f5f1fa;text-align:right;">
+            <input type="number" id="blankPercent" value="2.5" min="0" max="100" step="0.1" style="width:100px;padding:8px;border:2px solid #9467bd;border-radius:var(--radius);background:#f5f1fa;text-align:right;">
             <label > %</label>
         </div>
         <div class="field-help">Des copies supplémentaires non attribuées à un étudiant, à prévoir pour les retardataires ou imprévus (ex. 2,5 % = environ 3 copies pour 100 étudiants).</div>
@@ -685,7 +687,7 @@
         <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
             <label for="numberingStart" style="font-size:13px;font-weight:600;">Numéro de départ pour la numérotation <br>
                 des examens et des places</label>
-            <input type="number" id="numberingStart" value="1" min="1" step="1" style="width:100px;padding:8px;border:2px solid #9467bd;border-radius:8px;background:#f5f1fa;text-align:right;">
+            <input type="number" id="numberingStart" value="1" min="1" step="1" style="width:100px;padding:8px;border:2px solid #9467bd;border-radius:var(--radius);background:#f5f1fa;text-align:right;">
         </div>
         <div class="field-help">Le premier numéro imprimé sur les examens et les places. Laissez à 1 sauf si vous poursuivez une numérotation déjà commencée.</div>
 
@@ -2402,7 +2404,7 @@
                 customInput.type = 'text';
                 customInput.placeholder = 'Nom du local';
                 customInput.setAttribute('aria-label', `Autre local pour ${student.name || student.ni}`);
-                customInput.style.cssText = 'width:160px;padding:5px 6px;border:1px solid #ccc;border-radius:4px;display:none;';
+                customInput.style.cssText = 'width:160px;padding:5px 6px;border:1px solid #ccc;border-radius:var(--radius-sm);display:none;';
 
                 const current = getAccomManualRoom(student);
                 if (current && accomRoomChoices.some(room => room.name === current)) {
