@@ -6,10 +6,11 @@
     <title>Générateur de PDFs d'Examen</title>
     <link rel="icon" href="../../img/logo.png">
     <link rel="stylesheet" href="../../styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <!-- Bibliothèques à version fixe, avec empreinte d'intégrité : le navigateur refuse tout script modifié -->
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js" integrity="sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
     <style>
 
         :root {
@@ -710,7 +711,8 @@
     <script>
         const { PDFDocument, rgb, StandardFonts } = PDFLib;
         if (window.pdfjsLib) {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+            // Worker hébergé avec la page (un worker chargé depuis un CDN ne peut pas être protégé par une empreinte)
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'lib/pdf.worker.min.js';
         }
 
         // ========== CONFIGURATION DES POSITIONS ==========
@@ -3552,15 +3554,23 @@
             const niIndex = detectSingleColumn(headers, niKeywords);
 
             // Afficher le résultat de la détection pour l'utilisateur (nom + NI)
-            const mappingLines = [];
-            if (detection.type !== 'none') {
-                mappingLines.push(`<strong>Détection nom:</strong> ${detection.match} (type: ${detection.type}, score: ${Math.round(detection.score*100)}%)`);
-            } else {
-                mappingLines.push('<strong>Détection nom:</strong> non trouvée — utilisation des positions par défaut');
-            }
-            mappingLines.push(`<strong>NI:</strong> ${niIndex>=0 ? headers[niIndex] : 'non détecté'}`);
+            // Les en-têtes viennent du fichier : insérés en texte brut, jamais en HTML
+            const mappingLines = [
+                ['Détection nom:', detection.type !== 'none'
+                    ? `${detection.match} (type: ${detection.type}, score: ${Math.round(detection.score*100)}%)`
+                    : 'non trouvée — utilisation des positions par défaut'],
+                ['NI:', niIndex >= 0 ? String(headers[niIndex]) : 'non détecté']
+            ];
             const detDiv = document.getElementById('detectionResult');
-            if (detDiv) detDiv.innerHTML = mappingLines.join('<br>');
+            if (detDiv) {
+                detDiv.replaceChildren();
+                for (const [index, [label, value]] of mappingLines.entries()) {
+                    if (index > 0) detDiv.appendChild(document.createElement('br'));
+                    const strong = document.createElement('strong');
+                    strong.textContent = label;
+                    detDiv.append(strong, document.createTextNode(' ' + value));
+                }
+            }
 
             // Fallback indices par défaut
             const fallback = { nameIdx: 0, niIdx: 1 };
