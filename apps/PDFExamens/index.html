@@ -462,7 +462,7 @@
                 <ol>
                     <li><strong>Étape 1 — Informations générales :</strong> le nom de l'évaluation et le cours, imprimés sur chaque PDF.</li>
                     <li><strong>Étape 2 — Fichiers de l'examen :</strong> sélectionnez le dossier contenant <code>BRIO.xlsx</code> et <code>examen.pdf</code> (obligatoires), et au besoin <code>accommodements.xlsx</code>, <code>horscampus.xlsx</code> ou des captures d'écran d'accommodements.</li>
-                    <li><strong>Étape 3 — Locaux et répartition :</strong> choisissez les locaux réguliers et, si nécessaire, les locaux d'accommodement, puis le mode de répartition des étudiants.</li>
+                    <li><strong>Étape 3 — Locaux et répartition :</strong> choisissez les locaux réguliers et, si nécessaire, les locaux d'accommodement, puis le mode de répartition des étudiants. En mode « Par section », chaque section peut être répartie dans plusieurs locaux, et certains étudiants en accommodement peuvent être placés manuellement dans un local précis.</li>
                     <li><strong>Étape 4 — Options d'impression :</strong> format des listes de présence, pourcentage de copies vierges, numérotation.</li>
                     <li><strong>Étape 5 — Génération :</strong> cliquez sur « Générer et Télécharger le ZIP ». Il contiendra les PDFs, les listes de présence et <code>Recapitulatif_etudiants.xlsx</code>.</li>
                 </ol>
@@ -603,17 +603,17 @@
 
         <div class="step-card">
             <div class="step-header"><span class="step-badge">3</span><span class="step-title">Locaux et répartition des étudiants</span></div>
-            <div class="step-desc">Sélectionnez les locaux disponibles et la façon de répartir les étudiants entre eux. Les étudiants en accommodement sont toujours placés dans les locaux d'accommodement dédiés ci-dessous, indépendamment de ce mode.</div>
+            <div class="step-desc">Sélectionnez les locaux disponibles et la façon de répartir les étudiants entre eux. Les étudiants en accommodement sont toujours placés dans les locaux d'accommodement dédiés ci-dessous (ou dans le local choisi manuellement pour chacun), indépendamment de ce mode.</div>
         <div id="roomsUI" style="margin-bottom:16px;">
             <label>🏷️ Choisir les locaux à utiliser</label>
                         <div style="margin-top:10px;">
                 <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block;">Mode de répartition : <span class="info-icon" id="repartitionInfoIcon" title="Informations">i
-                <span class="info-bubble" id="repartitionInfoBubble">Par section : attribue chaque section (feuille Excel) au local choisi. <br>
+                <span class="info-bubble" id="repartitionInfoBubble">Par section : attribue chaque section (feuille Excel) au(x) local(aux) coché(s). <br>
                     Gros→Petit : remplit les plus gros locaux en premier. <br>
                     Petit→Gros : remplit les plus petits en premier. <br>
                     Uniforme : répartit les étudiants proportionnellement dans tous les locaux.</span></span></label>
                 <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
-                    <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="section"> Par section → local</label>
+                    <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="section"> Par section → local(aux)</label>
                 </div>
                 <div id="distributionModeChoices" style="display:flex;gap:12px;flex-wrap:wrap;">
                     <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="large-first" checked> Gros → Petit</label>
@@ -621,9 +621,9 @@
                     <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="uniform"> Uniforme</label>
                 </div>
                 <div id="sectionDistributionUI" style="display:none;margin:12px 0;padding:12px;background:#f5f1fa;border:1px solid #d9c9e8;border-radius:8px;">
-                    <div style="font-size:13px;color:#555;margin-bottom:8px;">Choisissez le local de chaque section du fichier BRIO :</div>
+                    <div style="font-size:13px;color:#555;margin-bottom:8px;">Cochez le ou les locaux de chaque section du fichier BRIO. Si une section a plusieurs locaux, ils sont remplis du plus grand au plus petit. Un même local peut être partagé par plusieurs sections : les places restantes sont réparties dans l'ordre des sections.</div>
                     <div id="sectionRoomMapping"></div>
-                    <div style="font-size:12px;color:#666;margin-top:8px;">Les capacités des locaux sont vérifiées avant l'attribution. Les étudiants avec accommodement conservent leur répartition dédiée.</div>
+                    <div style="font-size:12px;color:#666;margin-top:8px;">Les capacités des locaux sont vérifiées avant l'attribution (en tenant compte des sections déjà placées). Les étudiants avec accommodement conservent leur répartition dédiée.</div>
                 </div>
 
             <div id="roomList" style="margin-top:8px;display:flex;gap:24px;align-items:flex-start;">
@@ -726,19 +726,25 @@
                     <div style="font-size:12px;color:#666;">places</div>
                 </div>
                 <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_2">
+                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_3">
                     <input type="text" class="accomRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
                     <input type="number" class="accomRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
                     <div style="font-size:12px;color:#666;">places</div>
                 </div>
                 <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_2">
+                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_4">
                     <input type="text" class="accomRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
                     <input type="number" class="accomRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
                     <div style="font-size:12px;color:#666;">places</div>
                 </div>
             </div>
-            <div style="font-size:12px;color:#666">Si aucune salle n'est sélectionnée, les accommodements restent sans attribution de place.</div>
+            <div style="font-size:12px;color:#666">Si aucune salle n'est sélectionnée, les accommodements restent sans attribution de place (sauf ceux placés manuellement ci-dessous).</div>
+
+            <div id="accomManualUI" style="margin-top:14px;padding:12px;background:#f5f1fa;border:1px solid #d9c9e8;border-radius:8px;">
+                <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:4px;">Placement manuel de certains étudiants en accommodement (optionnel)</div>
+                <div class="field-help">Par défaut, les étudiants en accommodement sont répartis automatiquement dans les salles d'accommodement cochées ci-dessus. Vous pouvez ici choisir un local précis pour certains d'entre eux : une salle d'accommodement cochée, ou un autre local saisi librement (par exemple le Centre d'aide aux étudiants). Les autres restent en placement automatique.</div>
+                <div id="accomManualList" style="margin-top:8px;"></div>
+            </div>
         </div>
         </div>
 
@@ -1200,9 +1206,9 @@
                     const recapWB = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(recapWB, recapSheet, 'Récapitulatif');
                     if (lastDistributionMode === 'section') {
-                        const sectionAssignmentRows = [['Section', 'Local attribué']];
+                        const sectionAssignmentRows = [['Section', 'Locaux attribués']];
                         for (const [sectionIndex, section] of brioSections.entries()) {
-                            sectionAssignmentRows.push([section, sectionRoomAssignments[section] || '']);
+                            sectionAssignmentRows.push([section, getSectionRooms(section).join(', ')]);
                         }
                         const sectionAssignmentSheet = XLSX.utils.aoa_to_sheet(sectionAssignmentRows);
                         sectionAssignmentSheet['!cols'] = [{ wch: 30 }, { wch: 24 }];
@@ -1496,15 +1502,22 @@
             if (sectionUI) sectionUI.style.display = bySection ? 'block' : 'none';
         }
 
+        // Locaux attribués à une section (tableau de noms, toujours normalisé)
+        function getSectionRooms(section) {
+            const value = sectionRoomAssignments[section];
+            if (Array.isArray(value)) return value.filter(Boolean);
+            return value ? [String(value)] : [];
+        }
+
         function renderSectionRoomAssignments() {
             const container = document.getElementById('sectionRoomMapping');
             if (!container) return;
 
             const selectedRooms = getSelectedRooms();
-            const previousSelections = { ...sectionRoomAssignments };
-            container.querySelectorAll('select[data-section]').forEach(select => {
-                previousSelections[select.dataset.section] = select.value;
-            });
+            const previousSelections = Object.create(null);
+            for (const section of Object.keys(sectionRoomAssignments)) {
+                previousSelections[section] = getSectionRooms(section);
+            }
             sectionRoomAssignments = Object.create(null);
             container.replaceChildren();
 
@@ -1515,43 +1528,51 @@
                 container.appendChild(message);
                 return;
             }
+            if (selectedRooms.length === 0) {
+                const message = document.createElement('div');
+                message.textContent = 'Cochez au moins un local dans la liste ci-dessous pour pouvoir l\'attribuer aux sections.';
+                message.style.color = '#666';
+                container.appendChild(message);
+                for (const section of brioSections) sectionRoomAssignments[section] = [];
+                return;
+            }
 
             for (const [sectionIndex, section] of brioSections.entries()) {
                 const row = document.createElement('div');
-                row.style.cssText = 'display:flex;align-items:center;gap:10px;margin:6px 0;flex-wrap:wrap;';
+                row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;margin:8px 0;flex-wrap:wrap;';
 
-                const sectionLabel = document.createElement('label');
+                const sectionLabel = document.createElement('div');
                 sectionLabel.textContent = section;
-                sectionLabel.style.minWidth = '150px';
+                sectionLabel.style.cssText = 'min-width:150px;font-weight:600;padding-top:2px;';
                 const assignmentLabel = document.createElement('span');
-                assignmentLabel.textContent = 'sera dans le local';
-                const select = document.createElement('select');
-                select.id = `sectionRoom_${sectionIndex}`;
-                sectionLabel.htmlFor = select.id;
-                select.dataset.section = section;
-                select.style.cssText = 'width:auto;min-width:180px;padding:7px;';
+                assignmentLabel.textContent = 'sera dans :';
+                assignmentLabel.style.paddingTop = '2px';
 
-                const placeholder = document.createElement('option');
-                placeholder.value = '';
-                placeholder.textContent = '-- choisir un local --';
-                select.appendChild(placeholder);
-                for (const room of selectedRooms) {
-                    const option = document.createElement('option');
-                    option.value = room.name;
-                    option.textContent = room.name;
-                    select.appendChild(option);
+                const choices = document.createElement('div');
+                choices.style.cssText = 'display:flex;gap:6px 14px;flex-wrap:wrap;';
+                const previous = previousSelections[section] || [];
+                const selectedNames = [];
+                for (const [roomIndex, room] of selectedRooms.entries()) {
+                    const choiceLabel = document.createElement('label');
+                    choiceLabel.style.cssText = 'display:flex;align-items:center;gap:4px;margin:0;font-weight:normal;font-size:13px;cursor:pointer;';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `sectionRoom_${sectionIndex}_${roomIndex}`;
+                    checkbox.dataset.section = section;
+                    checkbox.dataset.room = room.name;
+                    checkbox.checked = previous.includes(room.name);
+                    if (checkbox.checked) selectedNames.push(room.name);
+                    checkbox.addEventListener('change', () => {
+                        sectionRoomAssignments[section] = Array.from(choices.querySelectorAll('input[type="checkbox"]'))
+                            .filter(input => input.checked)
+                            .map(input => input.dataset.room);
+                    });
+                    choiceLabel.append(checkbox, document.createTextNode(`${room.name} (${room.capacity} places)`));
+                    choices.appendChild(choiceLabel);
                 }
+                sectionRoomAssignments[section] = selectedNames;
 
-                const previous = previousSelections[section] || '';
-                if (selectedRooms.some(room => room.name === previous)) {
-                    select.value = previous;
-                }
-                sectionRoomAssignments[section] = select.value;
-                select.addEventListener('change', () => {
-                    sectionRoomAssignments[section] = select.value;
-                });
-
-                row.append(sectionLabel, assignmentLabel, select);
+                row.append(sectionLabel, assignmentLabel, choices);
                 container.appendChild(row);
             }
         }
@@ -1573,7 +1594,7 @@
         const roomListElement = document.getElementById('roomList');
         if (roomListElement) {
             roomListElement.addEventListener('change', event => {
-                if (event.target.matches('.roomCheckbox, .customRoomName')) {
+                if (event.target.matches('.roomCheckbox, .customRoomName, .roomCapacity')) {
                     renderSectionRoomAssignments();
                 }
             });
@@ -1678,15 +1699,69 @@
             return assigned;
         }
 
+        function compareStudentsByLastName(a, b) {
+            const getLast = s => (s.last && String(s.last).trim()) || (s.name ? String(s.name).trim().split(/\s+/).slice(-1)[0] : '');
+            return getLast(a).toString().localeCompare(getLast(b).toString(), 'fr', { sensitivity: 'base' });
+        }
+
         function assignAccommodementStudents(students, rooms, startFrom = 1) {
-            if (rooms.length === 0) {
-                return students.map(student => ({ ...student, local: '', place: '' }));
+            const resetPerRoom = shouldResetNumberingPerRoom();
+            const sortedRooms = [...rooms].sort((a, b) => b.capacity - a.capacity);
+            const slots = new Map(sortedRooms.map(room => [room.name, { capacity: room.capacity, students: [] }]));
+            const extraRooms = new Map(); // locaux saisis librement (sans capacité connue)
+            const automatic = [];
+
+            // 1) Placer d'abord les étudiants dont le local a été choisi manuellement
+            for (const student of students) {
+                const manualRoom = getAccomManualRoom(student);
+                if (!manualRoom) {
+                    automatic.push(student);
+                } else if (slots.has(manualRoom)) {
+                    slots.get(manualRoom).students.push(student);
+                } else {
+                    if (!extraRooms.has(manualRoom)) extraRooms.set(manualRoom, []);
+                    extraRooms.get(manualRoom).push(student);
+                }
             }
-            const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
-            if (students.length > totalCapacity) {
-                throw new Error(`Les locaux d’accommodement offrent ${totalCapacity} places pour ${students.length} étudiants.`);
+            for (const [name, slot] of slots) {
+                if (slot.students.length > slot.capacity) {
+                    throw new Error(`Le local d’accommodement ${name} ne peut accueillir que ${slot.capacity} étudiants, mais ${slot.students.length} y sont placés manuellement.`);
+                }
             }
-            return assignSeatsToRooms(students, rooms, startFrom, 'large-first');
+
+            // 2) Répartir les autres automatiquement, du plus grand au plus petit local
+            const remainingCapacity = sortedRooms.reduce((sum, room) => {
+                const slot = slots.get(room.name);
+                return sum + (slot.capacity - slot.students.length);
+            }, 0);
+            if (rooms.length > 0 && automatic.length > remainingCapacity) {
+                throw new Error(`Les locaux d’accommodement offrent ${remainingCapacity} places libres pour ${automatic.length} étudiants à placer automatiquement.`);
+            }
+            let index = 0;
+            for (const room of sortedRooms) {
+                const slot = slots.get(room.name);
+                while (index < automatic.length && slot.students.length < slot.capacity) {
+                    slot.students.push(automatic[index++]);
+                }
+            }
+
+            // 3) Numéroter les places, local par local
+            const assigned = [];
+            let seatNumber = Number(startFrom) || 1;
+            const numberRoom = (roomName, roomStudents) => {
+                let roomSeat = 1;
+                for (const student of [...roomStudents].sort(compareStudentsByLastName)) {
+                    const place = resetPerRoom ? String(roomSeat++) : String(seatNumber++);
+                    assigned.push({ ...student, local: roomName, place });
+                }
+            };
+            for (const room of sortedRooms) numberRoom(room.name, slots.get(room.name).students);
+            for (const [name, roomStudents] of extraRooms) numberRoom(name, roomStudents);
+            // Sans salle d'accommodement cochée, les étudiants non placés manuellement restent sans place
+            while (index < automatic.length) {
+                assigned.push({ ...automatic[index++], local: '', place: '' });
+            }
+            return assigned;
         }
 
         function assignSectionsToRooms(students, rooms, startFrom = 1) {
@@ -1694,46 +1769,62 @@
                 throw new Error('Chaque local sélectionné doit avoir un nom unique.');
             }
             const roomByName = new Map(rooms.map(room => [room.name, room]));
-            const missingMappings = brioSections.filter(section => {
-                const roomName = sectionRoomAssignments[section];
-                return !roomName || !roomByName.has(roomName);
-            });
+            const validRoomsFor = section => getSectionRooms(section)
+                .filter(name => roomByName.has(name))
+                .map(name => roomByName.get(name))
+                .sort((a, b) => b.capacity - a.capacity);
+
+            const missingMappings = brioSections.filter(section => validRoomsFor(section).length === 0);
             if (missingMappings.length > 0) {
-                throw new Error(`Choisissez un local pour chaque section : ${missingMappings.join(', ')}.`);
+                throw new Error(`Cochez au moins un local pour chaque section : ${missingMappings.join(', ')}.`);
             }
 
-            const roomCounts = new Map();
+            // Regrouper les étudiants par section, dans l'ordre des feuilles du fichier BRIO
+            const studentsBySection = new Map();
             for (const student of students) {
                 const section = String(student.section || '').trim();
-                const roomName = sectionRoomAssignments[section];
-                if (!roomName || !roomByName.has(roomName)) {
-                    throw new Error(`La section « ${section || '(sans nom)'} » n'a pas de local valide.`);
-                }
-                roomCounts.set(roomName, (roomCounts.get(roomName) || 0) + 1);
+                if (!studentsBySection.has(section)) studentsBySection.set(section, []);
+                studentsBySection.get(section).push(student);
+            }
+            const orderedSections = brioSections.filter(section => studentsBySection.has(section));
+            for (const section of studentsBySection.keys()) {
+                if (!orderedSections.includes(section)) orderedSections.push(section);
             }
 
-            for (const [roomName, count] of roomCounts) {
-                const room = roomByName.get(roomName);
-                if (count > room.capacity) {
-                    throw new Error(`Le local ${roomName} ne peut accueillir que ${room.capacity} étudiants, mais ${count} lui sont attribués par section.`);
-                }
-            }
-
-            let seatNumber = Number(startFrom) || 1;
+            const remainingCapacity = new Map(rooms.map(room => [room.name, room.capacity]));
             const resetPerRoom = shouldResetNumberingPerRoom();
             const roomSeatNumbers = new Map();
-            return students.map(student => {
-                const local = sectionRoomAssignments[String(student.section || '').trim()];
-                let place;
-                if (resetPerRoom) {
-                    const roomSeat = roomSeatNumbers.get(local) || 1;
-                    place = String(roomSeat);
-                    roomSeatNumbers.set(local, roomSeat + 1);
-                } else {
-                    place = String(seatNumber++);
+            let seatNumber = Number(startFrom) || 1;
+            const assigned = [];
+
+            for (const section of orderedSections) {
+                const sectionStudents = studentsBySection.get(section);
+                const sectionRooms = validRoomsFor(section);
+                if (sectionRooms.length === 0) {
+                    throw new Error(`La section « ${section || '(sans nom)'} » n'a pas de local valide.`);
                 }
-                return { ...student, local, place };
-            });
+                const available = sectionRooms.reduce((sum, room) => sum + remainingCapacity.get(room.name), 0);
+                if (sectionStudents.length > available) {
+                    throw new Error(`La section « ${section || '(sans nom)'} » compte ${sectionStudents.length} étudiants, mais il ne reste que ${available} places dans ${sectionRooms.map(room => room.name).join(', ')} (les places déjà prises par les sections précédentes sont déduites).`);
+                }
+                let index = 0;
+                for (const room of sectionRooms) {
+                    while (index < sectionStudents.length && remainingCapacity.get(room.name) > 0) {
+                        const student = sectionStudents[index++];
+                        remainingCapacity.set(room.name, remainingCapacity.get(room.name) - 1);
+                        let place;
+                        if (resetPerRoom) {
+                            const roomSeat = roomSeatNumbers.get(room.name) || 1;
+                            place = String(roomSeat);
+                            roomSeatNumbers.set(room.name, roomSeat + 1);
+                        } else {
+                            place = String(seatNumber++);
+                        }
+                        assigned.push({ ...student, local: room.name, place });
+                    }
+                }
+            }
+            return assigned;
         }
 
         function ensureLocalIndexMap() {
@@ -2082,6 +2173,10 @@
         let accomTimeMap = null; // Map of NI string -> { start, end }
         let accomFileNISet = new Set();
         let accomFileTimeMap = new Map();
+        // Placement manuel des étudiants en accommodement : NI normalisé -> nom du local
+        let accomManualRooms = new Map();
+        // Étudiants du fichier BRIO (cache pour afficher la liste des accommodements)
+        let brioStudentsCache = [];
         let screenshotCaptures = [];
         let screenshotAccomNIBySection = new Map();
         let nextScreenshotCaptureId = 1;
@@ -2120,6 +2215,7 @@
                     screenshotAccomNIBySection.get(row.section).add(ni);
                 }
             }
+            renderAccomManualPlacement();
         }
 
         function isAccommodementStudent(student) {
@@ -2128,6 +2224,145 @@
             if (accomFileNISet.has(ni)) return true;
             const sectionNIs = screenshotAccomNIBySection.get(String(student.section || '').trim());
             return Boolean(sectionNIs && sectionNIs.has(ni));
+        }
+
+        function getAccomManualRoom(student) {
+            const ni = normalizeNI(student.ni);
+            const room = ni ? accomManualRooms.get(ni) : '';
+            return room ? String(room).trim() : '';
+        }
+
+        async function refreshBrioStudentCache() {
+            brioStudentsCache = [];
+            if (folderBrioFile && folderBrioFile.name.toLowerCase().endsWith('.xlsx')) {
+                try {
+                    brioStudentsCache = await readXlsxRegistrationStudents(folderBrioFile);
+                } catch (err) {
+                    console.error('Lecture des étudiants BRIO pour le placement manuel :', err);
+                }
+            }
+            renderAccomManualPlacement();
+        }
+
+        function renderAccomManualPlacement() {
+            const container = document.getElementById('accomManualList');
+            if (!container) return;
+            container.replaceChildren();
+            const showMessage = text => {
+                const message = document.createElement('div');
+                message.textContent = text;
+                message.style.cssText = 'font-size:13px;color:#666;';
+                container.appendChild(message);
+            };
+            if (!folderBrioFile) {
+                showMessage('Chargez le dossier de l’examen pour afficher les étudiants en accommodement.');
+                return;
+            }
+            const accomStudents = brioStudentsCache.filter(isAccommodementStudent).sort(compareStudentsByLastName);
+            if (accomStudents.length === 0) {
+                showMessage('Aucun étudiant en accommodement détecté dans BRIO.xlsx (fournissez accommodements.xlsx ou une capture d’écran).');
+                return;
+            }
+            const accomRooms = getSelectedAccomRooms();
+            const CUSTOM = '__custom__';
+
+            const table = document.createElement('table');
+            table.style.cssText = 'width:100%;border-collapse:collapse;font-size:13px;';
+            const header = document.createElement('tr');
+            for (const title of ['Étudiant', 'NI', 'Section', 'Local']) {
+                const cell = document.createElement('th');
+                cell.textContent = title;
+                cell.style.cssText = 'padding:6px 8px;text-align:left;background:#ece4f4;border-bottom:1px solid #d9c9e8;';
+                header.appendChild(cell);
+            }
+            table.appendChild(header);
+
+            for (const [index, student] of accomStudents.entries()) {
+                const ni = normalizeNI(student.ni);
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #e4dced';
+                for (const text of [student.name || '', student.ni || '', student.section || '']) {
+                    const cell = document.createElement('td');
+                    cell.textContent = text;
+                    cell.style.padding = '6px 8px';
+                    tr.appendChild(cell);
+                }
+
+                const roomCell = document.createElement('td');
+                roomCell.style.cssText = 'padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;';
+                const select = document.createElement('select');
+                select.id = `accomManual_${index}`;
+                select.setAttribute('aria-label', `Local de ${student.name || student.ni}`);
+                select.style.cssText = 'width:auto;min-width:200px;padding:6px;';
+                const automaticOption = document.createElement('option');
+                automaticOption.value = '';
+                automaticOption.textContent = accomRooms.length > 0 ? 'Automatique (salles d’accommodement)' : 'Automatique (aucune salle cochée)';
+                select.appendChild(automaticOption);
+                for (const room of accomRooms) {
+                    const option = document.createElement('option');
+                    option.value = room.name;
+                    option.textContent = `${room.name} (${room.capacity} places)`;
+                    select.appendChild(option);
+                }
+                const customOption = document.createElement('option');
+                customOption.value = CUSTOM;
+                customOption.textContent = 'Autre local…';
+                select.appendChild(customOption);
+
+                const customInput = document.createElement('input');
+                customInput.type = 'text';
+                customInput.placeholder = 'Nom du local';
+                customInput.setAttribute('aria-label', `Autre local pour ${student.name || student.ni}`);
+                customInput.style.cssText = 'width:160px;padding:5px 6px;border:1px solid #ccc;border-radius:4px;display:none;';
+
+                const current = getAccomManualRoom(student);
+                if (current && accomRooms.some(room => room.name === current)) {
+                    select.value = current;
+                } else if (current) {
+                    select.value = CUSTOM;
+                    customInput.value = current;
+                    customInput.style.display = '';
+                }
+
+                select.addEventListener('change', () => {
+                    if (select.value === CUSTOM) {
+                        customInput.style.display = '';
+                        const name = customInput.value.trim();
+                        if (name) accomManualRooms.set(ni, name); else accomManualRooms.delete(ni);
+                        customInput.focus();
+                    } else {
+                        customInput.style.display = 'none';
+                        if (select.value) accomManualRooms.set(ni, select.value); else accomManualRooms.delete(ni);
+                    }
+                    updateAccomManualSummary();
+                });
+                customInput.addEventListener('input', () => {
+                    const name = customInput.value.trim();
+                    if (name) accomManualRooms.set(ni, name); else accomManualRooms.delete(ni);
+                    updateAccomManualSummary();
+                });
+
+                roomCell.append(select, customInput);
+                tr.appendChild(roomCell);
+                table.appendChild(tr);
+            }
+            container.appendChild(table);
+
+            const summary = document.createElement('div');
+            summary.id = 'accomManualSummary';
+            summary.style.cssText = 'font-size:12px;color:#666;margin-top:6px;';
+            container.appendChild(summary);
+            updateAccomManualSummary();
+
+            function updateAccomManualSummary() {
+                const placed = accomStudents.filter(s => getAccomManualRoom(s)).length;
+                summary.textContent = `${accomStudents.length} étudiant(s) en accommodement, dont ${placed} placé(s) manuellement.`;
+            }
+        }
+
+        const accomRoomListElement = document.getElementById('accomRoomList');
+        if (accomRoomListElement) {
+            accomRoomListElement.addEventListener('change', renderAccomManualPlacement);
         }
 
         function updateScreenshotAccomStatus() {
@@ -2588,6 +2823,7 @@
             if (folderFilterFile) {
                 await onFilterFilesSelected({ target: { files: [folderFilterFile] } });
             }
+            await refreshBrioStudentCache();
         }
 
         async function onCsvFileSelected(e) {
@@ -3308,6 +3544,7 @@
             columnMapping.niIdx = document.getElementById('niSelect').value === '' ? null : parseInt(document.getElementById('niSelect').value,10);
             const emailSelEl = document.getElementById('emailSelect');
             columnMapping.emailIdx = (emailSelEl && emailSelEl.value !== '') ? parseInt(emailSelEl.value, 10) : null;
+            if (folderBrioFile) refreshBrioStudentCache();
         }
 
         function parseCSV(csvText) {
