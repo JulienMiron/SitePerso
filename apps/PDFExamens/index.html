@@ -414,6 +414,7 @@
         .room-card-name { font-weight:700; color:#735093; }
         .room-card-capacity { font-size:12px; color:#666; }
         .room-card-capacity input { width:90px; padding:4px 6px; border:1px solid #c62828; border-radius:4px; font-size:13px; }
+        .room-card-badge { font-size:11px; color:#735093; background:#e9e0f3; border-radius:10px; padding:1px 7px; margin-left:4px; }
         .room-card-remove { width:auto; margin:0; padding:0 6px; background:none; border:none; color:#c62828; font-size:18px; line-height:1; cursor:pointer; box-shadow:none; }
         .room-card-remove:hover { color:#8e1b1b; background:none; transform:none; }
         .room-add-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px; }
@@ -558,6 +559,10 @@
                     <label for="accomEndSelect">Colonne Heure de fin</label>
                     <select id="accomEndSelect"></select>
                 </div>
+                <div style="flex:1;">
+                    <label for="accomRoomSelect">Colonne Local (salle d'accommodement)</label>
+                    <select id="accomRoomSelect"></select>
+                </div>
             </div>
         </div>
 
@@ -629,38 +634,19 @@
 
         <div id="accomRoomsUI" style="margin-bottom:16px;">
             <label>🟪 Salles d'accommodement (optionnel)</label>
-            <div class="field-help">Locaux réservés exclusivement aux étudiants identifiés en accommodement (via <code>accommodements.xlsx</code>). Ils sont remplis du plus grand au plus petit, séparément des locaux réguliers.</div>
-            <div id="accomRoomList" style="margin-top:8px;">
-                <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_1">
-                    <input type="text" class="accomRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
-                    <input type="number" class="accomRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
-                    <div style="font-size:12px;color:#666;">places</div>
-                </div>
-                <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_2">
-                    <input type="text" class="accomRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
-                    <input type="number" class="accomRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
-                    <div style="font-size:12px;color:#666;">places</div>
-                </div>
-                <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_3">
-                    <input type="text" class="accomRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
-                    <input type="number" class="accomRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
-                    <div style="font-size:12px;color:#666;">places</div>
-                </div>
-                <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="accomRoomCheckbox" id="accom_room_4">
-                    <input type="text" class="accomRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
-                    <input type="number" class="accomRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
-                    <div style="font-size:12px;color:#666;">places</div>
-                </div>
+            <div class="field-help">Si <code>accommodements.xlsx</code> contient une colonne <strong>Local</strong>, les salles y sont détectées automatiquement et chaque étudiant est placé dans le local indiqué pour lui. Vous pouvez aussi ajouter des salles ci-dessous : elles accueillent, du plus grand au plus petit, les étudiants en accommodement sans local précisé.</div>
+            <div id="accomRoomCards" class="room-cards"></div>
+            <div class="room-add-row">
+                <select id="accomCatalogSelect" aria-label="Ajouter une salle d'accommodement"></select>
+                <input type="text" id="accomCustomName" placeholder="Nom du local" style="display:none;">
+                <input type="number" id="accomCustomCapacity" placeholder="Capacité" min="1" style="display:none;width:130px;">
+                <button type="button" id="accomAddBtn">Ajouter</button>
             </div>
-            <div style="font-size:12px;color:#666">Si aucune salle n'est sélectionnée, les accommodements restent sans attribution de place (sauf ceux placés manuellement ci-dessous).</div>
+            <div id="accomRoomTotal" class="field-help"></div>
 
             <div id="accomManualUI" style="margin-top:14px;padding:12px;background:#f5f1fa;border:1px solid #d9c9e8;border-radius:8px;">
                 <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:4px;">Placement manuel de certains étudiants en accommodement (optionnel)</div>
-                <div class="field-help">Par défaut, les étudiants en accommodement sont répartis automatiquement dans les salles d'accommodement cochées ci-dessus. Vous pouvez ici choisir un local précis pour certains d'entre eux : une salle d'accommodement cochée, ou un autre local saisi librement (par exemple le Centre d'aide aux étudiants). Les autres restent en placement automatique.</div>
+                <div class="field-help">Les étudiants dont le local figure dans <code>accommodements.xlsx</code> y sont placés d'office (mention « fichier »). Les autres sont répartis automatiquement dans les salles d'accommodement ci-dessus. Vous pouvez modifier le local de chacun : une salle d'accommodement, ou un autre local saisi librement (par exemple le Centre d'aide aux étudiants).</div>
                 <div id="accomManualList" style="margin-top:8px;"></div>
             </div>
         </div>
@@ -1409,24 +1395,34 @@
             }
         }
 
-        function renderRoomCards() {
-            const container = document.getElementById('roomCards');
+
+
+
+        // Cartes de locaux (réguliers et accommodement)
+        function renderRoomCardList(containerId, rooms, options) {
+            const container = document.getElementById(containerId);
             if (!container) return;
             container.replaceChildren();
-            if (regularRooms.length === 0) {
+            if (rooms.length === 0) {
                 const message = document.createElement('div');
-                message.textContent = 'Aucun local pour l’instant : collez le déroulement de Brio ou ajoutez un local ci-dessous.';
+                message.textContent = options.emptyText;
                 message.style.cssText = 'font-size:13px;color:#666;';
                 container.appendChild(message);
                 return;
             }
-            for (const room of regularRooms) {
+            for (const room of rooms) {
                 const card = document.createElement('div');
                 card.className = 'room-card';
                 const info = document.createElement('div');
                 const name = document.createElement('div');
                 name.className = 'room-card-name';
                 name.textContent = room.name;
+                if (options.badge && options.badge(room)) {
+                    const badge = document.createElement('span');
+                    badge.className = 'room-card-badge';
+                    badge.textContent = options.badge(room);
+                    name.appendChild(badge);
+                }
                 const capacity = document.createElement('div');
                 capacity.className = 'room-card-capacity';
                 if (room.capacity > 0) {
@@ -1440,7 +1436,7 @@
                     input.addEventListener('change', () => {
                         const value = parseInt(input.value, 10);
                         room.capacity = value > 0 ? value : 0;
-                        renderRoomsUI();
+                        options.onChange();
                     });
                     capacity.append(input, document.createTextNode(' places'));
                 }
@@ -1451,23 +1447,23 @@
                 remove.textContent = '×';
                 remove.title = `Retirer ${room.name}`;
                 remove.setAttribute('aria-label', `Retirer ${room.name}`);
-                remove.addEventListener('click', () => removeRegularRoom(room.name));
+                remove.addEventListener('click', () => options.onRemove(room.name));
                 card.append(info, remove);
                 container.appendChild(card);
             }
         }
 
-        function renderRoomCatalogSelect() {
-            const select = document.getElementById('roomCatalogSelect');
+        function renderCatalogSelect(selectId, existingNames, placeholderText) {
+            const select = document.getElementById(selectId);
             if (!select) return;
             const previous = select.value;
             select.replaceChildren();
             const placeholder = document.createElement('option');
             placeholder.value = '';
-            placeholder.textContent = '— Ajouter un local —';
+            placeholder.textContent = placeholderText;
             select.appendChild(placeholder);
             for (const room of ROOM_CATALOG) {
-                if (findRoom(room.name)) continue;
+                if (existingNames.includes(room.name)) continue;
                 const option = document.createElement('option');
                 option.value = room.name;
                 option.textContent = `${room.name} (${room.capacity} pl.)`;
@@ -1478,16 +1474,54 @@
             custom.textContent = 'Autre local…';
             select.appendChild(custom);
             select.value = Array.from(select.options).some(o => o.value === previous) ? previous : '';
+        }
+
+        function updateCustomRoomInputs(selectId, nameId, capacityId) {
+            const select = document.getElementById(selectId);
+            const show = select && select.value === '__custom__';
+            const nameInput = document.getElementById(nameId);
+            const capacityInput = document.getElementById(capacityId);
+            if (nameInput) nameInput.style.display = show ? '' : 'none';
+            if (capacityInput) capacityInput.style.display = show ? '' : 'none';
+        }
+
+        // Lecture du menu d'ajout ; retourne { name, capacity } ou null
+        function readRoomToAdd(selectId, nameId, capacityId) {
+            const select = document.getElementById(selectId);
+            if (!select || !select.value) return null;
+            let result;
+            if (select.value === '__custom__') {
+                const nameInput = document.getElementById(nameId);
+                const capacityInput = document.getElementById(capacityId);
+                const name = nameInput ? nameInput.value.trim() : '';
+                if (!name) { alert('Indiquez le nom du local à ajouter.'); return null; }
+                const capacity = capacityInput ? parseInt(capacityInput.value, 10) : 0;
+                result = { name, capacity: capacity > 0 ? capacity : 0 };
+                if (nameInput) nameInput.value = '';
+                if (capacityInput) capacityInput.value = '';
+            } else {
+                result = { name: select.value, capacity: ROOM_CATALOG_MAP.get(select.value) || 0 };
+            }
+            select.value = '';
+            return result;
+        }
+
+        function renderRoomCards() {
+            renderRoomCardList('roomCards', regularRooms, {
+                emptyText: 'Aucun local pour l’instant : collez le déroulement de Brio ou ajoutez un local ci-dessous.',
+                onRemove: removeRegularRoom,
+                onChange: renderRoomsUI,
+                badge: null
+            });
+        }
+
+        function renderRoomCatalogSelect() {
+            renderCatalogSelect('roomCatalogSelect', regularRooms.map(room => room.name), '— Ajouter un local —');
             updateRoomCustomInputs();
         }
 
         function updateRoomCustomInputs() {
-            const select = document.getElementById('roomCatalogSelect');
-            const nameInput = document.getElementById('roomCustomName');
-            const capacityInput = document.getElementById('roomCustomCapacity');
-            const show = select && select.value === '__custom__';
-            if (nameInput) nameInput.style.display = show ? '' : 'none';
-            if (capacityInput) capacityInput.style.display = show ? '' : 'none';
+            updateCustomRoomInputs('roomCatalogSelect', 'roomCustomName', 'roomCustomCapacity');
         }
 
         function renderRoomTotal() {
@@ -1677,21 +1711,9 @@
             const addButton = document.getElementById('roomAddBtn');
             if (addButton) {
                 addButton.addEventListener('click', () => {
-                    const select = document.getElementById('roomCatalogSelect');
-                    if (!select || !select.value) return;
-                    if (select.value === '__custom__') {
-                        const nameInput = document.getElementById('roomCustomName');
-                        const capacityInput = document.getElementById('roomCustomCapacity');
-                        const name = nameInput ? nameInput.value.trim() : '';
-                        if (!name) { alert('Indiquez le nom du local à ajouter.'); return; }
-                        const capacity = capacityInput ? parseInt(capacityInput.value, 10) : 0;
-                        addRegularRoom(name, capacity > 0 ? capacity : 0);
-                        if (nameInput) nameInput.value = '';
-                        if (capacityInput) capacityInput.value = '';
-                    } else {
-                        addRegularRoom(select.value, ROOM_CATALOG_MAP.get(select.value) || 0);
-                    }
-                    select.value = '';
+                    const room = readRoomToAdd('roomCatalogSelect', 'roomCustomName', 'roomCustomCapacity');
+                    if (!room) return;
+                    addRegularRoom(room.name, room.capacity);
                     renderRoomsUI();
                 });
             }
@@ -2002,22 +2024,70 @@
             }
         }
 
-        function getSelectedAccomRooms() {
-            const rows = Array.from(document.querySelectorAll('#accomRoomList .accomRoomRow'));
-            const rooms = [];
-            for (const row of rows) {
-                const checkbox = row.querySelector('.accomRoomCheckbox');
-                const nameInput = row.querySelector('.accomRoomName');
-                const capacityInput = row.querySelector('.accomRoomCapacity');
-                if (!checkbox || !nameInput || !capacityInput) continue;
-                if (checkbox.checked) {
-                    const name = (nameInput.value || '').trim();
-                    if (!name) continue;
-                    const cap = parseInt(capacityInput.value, 10) || 0;
-                    if (cap > 0) rooms.push({ name: String(name), capacity: cap });
-                }
+
+        // ===== Salles d'accommodement =====
+        let accomRooms = []; // [{ name, capacity, fromFile }]
+
+        function findAccomRoom(name) {
+            return accomRooms.find(room => room.name === name) || null;
+        }
+
+        function addAccomRoom(rawName, capacity = 0, fromFile = false) {
+            const name = String(rawName || '').trim().toUpperCase();
+            if (!name) return null;
+            let room = findAccomRoom(name);
+            if (room) {
+                if (capacity > 0 && !(room.capacity > 0)) room.capacity = capacity;
+                if (fromFile) room.fromFile = true;
+                return room;
             }
-            return rooms;
+            const cap = capacity > 0 ? capacity : (ROOM_CATALOG_MAP.get(name) || 0);
+            room = { name, capacity: cap, fromFile };
+            accomRooms.push(room);
+            return room;
+        }
+
+        function removeAccomRoom(name) {
+            accomRooms = accomRooms.filter(room => room.name !== name);
+            renderAccomRoomsUI();
+        }
+
+        function getSelectedAccomRooms() {
+            return accomRooms.filter(room => room.capacity > 0).map(room => ({ name: room.name, capacity: room.capacity }));
+        }
+
+        function renderAccomRoomsUI() {
+            renderRoomCardList('accomRoomCards', accomRooms, {
+                emptyText: 'Aucune salle d’accommodement : elles seront détectées dans accommodements.xlsx (colonne Local) ou ajoutées ci-dessous.',
+                onRemove: removeAccomRoom,
+                onChange: renderAccomRoomsUI,
+                badge: room => (room.fromFile ? 'fichier' : '')
+            });
+            renderCatalogSelect('accomCatalogSelect', accomRooms.map(room => room.name), '— Ajouter une salle d’accommodement —');
+            updateCustomRoomInputs('accomCatalogSelect', 'accomCustomName', 'accomCustomCapacity');
+            const total = document.getElementById('accomRoomTotal');
+            if (total) {
+                const sum = accomRooms.reduce((acc, room) => acc + (room.capacity > 0 ? room.capacity : 0), 0);
+                const missing = accomRooms.filter(room => !(room.capacity > 0)).map(room => room.name);
+                total.textContent = accomRooms.length === 0
+                    ? ''
+                    : `Total : ${sum} places d’accommodement` + (missing.length > 0 ? ` — capacité à saisir pour ${missing.join(', ')} (les étudiants placés d’office y restent)` : '');
+            }
+            renderAccomManualPlacement();
+        }
+
+        {
+            const accomSelect = document.getElementById('accomCatalogSelect');
+            if (accomSelect) accomSelect.addEventListener('change', () => updateCustomRoomInputs('accomCatalogSelect', 'accomCustomName', 'accomCustomCapacity'));
+            const accomAddButton = document.getElementById('accomAddBtn');
+            if (accomAddButton) {
+                accomAddButton.addEventListener('click', () => {
+                    const room = readRoomToAdd('accomCatalogSelect', 'accomCustomName', 'accomCustomCapacity');
+                    if (!room) return;
+                    addAccomRoom(room.name, room.capacity);
+                    renderAccomRoomsUI();
+                });
+            }
         }
 
         function detectSingleColumn(headers, keywords) {
@@ -2142,6 +2212,8 @@
         let accomTimeMap = null; // Map of NI string -> { start, end }
         let accomFileNISet = new Set();
         let accomFileTimeMap = new Map();
+        let accomFileRoomMap = new Map(); // NI normalisé -> local indiqué dans accommodements.xlsx
+        let accomManualSource = new Map(); // NI normalisé -> 'file' | 'user'
         // Placement manuel des étudiants en accommodement : NI normalisé -> nom du local
         let accomManualRooms = new Map();
         // Étudiants du fichier BRIO (cache pour afficher la liste des accommodements)
@@ -2165,7 +2237,28 @@
         function refreshAccommodementData() {
             accomNISet = new Set(Array.from(accomFileNISet, normalizeNI).filter(Boolean));
             accomTimeMap = new Map(Array.from(accomFileTimeMap, ([ni, times]) => [normalizeNI(ni), times]));
-            renderAccomManualPlacement();
+
+            // Salles détectées dans le fichier : retirer celles qui n'y sont plus, ajouter les nouvelles
+            const fileRooms = new Set(accomFileRoomMap.values());
+            accomRooms = accomRooms.filter(room => !room.fromFile || fileRooms.has(room.name));
+            for (const name of fileRooms) {
+                const placedHere = Array.from(accomFileRoomMap.values()).filter(v => v === name).length;
+                addAccomRoom(name, ROOM_CATALOG_MAP.get(name) || placedHere, true);
+            }
+
+            // Placement d'office des étudiants dont le local figure dans le fichier (sauf modification manuelle)
+            for (const [ni, source] of Array.from(accomManualSource.entries())) {
+                if (source === 'file' && !accomFileRoomMap.has(ni)) {
+                    accomManualRooms.delete(ni);
+                    accomManualSource.delete(ni);
+                }
+            }
+            for (const [ni, room] of accomFileRoomMap) {
+                if (accomManualSource.get(ni) === 'user') continue;
+                accomManualRooms.set(ni, room);
+                accomManualSource.set(ni, 'file');
+            }
+            renderAccomRoomsUI();
         }
 
         function isAccommodementStudent(student) {
@@ -2212,7 +2305,7 @@
                 showMessage('Aucun étudiant en accommodement détecté dans BRIO.xlsx (fournissez accommodements.xlsx).');
                 return;
             }
-            const accomRooms = getSelectedAccomRooms();
+            const accomRoomChoices = accomRooms.slice();
             const CUSTOM = '__custom__';
 
             const table = document.createElement('table');
@@ -2245,12 +2338,12 @@
                 select.style.cssText = 'width:auto;min-width:200px;padding:6px;';
                 const automaticOption = document.createElement('option');
                 automaticOption.value = '';
-                automaticOption.textContent = accomRooms.length > 0 ? 'Automatique (salles d’accommodement)' : 'Automatique (aucune salle cochée)';
+                automaticOption.textContent = getSelectedAccomRooms().length > 0 ? 'Automatique (salles d’accommodement)' : 'Automatique (aucune salle disponible)';
                 select.appendChild(automaticOption);
-                for (const room of accomRooms) {
+                for (const room of accomRoomChoices) {
                     const option = document.createElement('option');
                     option.value = room.name;
-                    option.textContent = `${room.name} (${room.capacity} places)`;
+                    option.textContent = room.capacity > 0 ? `${room.name} (${room.capacity} places)` : `${room.name} (capacité à saisir)`;
                     select.appendChild(option);
                 }
                 const customOption = document.createElement('option');
@@ -2265,7 +2358,7 @@
                 customInput.style.cssText = 'width:160px;padding:5px 6px;border:1px solid #ccc;border-radius:4px;display:none;';
 
                 const current = getAccomManualRoom(student);
-                if (current && accomRooms.some(room => room.name === current)) {
+                if (current && accomRoomChoices.some(room => room.name === current)) {
                     select.value = current;
                 } else if (current) {
                     select.value = CUSTOM;
@@ -2273,7 +2366,15 @@
                     customInput.style.display = '';
                 }
 
+                const fromFile = document.createElement('span');
+                fromFile.textContent = accomManualSource.get(ni) === 'file' ? 'fichier' : '';
+                fromFile.className = 'room-card-badge';
+                fromFile.title = 'Local indiqué dans accommodements.xlsx';
+                fromFile.style.display = fromFile.textContent ? '' : 'none';
+
                 select.addEventListener('change', () => {
+                    accomManualSource.set(ni, 'user');
+                    fromFile.style.display = 'none';
                     if (select.value === CUSTOM) {
                         customInput.style.display = '';
                         const name = customInput.value.trim();
@@ -2286,12 +2387,14 @@
                     updateAccomManualSummary();
                 });
                 customInput.addEventListener('input', () => {
+                    accomManualSource.set(ni, 'user');
+                    fromFile.style.display = 'none';
                     const name = customInput.value.trim();
                     if (name) accomManualRooms.set(ni, name); else accomManualRooms.delete(ni);
                     updateAccomManualSummary();
                 });
 
-                roomCell.append(select, customInput);
+                roomCell.append(select, customInput, fromFile);
                 tr.appendChild(roomCell);
                 table.appendChild(tr);
             }
@@ -2305,14 +2408,11 @@
 
             function updateAccomManualSummary() {
                 const placed = accomStudents.filter(s => getAccomManualRoom(s)).length;
-                summary.textContent = `${accomStudents.length} étudiant(s) en accommodement, dont ${placed} placé(s) manuellement.`;
+                const fromFileCount = accomStudents.filter(s => accomManualSource.get(normalizeNI(s.ni)) === 'file' && getAccomManualRoom(s)).length;
+                summary.textContent = `${accomStudents.length} étudiant(s) en accommodement, dont ${placed} avec un local précis (${fromFileCount} d’après le fichier).`;
             }
         }
 
-        const accomRoomListElement = document.getElementById('accomRoomList');
-        if (accomRoomListElement) {
-            accomRoomListElement.addEventListener('change', renderAccomManualPlacement);
-        }
 
         // Safe DOM listener registration: check elements exist before binding to avoid hard errors
         const folderEl = document.getElementById('folderInput');
@@ -2676,9 +2776,11 @@
             const select = document.getElementById('accomNiSelect');
             const accomStartSel = document.getElementById('accomStartSelect');
             const accomEndSel = document.getElementById('accomEndSelect');
+            const accomRoomSel = document.getElementById('accomRoomSelect');
             if (select) select.innerHTML = '';
             if (accomStartSel) accomStartSel.innerHTML = '';
             if (accomEndSel) accomEndSel.innerHTML = '';
+            if (accomRoomSel) accomRoomSel.innerHTML = '';
             if (!file) { if (mapDiv) try { mapDiv.style.display = 'none'; } catch(e){}; console.log('onAccomFileSelected: no file'); return; }
 
             try {
@@ -2722,8 +2824,8 @@
                 const o = document.createElement('option'); o.value = String(idx); o.textContent = `${idx+1}: ${h}`; select.appendChild(o);
             });
 
-            // populate start/end time selects
-            for (const sel of [accomStartSel, accomEndSel]) {
+            // populate start/end time and room selects
+            for (const sel of [accomStartSel, accomEndSel, accomRoomSel]) {
                 if (!sel) continue;
                 const noneOpt = document.createElement('option'); noneOpt.value = ''; noneOpt.textContent = '-- aucune --'; sel.appendChild(noneOpt);
                 accomHeaders.forEach((h,idx) => {
@@ -2741,6 +2843,8 @@
             const defaultEndIdx = norm.findIndex(h => /fin|end|heure.*fin/.test(h));
             if (defaultStartIdx >= 0 && accomStartSel) accomStartSel.value = String(defaultStartIdx);
             if (defaultEndIdx >= 0 && accomEndSel) accomEndSel.value = String(defaultEndIdx);
+            const defaultRoomIdx = norm.findIndex(h => /^local|local d|salle|lieu|room/.test(h));
+            if (defaultRoomIdx >= 0 && accomRoomSel) accomRoomSel.value = String(defaultRoomIdx);
 
             try { if (mapDiv) mapDiv.style.display = 'block'; } catch(e) { console.warn('could not show accomMap', e); }
 
@@ -2748,25 +2852,36 @@
             const getAccomColIndices = () => ({
                 niCol: select.value === '' ? null : parseInt(select.value, 10),
                 startCol: (accomStartSel && accomStartSel.value !== '') ? parseInt(accomStartSel.value, 10) : null,
-                endCol: (accomEndSel && accomEndSel.value !== '') ? parseInt(accomEndSel.value, 10) : null
+                endCol: (accomEndSel && accomEndSel.value !== '') ? parseInt(accomEndSel.value, 10) : null,
+                roomCol: (accomRoomSel && accomRoomSel.value !== '') ? parseInt(accomRoomSel.value, 10) : null
             });
 
             // when user changes selection, re-read selected columns
             const rebuildAccom = async () => {
                 const cols = getAccomColIndices();
-                try { await buildAccomNISet(file, cols.niCol, cols.startCol, cols.endCol); } catch(e) { console.error('buildAccomNISet error on change', e); }
+                try { await buildAccomNISet(file, cols.niCol, cols.startCol, cols.endCol, cols.roomCol); } catch(e) { console.error('buildAccomNISet error on change', e); }
             };
             select.addEventListener('change', rebuildAccom, { once: false });
             if (accomStartSel) accomStartSel.addEventListener('change', rebuildAccom, { once: false });
             if (accomEndSel) accomEndSel.addEventListener('change', rebuildAccom, { once: false });
+            if (accomRoomSel) accomRoomSel.addEventListener('change', rebuildAccom, { once: false });
 
             // build initial set
-            try { const cols = getAccomColIndices(); await buildAccomNISet(file, cols.niCol, cols.startCol, cols.endCol); } catch(e) { console.error('initial buildAccomNISet failed', e); }
+            try { const cols = getAccomColIndices(); await buildAccomNISet(file, cols.niCol, cols.startCol, cols.endCol, cols.roomCol); } catch(e) { console.error('initial buildAccomNISet failed', e); }
         }
 
-        async function buildAccomNISet(file, colIdx, startColIdx, endColIdx) {
+        // Extrait le nom de local d'une cellule : code de local (ex. VCH-2850) sinon le texte tel quel
+        function extractRoomName(value) {
+            const text = String(value === undefined || value === null ? '' : value).trim();
+            if (!text) return '';
+            const codes = text.toUpperCase().match(/[A-Z]{2,4}-\d{3,5}[A-Z]?/g);
+            return codes ? codes[0] : text.toUpperCase();
+        }
+
+        async function buildAccomNISet(file, colIdx, startColIdx, endColIdx, roomColIdx = null) {
             accomFileNISet = new Set();
             accomFileTimeMap = new Map();
+            accomFileRoomMap = new Map();
             if (!file || colIdx === null || typeof colIdx === 'undefined') return;
 
             // Helper: convert Excel serial time or date-time to HH:MM string
@@ -2810,6 +2925,8 @@
                             const sTime = (startColIdx !== null && startColIdx !== undefined) ? excelTimeToHHMM(row[startColIdx]) : '';
                             const eTime = (endColIdx !== null && endColIdx !== undefined) ? excelTimeToHHMM(row[endColIdx]) : '';
                             accomFileTimeMap.set(ni, { start: sTime, end: eTime });
+                            const roomName = (roomColIdx !== null && roomColIdx !== undefined) ? extractRoomName(row[roomColIdx]) : '';
+                            if (roomName) accomFileRoomMap.set(ni, roomName);
                         }
                     }
                 } else {
@@ -2827,6 +2944,8 @@
                                 const sTime = (startColIdx !== null && startColIdx !== undefined && parts[startColIdx]) ? String(parts[startColIdx]).trim() : '';
                                 const eTime = (endColIdx !== null && endColIdx !== undefined && parts[endColIdx]) ? String(parts[endColIdx]).trim() : '';
                                 accomFileTimeMap.set(ni, { start: sTime, end: eTime });
+                                const roomName = (roomColIdx !== null && roomColIdx !== undefined) ? extractRoomName(parts[roomColIdx]) : '';
+                                if (roomName) accomFileRoomMap.set(ni, roomName);
                             }
                         }
                     }
@@ -3624,6 +3743,9 @@
                 });
             }
         }
+
+        // Rendu initial des salles d'accommodement (après la déclaration de tout l'état)
+        renderAccomRoomsUI();
 
         // Route generation through one handler so a click cannot start two concurrent runs.
         const generateBtnEl = document.getElementById('generateBtn');
