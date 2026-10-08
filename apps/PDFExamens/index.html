@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <style>
 
         :root {
@@ -485,7 +486,7 @@
             <div class="intro-guide-body">
                 <p>Tout se passe dans votre navigateur : aucun fichier n'est envoyé sur un serveur. Suivez les étapes ci-dessous dans l'ordre :</p>
                 <ol>
-                    <li><strong>Étape 1 — Informations générales :</strong> le nom de l'évaluation et le cours, imprimés sur chaque PDF.</li>
+                    <li><strong>Étape 1 — Informations générales :</strong> le nom de l'évaluation et le sigle du cours, détectés dans <code>examen.pdf</code> et modifiables, imprimés sur chaque PDF.</li>
                     <li><strong>Étape 2 — Fichiers de l'examen :</strong> sélectionnez le dossier contenant <code>BRIO.xlsx</code> et <code>examen.pdf</code> (obligatoires), et au besoin <code>accommodements.xlsx</code> ou <code>horscampus.xlsx</code>.</li>
                     <li><strong>Étape 3 — Locaux et répartition :</strong> choisissez les locaux réguliers et, si nécessaire, les locaux d'accommodement, puis le mode de répartition des étudiants. Collez le déroulement de l'examen de Brio : locaux, heures et NRC sont repérés automatiquement, et vous cochez les locaux de chaque NRC. Certains étudiants en accommodement peuvent être placés manuellement dans un local précis.</li>
                     <li><strong>Étape 4 — Options d'impression :</strong> format des listes de présence, pourcentage de copies vierges, numérotation.</li>
@@ -497,16 +498,17 @@
 
         <div class="step-card">
             <div class="step-header"><span class="step-badge">1</span><span class="step-title">Informations générales</span></div>
-            <div class="step-desc">Ces renseignements apparaissent sur la page de couverture de chaque PDF et dans le récapitulatif Excel final.</div>
+            <div class="step-desc">Ces renseignements sont détectés automatiquement dans <code>examen.pdf</code> dès que le dossier est chargé (étape 2). Vérifiez-les et corrigez-les au besoin : ils apparaissent sur la page de couverture de chaque PDF et dans le récapitulatif Excel final.</div>
             <div class="upload-section">
                 <label for="evalName">📝 Nom de l'évaluation (obligatoire)</label>
-                <input type="text" id="evalName" placeholder="Ex: Examen 1">
+                <input type="text" id="evalName" placeholder="Ex: Examen 1 (détecté dans examen.pdf)">
                 <div class="field-help">Ex. : « Examen 1 », « Intra », « Final ». Ce texte est imprimé tel quel sur chaque PDF.</div>
             </div>
             <div class="upload-section">
                 <label for="courseName">📚 Numéro du cours (obligatoire)</label>
-                <input type="text" id="courseName" placeholder="Ex: STT-1900">
+                <input type="text" id="courseName" placeholder="Ex: STT-1900 (détecté dans examen.pdf)">
                 <div class="field-help">Le sigle du cours tel qu'il doit apparaître sur les documents (ex. STT-1900).</div>
+                <div id="examInfoDetected" class="field-help" style="color:#333;margin-top:8px;"></div>
             </div>
         </div>
         <div class="step-card">
@@ -710,6 +712,9 @@
 
     <script>
         const { PDFDocument, rgb, StandardFonts } = PDFLib;
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+        }
 
         // ========== CONFIGURATION DES POSITIONS ==========
         // Ajustez ces valeurs si les éléments ne sont pas parfaitement positionnés
@@ -2626,6 +2631,104 @@
             }
             await refreshBrioStudentCache();
             updateColumnMappingVisibility();
+            await detectExamInfoFromPdf(folderPdfFile);
+        }
+
+        // ===== Nom de l'évaluation et sigle du cours détectés dans examen.pdf =====
+        // Regroupe les fragments de texte de pdf.js en lignes (par ordonnée), de haut en bas
+        async function extractPdfPageLines(file, maxPages = 2) {
+            if (!window.pdfjsLib) throw new Error('le lecteur PDF n’est pas chargé (vérifiez votre connexion puis rechargez la page)');
+            const data = new Uint8Array(await file.arrayBuffer());
+            const doc = await pdfjsLib.getDocument({ data }).promise;
+            const pages = [];
+            for (let pageNumber = 1; pageNumber <= Math.min(doc.numPages, maxPages); pageNumber++) {
+                const page = await doc.getPage(pageNumber);
+                const content = await page.getTextContent();
+                const items = content.items
+                    .filter(item => item.str && item.str.trim())
+                    .map(item => ({ x: item.transform[4], y: item.transform[5], str: item.str }))
+                    .sort((a, b) => b.y - a.y || a.x - b.x);
+                const lines = [];
+                let current = null;
+                for (const item of items) {
+                    if (!current || Math.abs(current.y - item.y) > 3) {
+                        current = { y: item.y, items: [] };
+                        lines.push(current);
+                    }
+                    current.items.push(item);
+                }
+                pages.push(lines.map(line => line.items.sort((a, b) => a.x - b.x).map(i => i.str).join(' ').replace(/\s+/g, ' ').trim()).filter(Boolean));
+            }
+            return pages;
+        }
+
+        // Déduit { exam, course } des lignes de texte des premières pages
+        function detectExamInfoFromLines(pages) {
+            const courseRe = /\b([A-Z]{2,4}-\d{4}[A-Z]?)\b/;
+            const footerRe = /([A-Z]{2,4}-\d{4}[A-Z]?)\s*[–—-]\s*(.+)$/;
+            const keywordRe = /\b(examen|intra|final|partiel|test|quiz|évaluation|evaluation|contrôle|controle|reprise)\b/i;
+            let course = '';
+            let exam = '';
+
+            // 1) Pied de page des pages suivantes : « STT-1000 – Examen 1 »
+            for (const lines of pages.slice(1)) {
+                for (const line of lines) {
+                    const match = line.match(footerRe);
+                    if (match && match[2].trim().length <= 60) {
+                        course = match[1];
+                        exam = match[2].trim();
+                        break;
+                    }
+                }
+                if (exam) break;
+            }
+
+            // 2) Page titre : sigle entre parenthèses et ligne de titre contenant un mot-clé
+            const first = pages[0] || [];
+            if (!course) {
+                for (const line of first) {
+                    const match = line.match(courseRe);
+                    if (match) { course = match[1]; break; }
+                }
+            }
+            if (!exam) {
+                for (const line of first) {
+                    if (line.length > 60 || /^(directives|\d+\.)/i.test(line)) continue;
+                    if (keywordRe.test(line) && !courseRe.test(line)) { exam = line; break; }
+                }
+            }
+            exam = exam.replace(/\s*\(\s*\d+(?:[.,]\d+)?\s*%\s*\)/g, ' ').replace(/\s+/g, ' ').trim();
+            return { exam, course };
+        }
+
+        async function detectExamInfoFromPdf(file) {
+            const note = document.getElementById('examInfoDetected');
+            const evalInput = document.getElementById('evalName');
+            const courseInput = document.getElementById('courseName');
+            if (!file) { if (note) note.textContent = ''; return; }
+            try {
+                const pages = await extractPdfPageLines(file, 2);
+                const info = detectExamInfoFromLines(pages);
+                if (info.exam && evalInput) evalInput.value = info.exam;
+                if (info.course && courseInput) courseInput.value = info.course;
+                if (!note) return;
+                if (info.exam && info.course) {
+                    note.textContent = `🔍 Détecté dans examen.pdf : « ${info.exam} » et ${info.course}. Modifiez les champs ci-dessus si c’est inexact.`;
+                    note.style.color = '#333';
+                } else if (info.exam || info.course) {
+                    note.textContent = `⚠️ Détecté dans examen.pdf : ${info.exam ? `« ${info.exam} »` : 'nom non repéré'} et ${info.course || 'sigle non repéré'}. Complétez le champ manquant.`;
+                    note.style.color = '#b26a00';
+                } else {
+                    note.textContent = '⚠️ Nom de l’évaluation et sigle du cours non repérés dans examen.pdf : saisissez-les ci-dessus.';
+                    note.style.color = '#b26a00';
+                }
+            } catch (err) {
+                console.error('Détection du nom et du sigle dans examen.pdf :', err);
+                if (note) {
+                    note.textContent = `⚠️ Impossible de lire le texte de examen.pdf (${err.message}) : saisissez le nom et le sigle ci-dessus.`;
+                    note.style.color = '#b26a00';
+                }
+            }
         }
 
         // Le volet « Vérifier / choisir les colonnes » reste replié ; il n'apparaît que si au moins un mappage est disponible
