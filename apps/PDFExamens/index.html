@@ -409,6 +409,25 @@
             color: var(--text-dark);
         }
 
+        .room-cards { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+        .room-card { display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid #d9c9e8; background:#f5f1fa; border-radius:8px; }
+        .room-card-name { font-weight:700; color:#735093; }
+        .room-card-capacity { font-size:12px; color:#666; }
+        .room-card-capacity input { width:90px; padding:4px 6px; border:1px solid #c62828; border-radius:4px; font-size:13px; }
+        .room-card-remove { width:auto; margin:0; padding:0 6px; background:none; border:none; color:#c62828; font-size:18px; line-height:1; cursor:pointer; box-shadow:none; }
+        .room-card-remove:hover { color:#8e1b1b; background:none; transform:none; }
+        .room-add-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px; }
+        .room-add-row select { flex:1; min-width:220px; width:auto; }
+        .room-add-row input[type="number"] { padding:12px; border:2px solid #9467bd; border-radius:10px; background:#f5f1fa; font-size:14px; }
+        .room-add-row input[type="text"] { width:170px; }
+        .room-add-row button { width:auto; margin:0; padding:12px 20px; }
+        .nrc-table { border-collapse:collapse; font-size:13px; margin-top:10px; }
+        .nrc-table th, .nrc-table td { padding:6px 12px; text-align:left; border-bottom:1px solid #eee; vertical-align:middle; }
+        .nrc-table th { background:#f5f1fa; color:#5a3d7a; }
+        .nrc-table td input[type="checkbox"] { width:16px; height:16px; margin:0; }
+        .nrc-table .nrc-count { color:#888; font-weight:normal; margin-left:4px; }
+        .nrc-table .nrc-section { display:block; font-size:11px; color:#888; }
+
         .step-tag {
             font-size: 11px;
             font-weight: 700;
@@ -461,7 +480,7 @@
                 <ol>
                     <li><strong>Étape 1 — Informations générales :</strong> le nom de l'évaluation et le cours, imprimés sur chaque PDF.</li>
                     <li><strong>Étape 2 — Fichiers de l'examen :</strong> sélectionnez le dossier contenant <code>BRIO.xlsx</code> et <code>examen.pdf</code> (obligatoires), et au besoin <code>accommodements.xlsx</code> ou <code>horscampus.xlsx</code>.</li>
-                    <li><strong>Étape 3 — Locaux et répartition :</strong> choisissez les locaux réguliers et, si nécessaire, les locaux d'accommodement, puis le mode de répartition des étudiants. En mode « Par section », chaque section peut être répartie dans plusieurs locaux, et certains étudiants en accommodement peuvent être placés manuellement dans un local précis.</li>
+                    <li><strong>Étape 3 — Locaux et répartition :</strong> choisissez les locaux réguliers et, si nécessaire, les locaux d'accommodement, puis le mode de répartition des étudiants. Collez le déroulement de l'examen de Brio : locaux, heures et NRC sont repérés automatiquement, et vous cochez les locaux de chaque NRC. Certains étudiants en accommodement peuvent être placés manuellement dans un local précis.</li>
                     <li><strong>Étape 4 — Options d'impression :</strong> format des listes de présence, pourcentage de copies vierges, numérotation.</li>
                     <li><strong>Étape 5 — Génération :</strong> cliquez sur « Générer et Télécharger le ZIP ». Il contiendra les PDFs, les listes de présence et <code>Recapitulatif_etudiants.xlsx</code>.</li>
                 </ol>
@@ -590,116 +609,22 @@
 
         <div class="step-card">
             <div class="step-header"><span class="step-badge">3</span><span class="step-title">Locaux et répartition des étudiants</span></div>
-            <div class="step-desc">Sélectionnez les locaux disponibles et la façon de répartir les étudiants entre eux. Les étudiants en accommodement sont toujours placés dans les locaux d'accommodement dédiés ci-dessous (ou dans le local choisi manuellement pour chacun), indépendamment de ce mode.</div>
-        <div id="roomsUI" style="margin-bottom:16px;">
-            <div style="margin-bottom:18px;">
-                <label for="brioScheduleText">📋 Déroulement de l'examen (copié de Brio)</label>
-                <div class="field-help">Dans Brio, section <strong>Évaluations</strong>, copiez tout le texte de la colonne <strong>Déroulement de l'examen</strong> (groupes, dates et lieux) et collez-le ici. Les locaux de chaque NRC et les heures sont repérés automatiquement : les locaux sont cochés ci-dessous (saisissez la capacité des locaux inconnus), les heures sont remplies à l'étape 1 et, une fois <code>BRIO.xlsx</code> chargé, chaque section est associée à ses locaux en mode « Par section ».</div>
-                <textarea id="brioScheduleText" rows="5" placeholder="Groupe : 88927&#10;Le 22 oct. de 18 h 30 à 21 h 20&#10;Lieu : VCH-3880&#10;Groupe : 88928&#10;…" style="resize:vertical;font-family:inherit;line-height:1.4;" spellcheck="false"></textarea>
-                <div id="brioScheduleResult" style="margin-top:8px;font-size:13px;"></div>
+            <div class="step-desc">Collez le déroulement de l'examen tel qu'affiché dans Brio : les locaux, les heures et les NRC sont repérés automatiquement. Si un NRC a plusieurs locaux, ils sont remplis du plus grand au plus petit. Les étudiants en accommodement sont placés dans les salles d'accommodement plus bas.</div>
+        <div class="upload-section" id="roomsUI">
+            <label for="brioScheduleText">🏷️ Salles du groupe régulier</label>
+            <textarea id="brioScheduleText" rows="6" placeholder="Groupe : 88927&#10;Le 22 oct. de 18 h 30 à 21 h 20&#10;Lieu : VCH-3880&#10;Groupe : 88928&#10;…" style="resize:vertical;font-family:inherit;line-height:1.4;" spellcheck="false"></textarea>
+            <div class="field-help">Dans Brio, section <strong>Évaluations</strong>, copiez tout le texte de la colonne <strong>Déroulement de l'examen</strong> (groupes, dates et lieux) et collez-le ici : les locaux de chaque NRC et les heures sont repérés automatiquement.<br>Vous pouvez aussi ajouter les locaux un à un ci-dessous et cocher les NRC de chacun.</div>
+            <div id="brioScheduleNotes" style="font-size:13px;color:#b26a00;"></div>
+            <div id="roomCards" class="room-cards"></div>
+            <div class="room-add-row">
+                <select id="roomCatalogSelect" aria-label="Ajouter un local"></select>
+                <input type="text" id="roomCustomName" placeholder="Nom du local" style="display:none;">
+                <input type="number" id="roomCustomCapacity" placeholder="Capacité" min="1" style="display:none;width:130px;">
+                <button type="button" id="roomAddBtn">Ajouter</button>
             </div>
-            <label>🏷️ Choisir les locaux à utiliser</label>
-                        <div style="margin-top:10px;">
-                <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block;">Mode de répartition : <span class="info-icon" id="repartitionInfoIcon" title="Informations">i
-                <span class="info-bubble" id="repartitionInfoBubble">Par section : attribue chaque section (feuille Excel) au(x) local(aux) coché(s). <br>
-                    Gros→Petit : remplit les plus gros locaux en premier. <br>
-                    Petit→Gros : remplit les plus petits en premier. <br>
-                    Uniforme : répartit les étudiants proportionnellement dans tous les locaux.</span></span></label>
-                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
-                    <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="section"> Par section → local(aux)</label>
-                </div>
-                <div id="distributionModeChoices" style="display:flex;gap:12px;flex-wrap:wrap;">
-                    <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="large-first" checked> Gros → Petit</label>
-                    <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="small-first"> Petit → Gros</label>
-                    <label style="font-size:13px;cursor:pointer;"><input type="radio" name="distMode" value="uniform"> Uniforme</label>
-                </div>
-                <div id="sectionDistributionUI" style="display:none;margin:12px 0;padding:12px;background:#f5f1fa;border:1px solid #d9c9e8;border-radius:8px;">
-                    <div style="font-size:13px;color:#555;margin-bottom:8px;">Cochez le ou les locaux de chaque section du fichier BRIO. Si une section a plusieurs locaux, ils sont remplis du plus grand au plus petit. Un même local peut être partagé par plusieurs sections : les places restantes sont réparties dans l'ordre des sections.</div>
-                    <div id="sectionRoomMapping"></div>
-                    <div style="font-size:12px;color:#666;margin-top:8px;">Les capacités des locaux sont vérifiées avant l'attribution (en tenant compte des sections déjà placées). Les étudiants avec accommodement conservent leur répartition dédiée.</div>
-                </div>
-
-            <div id="roomList" style="margin-top:8px;display:flex;gap:24px;align-items:flex-start;">
-                <!-- Colonne gauche : salles prédéfinies -->
-                 
-                <div style="flex:1;">
-                <div style="font-size:13px;color:#555;font-weight:600;margin-bottom:8px;">Salles prédéfinies</div>
-                
-                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="roomCheckbox" data-name="VCH-2850" id="room_VCH-2850" checked>
-                    <label for="room_VCH-2850" style="margin:0;font-weight:600;min-width:180px;">VCH-2850 (201 places)</label>
-                    <input type="number" class="roomCapacity" data-name="VCH-2850" value="201" min="1" style="width:100px;margin-left:8px;">
-                    <div style="font-size:12px;color:#666;margin-left:8px;">places</div>
-                </div>
-                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="roomCheckbox" data-name="VCH-2880" id="room_VCH-2880" checked>
-                    <label for="room_VCH-2880" style="margin:0;font-weight:600;min-width:180px;">VCH-2880 (110 places)</label>
-                    <input type="number" class="roomCapacity" data-name="VCH-2880" value="110" min="1" style="width:100px;margin-left:8px;">
-                    <div style="font-size:12px;color:#666;margin-left:8px;">places</div>
-                </div>
-                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="roomCheckbox" data-name="VCH-3860" id="room_VCH-3860" >
-                    <label for="room_VCH-3860" style="margin:0;font-weight:600;min-width:180px;">VCH-3860 (80 places)</label>
-                    <input type="number" class="roomCapacity" data-name="VCH-3860" value="80" min="1" style="width:100px;margin-left:8px;">
-                    <div style="font-size:12px;color:#666;margin-left:8px;">places</div>
-                </div>
-                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="roomCheckbox" data-name="VCH-3880" id="room_VCH-3880">
-                    <label for="room_VCH-3880" style="margin:0;font-weight:600;min-width:180px;">VCH-3880 (110 places)</label>
-                    <input type="number" class="roomCapacity" data-name="VCH-3880" value="110" min="1" style="width:100px;margin-left:8px;">
-                    <div style="font-size:12px;color:#666;margin-left:8px;">places</div>
-                </div>
-                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="roomCheckbox" data-name="PLT-1112" id="room_PLT-1112">
-                    <label for="room_PLT-1112" style="margin:0;font-weight:600;min-width:180px;">PLT-1112 (249 places)</label>
-                    <input type="number" class="roomCapacity" data-name="PLT-1112" value="249" min="1" style="width:100px;margin-left:8px;">
-                    <div style="font-size:12px;color:#666;margin-left:8px;">places</div>
-                </div>
-                </div>
-                <!-- Colonne droite : salles supplémentaires -->
-                <div style="flex:1;border-left:1px solid #ddd;padding-left:20px;">
-                <div style="font-size:13px;color:#555;font-weight:600;margin-bottom:8px;">Salles supplémentaires</div>
-                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_1">
-                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
-                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
-                    <div style="font-size:12px;color:#666;">places</div>
-                </div>
-                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_2">
-                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
-                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
-                    <div style="font-size:12px;color:#666;">places</div>
-                </div>
-                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_3">
-                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
-                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
-                    <div style="font-size:12px;color:#666;">places</div>
-                </div>
-                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_4">
-                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
-                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
-                    <div style="font-size:12px;color:#666;">places</div>
-                </div>
-                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_5">
-                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
-                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
-                    <div style="font-size:12px;color:#666;">places</div>
-                </div>
-                <div class="roomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <input type="checkbox" class="roomCheckbox customRoomCheckbox" id="room_custom_6">
-                    <input type="text" class="customRoomName" placeholder="Nom de la salle" style="width:140px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;">
-                    <input type="number" class="roomCapacity customRoomCapacity" value="" min="1" placeholder="Capacité" style="width:100px;">
-                    <div style="font-size:12px;color:#666;">places</div>
-                </div>
-                </div>
-            </div>
-            <div style="font-size:12px;color:#666">Cochez les locaux à utiliser et modifiez la capacité si besoin.</div>
-
-        </div>
+            <div id="roomTotal" class="field-help"></div>
+            <div id="nrcRoomTable"></div>
+            <div class="field-help">Cochez les locaux attribués à chaque NRC. Un NRC sans local coché est placé dans les locaux qui ne sont attribués à aucun NRC (ou, à défaut, dans tous les locaux).</div>
         </div>
 
         <div id="accomRoomsUI" style="margin-bottom:16px;">
@@ -1198,13 +1123,14 @@
                     });
                     const recapWB = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(recapWB, recapSheet, 'Récapitulatif');
-                    if (lastDistributionMode === 'section') {
-                        const sectionAssignmentRows = [['Section', 'Locaux attribués']];
-                        for (const [sectionIndex, section] of brioSections.entries()) {
-                            sectionAssignmentRows.push([section, getSectionRooms(section).join(', ')]);
+                    if (brioSections.length > 0) {
+                        const sectionAssignmentRows = [['Section', 'NRC', 'Locaux utilisés']];
+                        for (const section of brioSections) {
+                            const key = groupKeyForSection(section);
+                            sectionAssignmentRows.push([section, key, (lastGroupRoomUsage.get(key) || []).join(', ')]);
                         }
                         const sectionAssignmentSheet = XLSX.utils.aoa_to_sheet(sectionAssignmentRows);
-                        sectionAssignmentSheet['!cols'] = [{ wch: 30 }, { wch: 24 }];
+                        sectionAssignmentSheet['!cols'] = [{ wch: 30 }, { wch: 12 }, { wch: 30 }];
                         XLSX.utils.book_append_sheet(recapWB, sectionAssignmentSheet, 'Attribution sections');
                     }
                     const recapArray = XLSX.write(recapWB, { bookType: 'xlsx', type: 'array' });
@@ -1354,259 +1280,310 @@
             return { type: 'none', indices: [], score: 0, match: null };
         }
 
-        // ======= Attribution automatique des places (XLSX d'inscription) =======
-        // Salles par défaut (modifiable dans le HTML plus tard)
-        const ROOMS = [
-            { name: 'VCH-2850', capacity: 201 },
-            { name: 'VCH-2880', capacity: 110 }
+        // ======= Locaux réguliers et attribution par NRC =======
+        // Catalogue des locaux connus et de leur capacité (menu « Ajouter un local »)
+        const ROOM_CATALOG = [
+            { name: 'PLT-1112', capacity: 252 }, { name: 'PLT-2325', capacity: 54 }, { name: 'PLT-2341', capacity: 64 },
+            { name: 'PLT-2370', capacity: 26 }, { name: 'PLT-2500', capacity: 20 }, { name: 'PLT-2501', capacity: 70 },
+            { name: 'PLT-2504', capacity: 18 }, { name: 'PLT-2508', capacity: 20 }, { name: 'PLT-2510', capacity: 18 },
+            { name: 'PLT-2512', capacity: 20 }, { name: 'PLT-2540', capacity: 9 }, { name: 'PLT-2542', capacity: 9 },
+            { name: 'PLT-2544', capacity: 9 }, { name: 'PLT-2546', capacity: 20 }, { name: 'PLT-2548', capacity: 17 },
+            { name: 'PLT-2551', capacity: 63 }, { name: 'PLT-2569', capacity: 15 }, { name: 'PLT-2573', capacity: 25 },
+            { name: 'PLT-2575', capacity: 16 }, { name: 'PLT-2700', capacity: 70 }, { name: 'PLT-2744', capacity: 26 },
+            { name: 'PLT-2750', capacity: 26 }, { name: 'PLT-2751', capacity: 84 }, { name: 'PLT-2765', capacity: 38 },
+            { name: 'PLT-2783', capacity: 31 }, { name: 'PLT-2903', capacity: 10 }, { name: 'PLT-3775', capacity: 40 },
+            { name: 'PLT-3920', capacity: 30 }, { name: 'PLT-3928', capacity: 48 }, { name: 'PLT-4108', capacity: 18 },
+            { name: 'VCH-2810', capacity: 18 }, { name: 'VCH-2820', capacity: 20 }, { name: 'VCH-2830', capacity: 53 },
+            { name: 'VCH-2840', capacity: 49 }, { name: 'VCH-2850', capacity: 201 }, { name: 'VCH-2860', capacity: 70 },
+            { name: 'VCH-2870', capacity: 37 }, { name: 'VCH-2880', capacity: 110 }, { name: 'VCH-3820', capacity: 53 },
+            { name: 'VCH-3830', capacity: 20 }, { name: 'VCH-3840', capacity: 25 }, { name: 'VCH-3850', capacity: 35 },
+            { name: 'VCH-3860', capacity: 72 }, { name: 'VCH-3880', capacity: 110 }
         ];
-        let brioSections = [];
-        let sectionRoomAssignments = Object.create(null);
+        const ROOM_CATALOG_MAP = new Map(ROOM_CATALOG.map(room => [room.name, room.capacity]));
+
+        let regularRooms = [];          // [{ name, capacity, fromSchedule }]
+        let brioSections = [];          // noms des feuilles de BRIO.xlsx
+        let groupRoomAssignments = Object.create(null); // clé de groupe (NRC, sinon nom de section) -> [locaux]
+        let brioSchedule = [];          // [{ nrc, date, start, end, rooms: [] }] issu du texte de Brio
+        let brioScheduleNotes = [];
+        let lastScheduleRoomsByNrc = new Map(); // pour ne pas écraser les coches modifiées à la main
+        let lastGroupRoomUsage = new Map();     // clé de groupe -> locaux réellement utilisés (récapitulatif)
 
         // dernière attribution en mémoire (appliquée lors de la génération des PDFs)
         let lastAssignments = null;
-        let lastDistributionMode = 'large-first';
         // mapping local -> index (1..n) according to local population (most students = 1)
         let lastLocalIndexMap = null;
         // workbook binaire (Array) de l'attribution, à inclure dans le ZIP final
         let lastAssignmentWorkbookArray = null;
 
-        async function generateAssignments() {
-            const file = folderBrioFile;
-            if (!file) {
-                alert('⚠️ Veuillez sélectionner un dossier contenant BRIO.xlsx avant de générer.');
-                return;
+        function findRoom(name) {
+            return regularRooms.find(room => room.name === name) || null;
+        }
+
+        function addRegularRoom(rawName, capacity = 0, fromSchedule = false) {
+            const name = String(rawName || '').trim().toUpperCase();
+            if (!name) return null;
+            let room = findRoom(name);
+            if (room) {
+                if (capacity > 0 && !(room.capacity > 0)) room.capacity = capacity;
+                if (fromSchedule) room.fromSchedule = true;
+                return room;
             }
-            if (!file.name.toLowerCase().endsWith('.xlsx')) {
-                alert('⚠️ Le fichier BRIO doit être au format .xlsx.');
-                return;
+            const cap = capacity > 0 ? capacity : (ROOM_CATALOG_MAP.get(name) || 0);
+            room = { name, capacity: cap, fromSchedule };
+            regularRooms.push(room);
+            return room;
+        }
+
+        function removeRegularRoom(name) {
+            regularRooms = regularRooms.filter(room => room.name !== name);
+            for (const key of Object.keys(groupRoomAssignments)) {
+                groupRoomAssignments[key] = groupRoomAssignments[key].filter(n => n !== name);
             }
+            renderRoomsUI();
+        }
 
-            try {
-                const allStudents = await readXlsxRegistrationStudents(file);
+        function getSelectedRooms() {
+            return regularRooms.filter(room => room.capacity > 0).map(room => ({ name: room.name, capacity: room.capacity }));
+        }
 
-                if (allStudents.length === 0) {
-                    alert('Aucun étudiant détecté dans le fichier d’inscription. Vérifiez les en-têtes et les colonnes de BRIO.xlsx.');
-                    return;
-                }
+        // Clé de groupe d'une section BRIO : le NRC repéré dans le nom de la feuille, sinon le nom lui-même
+        function groupKeyForSection(section) {
+            const name = String(section || '').trim();
+            const group = brioSchedule.find(g => name.includes(g.nrc));
+            return group ? group.nrc : name;
+        }
 
-                // Récupérer les locaux sélectionnés dans l'UI (si aucun sélectionné -> alerte)
-                const roomsToUse = getSelectedRooms();
-                if (!roomsToUse || roomsToUse.length === 0) {
-                    alert('⚠️ Veuillez sélectionner au moins un local dans l\'interface avant de générer l\'attribution.');
-                    return;
-                }
+        function getGroupRooms(key) {
+            const value = groupRoomAssignments[key];
+            return Array.isArray(value) ? value.filter(name => findRoom(name)) : [];
+        }
 
-                // Séparer les accommodements (si fournis) et appliquer les exclusions par fichiers avant attribution
-                const accomList = [];
-                const remaining = [];
-                if (accomNISet && accomNISet.size > 0) {
-                    for (const s of allStudents) {
-                        const key = (s.ni || '').toString().trim();
-                        if (isAccommodementStudent(s)) {
-                            const times = (accomTimeMap && accomTimeMap.has(normalizeNI(key))) ? accomTimeMap.get(normalizeNI(key)) : {};
-                            accomList.push({ ...s, local: '', place: '', accomStart: times.start || '', accomEnd: times.end || '' });
-                        } else if (filterExcludeNISet && filterExcludeNISet.size > 0 && key && filterExcludeNISet.has(key)) {
-                            // excluded by filter: skip entirely
-                            continue;
-                        } else {
-                            remaining.push(s);
-                        }
-                    }
+        function setGroupRooms(key, names) {
+            groupRoomAssignments[key] = Array.from(new Set(names));
+        }
+
+        // Lignes du tableau NRC × locaux : sections de BRIO.xlsx (avec effectif), puis NRC du texte sans section
+        function getGroupRows() {
+            const rows = [];
+            const byKey = new Map();
+            for (const section of brioSections) {
+                const key = groupKeyForSection(section);
+                const count = brioStudentsCache.filter(s => String(s.section || '').trim() === String(section).trim()).length;
+                if (byKey.has(key)) {
+                    const row = byKey.get(key);
+                    row.count += count;
+                    row.sections.push(section);
                 } else {
-                    for (const s of allStudents) {
-                        const key = (s.ni || '').toString().trim();
-                        if (filterExcludeNISet && filterExcludeNISet.size > 0 && key && filterExcludeNISet.has(key)) {
-                            continue;
-                        }
-                        remaining.push(s);
-                    }
+                    const row = { key, sections: [section], count };
+                    byKey.set(key, row);
+                    rows.push(row);
                 }
-
-                // tri par nom de famille avant attribution (sur les étudiants restants)
-                remaining.sort((a, b) => {
-                    const getLast = s => (s.last && String(s.last).trim()) || (s.name ? String(s.name).trim().split(/\s+/).slice(-1)[0] : '');
-                    const la = getLast(a).toString();
-                    const lb = getLast(b).toString();
-                    return la.localeCompare(lb, 'fr', { sensitivity: 'base' });
-                });
-
-                const startSeatNumber = getSeatNumberStart();
-                const assignedRegular = assignSeatsToRooms(remaining, roomsToUse, startSeatNumber);
-                // Accommodement students use their separate rooms in large-to-small order.
-                const accomRoomsToUse = getSelectedAccomRooms();
-                accomList.sort((a, b) => {
-                    const getLast = s => (s.last && String(s.last).trim()) || (s.name ? String(s.name).trim().split(/\s+/).slice(-1)[0] : '');
-                    return getLast(a).toString().localeCompare(getLast(b).toString(), 'fr', { sensitivity: 'base' });
-                });
-                let maxPlace = 0;
-                for (const ar of assignedRegular) {
-                    const n = parseInt(ar.place, 10);
-                    if (!isNaN(n) && isFinite(n)) maxPlace = Math.max(maxPlace, n);
-                }
-                const startForAccom = maxPlace > 0 ? maxPlace + 1 : startSeatNumber;
-                const finalAccomList = assignAccommodementStudents(accomList, accomRoomsToUse, startForAccom);
-                const assigned = assignedRegular.concat(finalAccomList);
-
-                // Générer workbook d'attribution
-                const sheetData = assigned.map(s => ({
-                    'Prénom et nom': s.name,
-                    'NI': s.ni,
-                    'Local': s.local,
-                    'Place': s.place,
-                    'adresse courriel': s.email,
-                    'Accommodement': isAccommodementStudent(s) ? 'oui' : 'non',
-                    'statut d\'inscription': s.status
-                }));
-
-                const ws = XLSX.utils.json_to_sheet(sheetData, { header: ['Prénom et nom','NI','Local','Place','adresse courriel','Accommodement','statut d\'inscription'] });
-                const wbOut = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wbOut, ws, 'Attribution');
-                const wbArray = XLSX.write(wbOut, { bookType: 'xlsx', type: 'array' });
-
-                // stocker en mémoire pour réutilisation lors de la génération des PDFs
-                lastAssignments = assigned;
-                lastAssignmentWorkbookArray = wbArray;
-                // construire le mapping local -> index (1..n) basé sur le nombre d'étudiants par local (desc)
-                const counts = Object.create(null);
-                for (const s of assigned) {
-                    if (s.local) counts[s.local] = (counts[s.local] || 0) + 1;
-                }
-                const localsSorted = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
-                lastLocalIndexMap = Object.create(null);
-                localsSorted.forEach((loc, idx) => { lastLocalIndexMap[loc] = idx + 1; });
-                alert(`✅ Attribution terminée (${assigned.length} étudiants). L'attribution sera incluse dans le ZIP final.`);
-            } catch (err) {
-                console.error(err);
-                alert('Erreur lors de la génération des attributions: ' + err.message);
             }
+            for (const group of brioSchedule) {
+                if (!byKey.has(group.nrc)) {
+                    const row = { key: group.nrc, sections: [], count: null };
+                    byKey.set(group.nrc, row);
+                    rows.push(row);
+                }
+            }
+            return rows;
         }
 
-        function getDistributionMode() {
-            const el = document.querySelector('input[name="distMode"]:checked');
-            return el ? el.value : 'large-first';
+        function renderRoomsUI() {
+            renderBrioScheduleNotes();
+            renderRoomCards();
+            renderRoomCatalogSelect();
+            renderRoomTotal();
+            renderGroupRoomTable();
         }
 
-        function updateDistributionModeUI() {
-            const bySection = getDistributionMode() === 'section';
-            const choices = document.getElementById('distributionModeChoices');
-            const sectionUI = document.getElementById('sectionDistributionUI');
-            if (choices) choices.style.display = bySection ? 'none' : 'flex';
-            if (sectionUI) sectionUI.style.display = bySection ? 'block' : 'none';
-        }
-
-        // Locaux attribués à une section (tableau de noms, toujours normalisé)
-        function getSectionRooms(section) {
-            const value = sectionRoomAssignments[section];
-            if (Array.isArray(value)) return value.filter(Boolean);
-            return value ? [String(value)] : [];
-        }
-
-        function renderSectionRoomAssignments() {
-            const container = document.getElementById('sectionRoomMapping');
+        function renderBrioScheduleNotes() {
+            const container = document.getElementById('brioScheduleNotes');
             if (!container) return;
-
-            const selectedRooms = getSelectedRooms();
-            const previousSelections = Object.create(null);
-            for (const section of Object.keys(sectionRoomAssignments)) {
-                previousSelections[section] = getSectionRooms(section);
-            }
-            sectionRoomAssignments = Object.create(null);
             container.replaceChildren();
+            for (const note of brioScheduleNotes) {
+                const line = document.createElement('div');
+                line.textContent = note;
+                container.appendChild(line);
+            }
+        }
 
-            if (brioSections.length === 0) {
+        function renderRoomCards() {
+            const container = document.getElementById('roomCards');
+            if (!container) return;
+            container.replaceChildren();
+            if (regularRooms.length === 0) {
                 const message = document.createElement('div');
-                message.textContent = 'Chargez le fichier BRIO.xlsx pour afficher ses sections.';
-                message.style.color = '#666';
+                message.textContent = 'Aucun local pour l’instant : collez le déroulement de Brio ou ajoutez un local ci-dessous.';
+                message.style.cssText = 'font-size:13px;color:#666;';
                 container.appendChild(message);
                 return;
             }
-            if (selectedRooms.length === 0) {
+            for (const room of regularRooms) {
+                const card = document.createElement('div');
+                card.className = 'room-card';
+                const info = document.createElement('div');
+                const name = document.createElement('div');
+                name.className = 'room-card-name';
+                name.textContent = room.name;
+                const capacity = document.createElement('div');
+                capacity.className = 'room-card-capacity';
+                if (room.capacity > 0) {
+                    capacity.textContent = `${room.capacity} places`;
+                } else {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.min = '1';
+                    input.placeholder = 'Capacité';
+                    input.setAttribute('aria-label', `Capacité de ${room.name}`);
+                    input.addEventListener('change', () => {
+                        const value = parseInt(input.value, 10);
+                        room.capacity = value > 0 ? value : 0;
+                        renderRoomsUI();
+                    });
+                    capacity.append(input, document.createTextNode(' places'));
+                }
+                info.append(name, capacity);
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'room-card-remove';
+                remove.textContent = '×';
+                remove.title = `Retirer ${room.name}`;
+                remove.setAttribute('aria-label', `Retirer ${room.name}`);
+                remove.addEventListener('click', () => removeRegularRoom(room.name));
+                card.append(info, remove);
+                container.appendChild(card);
+            }
+        }
+
+        function renderRoomCatalogSelect() {
+            const select = document.getElementById('roomCatalogSelect');
+            if (!select) return;
+            const previous = select.value;
+            select.replaceChildren();
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = '— Ajouter un local —';
+            select.appendChild(placeholder);
+            for (const room of ROOM_CATALOG) {
+                if (findRoom(room.name)) continue;
+                const option = document.createElement('option');
+                option.value = room.name;
+                option.textContent = `${room.name} (${room.capacity} pl.)`;
+                select.appendChild(option);
+            }
+            const custom = document.createElement('option');
+            custom.value = '__custom__';
+            custom.textContent = 'Autre local…';
+            select.appendChild(custom);
+            select.value = Array.from(select.options).some(o => o.value === previous) ? previous : '';
+            updateRoomCustomInputs();
+        }
+
+        function updateRoomCustomInputs() {
+            const select = document.getElementById('roomCatalogSelect');
+            const nameInput = document.getElementById('roomCustomName');
+            const capacityInput = document.getElementById('roomCustomCapacity');
+            const show = select && select.value === '__custom__';
+            if (nameInput) nameInput.style.display = show ? '' : 'none';
+            if (capacityInput) capacityInput.style.display = show ? '' : 'none';
+        }
+
+        function renderRoomTotal() {
+            const container = document.getElementById('roomTotal');
+            if (!container) return;
+            const total = regularRooms.reduce((sum, room) => sum + (room.capacity > 0 ? room.capacity : 0), 0);
+            const missing = regularRooms.filter(room => !(room.capacity > 0)).map(room => room.name);
+            container.textContent = regularRooms.length === 0
+                ? ''
+                : `Total : ${total} places disponibles` + (missing.length > 0 ? ` — capacité à saisir pour ${missing.join(', ')}` : '');
+        }
+
+        function renderGroupRoomTable() {
+            const container = document.getElementById('nrcRoomTable');
+            if (!container) return;
+            container.replaceChildren();
+            const rows = getGroupRows();
+            const showMessage = text => {
                 const message = document.createElement('div');
-                message.textContent = 'Cochez au moins un local dans la liste ci-dessous pour pouvoir l\'attribuer aux sections.';
-                message.style.color = '#666';
+                message.textContent = text;
+                message.style.cssText = 'font-size:13px;color:#666;margin-top:8px;';
                 container.appendChild(message);
-                for (const section of brioSections) sectionRoomAssignments[section] = [];
+            };
+            if (rows.length === 0) {
+                showMessage('Les NRC apparaîtront ici après le collage du déroulement de Brio ou le chargement de BRIO.xlsx.');
                 return;
             }
-
-            for (const [sectionIndex, section] of brioSections.entries()) {
-                const row = document.createElement('div');
-                row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;margin:8px 0;flex-wrap:wrap;';
-
-                const sectionLabel = document.createElement('div');
-                sectionLabel.textContent = section;
-                sectionLabel.style.cssText = 'min-width:150px;font-weight:600;padding-top:2px;';
-                const assignmentLabel = document.createElement('span');
-                assignmentLabel.textContent = 'sera dans :';
-                assignmentLabel.style.paddingTop = '2px';
-
-                const choices = document.createElement('div');
-                choices.style.cssText = 'display:flex;gap:6px 14px;flex-wrap:wrap;';
-                const previous = previousSelections[section] || [];
-                const selectedNames = [];
-                for (const [roomIndex, room] of selectedRooms.entries()) {
-                    const choiceLabel = document.createElement('label');
-                    choiceLabel.style.cssText = 'display:flex;align-items:center;gap:4px;margin:0;font-weight:normal;font-size:13px;cursor:pointer;';
+            if (regularRooms.length === 0) {
+                showMessage('Ajoutez au moins un local pour attribuer les NRC.');
+                return;
+            }
+            const table = document.createElement('table');
+            table.className = 'nrc-table';
+            const header = document.createElement('tr');
+            const first = document.createElement('th');
+            first.textContent = 'NRC';
+            header.appendChild(first);
+            for (const room of regularRooms) {
+                const th = document.createElement('th');
+                th.textContent = room.name;
+                header.appendChild(th);
+            }
+            table.appendChild(header);
+            for (const row of rows) {
+                const tr = document.createElement('tr');
+                const label = document.createElement('td');
+                label.style.fontWeight = '600';
+                label.appendChild(document.createTextNode(row.key));
+                if (row.count !== null && brioStudentsCache.length > 0) {
+                    const count = document.createElement('span');
+                    count.className = 'nrc-count';
+                    count.textContent = `(${row.count})`;
+                    label.appendChild(count);
+                }
+                const extraSections = row.sections.filter(section => section !== row.key);
+                if (extraSections.length > 0) {
+                    const sub = document.createElement('span');
+                    sub.className = 'nrc-section';
+                    sub.textContent = `feuille : ${extraSections.join(', ')}`;
+                    label.appendChild(sub);
+                }
+                tr.appendChild(label);
+                const assigned = getGroupRooms(row.key);
+                for (const room of regularRooms) {
+                    const td = document.createElement('td');
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
-                    checkbox.id = `sectionRoom_${sectionIndex}_${roomIndex}`;
-                    checkbox.dataset.section = section;
+                    checkbox.checked = assigned.includes(room.name);
+                    checkbox.dataset.group = row.key;
                     checkbox.dataset.room = room.name;
-                    checkbox.checked = previous.includes(room.name);
-                    if (checkbox.checked) selectedNames.push(room.name);
+                    checkbox.setAttribute('aria-label', `${room.name} pour le NRC ${row.key}`);
                     checkbox.addEventListener('change', () => {
-                        const visibleNames = selectedRooms.map(r => r.name);
-                        const hidden = getSectionRooms(section).filter(name => !visibleNames.includes(name));
-                        sectionRoomAssignments[section] = Array.from(choices.querySelectorAll('input[type="checkbox"]'))
-                            .filter(input => input.checked)
-                            .map(input => input.dataset.room)
-                            .concat(hidden);
+                        const current = getGroupRooms(row.key);
+                        setGroupRooms(row.key, checkbox.checked
+                            ? current.concat(room.name)
+                            : current.filter(name => name !== room.name));
                     });
-                    choiceLabel.append(checkbox, document.createTextNode(`${room.name} (${room.capacity} places)`));
-                    choices.appendChild(choiceLabel);
+                    td.appendChild(checkbox);
+                    tr.appendChild(td);
                 }
-                // Conserver aussi les locaux attribués mais pas encore sélectionnables (ex. capacité à saisir)
-                const visibleNames = selectedRooms.map(r => r.name);
-                sectionRoomAssignments[section] = selectedNames.concat(previous.filter(name => !visibleNames.includes(name)));
-
-                row.append(sectionLabel, assignmentLabel, choices);
-                container.appendChild(row);
+                table.appendChild(tr);
             }
+            container.appendChild(table);
         }
 
         async function loadBrioSections(file) {
             brioSections = [];
-            sectionRoomAssignments = Object.create(null);
             if (file && file.name.toLowerCase().endsWith('.xlsx')) {
                 const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
                 brioSections = workbook.SheetNames.slice();
             }
-            renderSectionRoomAssignments();
-            if (brioSchedule.length > 0) {
-                applyBrioScheduleToSections();
-                renderBrioScheduleSummary();
-            }
+            renderRoomsUI();
             refreshAccommodementData();
         }
 
-        document.querySelectorAll('input[name="distMode"]').forEach(input => {
-            input.addEventListener('change', updateDistributionModeUI);
-        });
-        const roomListElement = document.getElementById('roomList');
-        if (roomListElement) {
-            roomListElement.addEventListener('change', event => {
-                if (event.target.matches('.roomCheckbox, .customRoomName, .roomCapacity')) {
-                    renderSectionRoomAssignments();
-                }
-            });
-        }
-        updateDistributionModeUI();
-
         // ===== Déroulement de l'examen collé depuis Brio (NRC, heures, locaux) =====
-        let brioSchedule = []; // [{ nrc, date, start, end, rooms: [] }]
-        let brioScheduleNotes = []; // avertissements (capacités manquantes, etc.)
-
         function parseBrioSchedule(text) {
             const groups = [];
             const pad = value => String(value).padStart(2, '0');
@@ -1638,143 +1615,41 @@
             return groups;
         }
 
-        // Coche exactement les locaux donnés dans la liste des locaux réguliers (ajoute les inconnus
-        // dans « Salles supplémentaires »). Retourne les locaux dont la capacité reste à saisir.
-        function selectRegularRooms(names) {
-            const rows = Array.from(document.querySelectorAll('#roomList .roomRow'));
-            const wanted = new Set(names);
-            const found = new Set();
-            const missingCapacity = [];
-            const hasCapacity = row => parseInt(row.querySelector('.roomCapacity').value, 10) > 0;
-            const flagCapacity = row => { row.querySelector('.roomCapacity').style.borderColor = '#c62828'; };
-            for (const row of rows) {
-                const checkbox = row.querySelector('.roomCheckbox');
-                const nameInput = row.querySelector('.customRoomName');
-                const name = nameInput ? nameInput.value.trim().toUpperCase() : (checkbox.dataset.name || '');
-                if (name && wanted.has(name)) {
-                    checkbox.checked = true;
-                    found.add(name);
-                    if (!hasCapacity(row)) { missingCapacity.push(name); flagCapacity(row); }
-                } else {
-                    checkbox.checked = false;
-                }
-            }
-            for (const name of names) {
-                if (found.has(name)) continue;
-                const emptyRow = rows.find(row => {
-                    const nameInput = row.querySelector('.customRoomName');
-                    return nameInput && !nameInput.value.trim();
-                });
-                if (!emptyRow) {
-                    missingCapacity.push(`${name} (aucune ligne libre dans « Salles supplémentaires »)`);
-                    continue;
-                }
-                emptyRow.querySelector('.customRoomName').value = name;
-                const checkbox = emptyRow.querySelector('.roomCheckbox');
-                checkbox.checked = true;
-                checkbox.dataset.name = name;
-                found.add(name);
-                if (!hasCapacity(emptyRow)) { missingCapacity.push(name); flagCapacity(emptyRow); }
-            }
-            return missingCapacity;
-        }
-
-        // Associe chaque section de BRIO.xlsx (nom contenant le NRC) aux locaux de son groupe.
-        function applyBrioScheduleToSections() {
-            const matches = new Map(); // nrc -> section
-            if (brioSchedule.length === 0 || brioSections.length === 0) return matches;
-            for (const section of brioSections) {
-                const group = brioSchedule.find(g => String(section).includes(g.nrc));
-                if (!group) continue;
-                matches.set(group.nrc, section);
-                sectionRoomAssignments[section] = group.rooms.slice();
-            }
-            if (matches.size > 0) {
-                const radio = document.querySelector('input[name="distMode"][value="section"]');
-                if (radio) { radio.checked = true; updateDistributionModeUI(); }
-                renderSectionRoomAssignments();
-            }
-            return matches;
-        }
-
-        function renderBrioScheduleSummary() {
-            const result = document.getElementById('brioScheduleResult');
-            if (!result) return;
-            result.replaceChildren();
-            if (brioSchedule.length === 0) return;
-            const sectionByNrc = new Map();
-            for (const section of brioSections) {
-                const group = brioSchedule.find(g => String(section).includes(g.nrc));
-                if (group && !sectionByNrc.has(group.nrc)) sectionByNrc.set(group.nrc, section);
-            }
-
-            const table = document.createElement('table');
-            table.style.cssText = 'width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;';
-            const header = document.createElement('tr');
-            for (const title of ['NRC', 'Date', 'Heures', 'Locaux', 'Section BRIO']) {
-                const cell = document.createElement('th');
-                cell.textContent = title;
-                cell.style.cssText = 'padding:6px 8px;text-align:left;background:#ece4f4;border-bottom:1px solid #d9c9e8;';
-                header.appendChild(cell);
-            }
-            table.appendChild(header);
-            for (const group of brioSchedule) {
-                const tr = document.createElement('tr');
-                tr.style.borderBottom = '1px solid #e4dced';
-                const section = sectionByNrc.get(group.nrc);
-                const sectionText = brioSections.length === 0
-                    ? '(chargez BRIO.xlsx)'
-                    : (section || 'aucune section ne contient ce NRC');
-                const cells = [
-                    group.nrc,
-                    group.date || '—',
-                    group.start ? `${group.start} – ${group.end}` : '—',
-                    group.rooms.length > 0 ? group.rooms.join(', ') : 'aucun local repéré',
-                    sectionText
-                ];
-                for (const [index, text] of cells.entries()) {
-                    const cell = document.createElement('td');
-                    cell.textContent = text;
-                    cell.style.padding = '6px 8px';
-                    if ((index === 3 && group.rooms.length === 0) || (index === 4 && brioSections.length > 0 && !section)) cell.style.color = '#b26a00';
-                    tr.appendChild(cell);
-                }
-                table.appendChild(tr);
-            }
-            result.appendChild(table);
-
-            for (const note of brioScheduleNotes) {
-                const line = document.createElement('div');
-                line.textContent = note;
-                line.style.cssText = 'margin-top:6px;color:#b26a00;';
-                result.appendChild(line);
-            }
-        }
-
         function applyBrioSchedule() {
             const textarea = document.getElementById('brioScheduleText');
-            const result = document.getElementById('brioScheduleResult');
-            if (!textarea || !result) return;
+            if (!textarea) return;
             const text = textarea.value;
             brioSchedule = parseBrioSchedule(text);
             brioScheduleNotes = [];
-            if (!text.trim()) { result.replaceChildren(); return; }
-            if (brioSchedule.length === 0) {
-                result.textContent = 'Aucun groupe (« Groupe : NRC ») repéré dans le texte collé. Vérifiez que vous avez copié toute la colonne « Déroulement de l’examen ».';
-                result.style.color = '#b26a00';
-                return;
-            }
-            result.style.color = '';
 
-            // 1) Locaux
-            const allRooms = [];
-            for (const group of brioSchedule) for (const room of group.rooms) if (!allRooms.includes(room)) allRooms.push(room);
-            const missingCapacity = selectRegularRooms(allRooms);
-            if (missingCapacity.length > 0) {
-                brioScheduleNotes.push(`⚠️ Capacité à saisir pour : ${missingCapacity.join(', ')}.`);
+            // Locaux du texte : retirer ceux d'un collage précédent qui n'y figurent plus, ajouter les nouveaux
+            const textRooms = new Set(brioSchedule.flatMap(group => group.rooms));
+            const removed = regularRooms.filter(room => room.fromSchedule && !textRooms.has(room.name)).map(room => room.name);
+            regularRooms = regularRooms.filter(room => !removed.includes(room.name));
+            for (const key of Object.keys(groupRoomAssignments)) {
+                groupRoomAssignments[key] = groupRoomAssignments[key].filter(name => !removed.includes(name));
+            }
+            for (const name of textRooms) addRegularRoom(name, 0, true);
+
+            // Coches par NRC (sans écraser une modification manuelle si le texte de ce NRC n'a pas changé)
+            const current = new Map();
+            for (const group of brioSchedule) {
+                const joined = group.rooms.join('|');
+                current.set(group.nrc, joined);
+                if (lastScheduleRoomsByNrc.get(group.nrc) !== joined || !groupRoomAssignments[group.nrc]) {
+                    setGroupRooms(group.nrc, group.rooms);
+                }
+            }
+            lastScheduleRoomsByNrc = current;
+
+            if (text.trim() && brioSchedule.length === 0) {
+                brioScheduleNotes.push('⚠️ Aucun groupe (« Groupe : NRC ») repéré dans le texte collé. Vérifiez que vous avez copié toute la colonne « Déroulement de l’examen ».');
+            }
+            for (const group of brioSchedule) {
+                if (group.rooms.length === 0) brioScheduleNotes.push(`⚠️ Aucun local repéré pour le NRC ${group.nrc}.`);
             }
 
-            // 2) Heures (étape 1), seulement si tous les groupes ont les mêmes
+            // Heures de l'étape 1, seulement si tous les groupes ont les mêmes
             const starts = new Set(brioSchedule.map(g => g.start).filter(Boolean));
             const ends = new Set(brioSchedule.map(g => g.end).filter(Boolean));
             const startInput = document.getElementById('startTime');
@@ -1786,25 +1661,41 @@
                 brioScheduleNotes.push('⚠️ Les groupes n’ont pas tous les mêmes heures : les heures de l’étape 1 n’ont pas été modifiées.');
             }
 
-            // 3) Sections (si BRIO.xlsx est chargé)
-            renderSectionRoomAssignments();
-            const matches = applyBrioScheduleToSections();
-            if (brioSections.length > 0 && matches.size === 0) {
-                brioScheduleNotes.push('⚠️ Aucune feuille de BRIO.xlsx ne contient un de ces NRC : les sections n’ont pas été associées automatiquement.');
+            if (brioSections.length > 0 && brioSchedule.length > 0
+                && !brioSections.some(section => brioSchedule.some(g => String(section).includes(g.nrc)))) {
+                brioScheduleNotes.push('⚠️ Aucune feuille de BRIO.xlsx ne contient un de ces NRC : vérifiez les noms des feuilles.');
             }
 
-            renderBrioScheduleSummary();
+            renderRoomsUI();
         }
 
         {
             const scheduleTextarea = document.getElementById('brioScheduleText');
             if (scheduleTextarea) scheduleTextarea.addEventListener('input', applyBrioSchedule);
-            const roomListForCapacity = document.getElementById('roomList');
-            if (roomListForCapacity) {
-                roomListForCapacity.addEventListener('input', event => {
-                    if (event.target.matches('.roomCapacity')) event.target.style.borderColor = '';
+            const catalogSelect = document.getElementById('roomCatalogSelect');
+            if (catalogSelect) catalogSelect.addEventListener('change', updateRoomCustomInputs);
+            const addButton = document.getElementById('roomAddBtn');
+            if (addButton) {
+                addButton.addEventListener('click', () => {
+                    const select = document.getElementById('roomCatalogSelect');
+                    if (!select || !select.value) return;
+                    if (select.value === '__custom__') {
+                        const nameInput = document.getElementById('roomCustomName');
+                        const capacityInput = document.getElementById('roomCustomCapacity');
+                        const name = nameInput ? nameInput.value.trim() : '';
+                        if (!name) { alert('Indiquez le nom du local à ajouter.'); return; }
+                        const capacity = capacityInput ? parseInt(capacityInput.value, 10) : 0;
+                        addRegularRoom(name, capacity > 0 ? capacity : 0);
+                        if (nameInput) nameInput.value = '';
+                        if (capacityInput) capacityInput.value = '';
+                    } else {
+                        addRegularRoom(select.value, ROOM_CATALOG_MAP.get(select.value) || 0);
+                    }
+                    select.value = '';
+                    renderRoomsUI();
                 });
             }
+            renderRoomsUI();
         }
 
         function getSeatNumberStart() {
@@ -1818,91 +1709,6 @@
         function shouldResetNumberingPerRoom() {
             const checkbox = document.getElementById('numberingResetPerRoom');
             return Boolean(checkbox && checkbox.checked);
-        }
-
-        function assignSeatsToRooms(students, rooms, startFrom = 1, modeOverride = null) {
-            const mode = modeOverride || getDistributionMode();
-            const resetPerRoom = shouldResetNumberingPerRoom();
-            const roomStart = resetPerRoom ? 1 : (Number(startFrom) || 1);
-
-            if (mode === 'uniform') {
-                // Répartition uniforme : proportionnelle à la capacité de chaque salle
-                const totalCapacity = rooms.reduce((sum, r) => sum + r.capacity, 0);
-                const totalStudents = students.length;
-                // Calculer le nombre d'étudiants par salle (proportionnel)
-                const roomAllocs = rooms.map(r => ({
-                    name: r.name,
-                    capacity: r.capacity,
-                    count: 0
-                }));
-                let allocated = 0;
-                for (let i = 0; i < roomAllocs.length; i++) {
-                    if (i === roomAllocs.length - 1) {
-                        // Dernière salle : prend le reste
-                        roomAllocs[i].count = Math.min(totalStudents - allocated, roomAllocs[i].capacity);
-                    } else {
-                        const share = Math.round((roomAllocs[i].capacity / totalCapacity) * totalStudents);
-                        roomAllocs[i].count = Math.min(share, roomAllocs[i].capacity);
-                    }
-                    allocated += roomAllocs[i].count;
-                }
-                // Ajuster si on a trop ou pas assez alloué (arrondi)
-                let diff = totalStudents - allocated;
-                if (diff > 0) {
-                    for (let i = 0; i < roomAllocs.length && diff > 0; i++) {
-                        const canAdd = roomAllocs[i].capacity - roomAllocs[i].count;
-                        const add = Math.min(canAdd, diff);
-                        roomAllocs[i].count += add;
-                        diff -= add;
-                    }
-                } else if (diff < 0) {
-                    for (let i = roomAllocs.length - 1; i >= 0 && diff < 0; i--) {
-                        const canRemove = roomAllocs[i].count;
-                        const remove = Math.min(canRemove, -diff);
-                        roomAllocs[i].count -= remove;
-                        diff += remove;
-                    }
-                }
-                const assigned = [];
-                let studentIndex = 0;
-                let globalSeat = Number(startFrom) || 1;
-                for (const alloc of roomAllocs) {
-                    let roomSeat = roomStart;
-                    for (let seat = 1; seat <= alloc.count && studentIndex < students.length; seat++) {
-                        const s = students[studentIndex++];
-                        const place = resetPerRoom ? roomSeat++ : globalSeat++;
-                        assigned.push({ ...s, local: alloc.name, place: String(place) });
-                    }
-                }
-                while (studentIndex < students.length) {
-                    assigned.push({ ...students[studentIndex++], local: '', place: '' });
-                }
-                return assigned;
-            }
-
-            // Modes séquentiels : gros→petit ou petit→gros
-            const sortedRooms = (mode === 'small-first')
-                ? [...rooms].sort((a, b) => a.capacity - b.capacity)
-                : [...rooms].sort((a, b) => b.capacity - a.capacity);
-
-            const assigned = [];
-            let studentIndex = 0;
-            let globalSeat = Number(startFrom) || 1;
-            for (const room of sortedRooms) {
-                let roomSeat = roomStart;
-                for (let seat = 1; seat <= room.capacity && studentIndex < students.length; seat++) {
-                    const s = students[studentIndex++];
-                    const place = resetPerRoom ? roomSeat++ : globalSeat++;
-                    assigned.push({ ...s, local: room.name, place: String(place) });
-                }
-                if (studentIndex >= students.length) break;
-            }
-            // If still students left (more than total capacity), append them with empty local/seat
-            while (studentIndex < students.length) {
-                const s = students[studentIndex++];
-                assigned.push({ ...s, local: '', place: '' });
-            }
-            return assigned;
         }
 
         function compareStudentsByLastName(a, b) {
@@ -1970,53 +1776,60 @@
             return assigned;
         }
 
-        function assignSectionsToRooms(students, rooms, startFrom = 1) {
-            if (new Set(rooms.map(room => room.name)).size !== rooms.length) {
-                throw new Error('Chaque local sélectionné doit avoir un nom unique.');
+        // Attribution des étudiants réguliers : par NRC, dans les locaux cochés (du plus grand au plus petit).
+        // Un NRC sans local coché va dans les locaux non attribués à un NRC, ou à défaut dans tous les locaux.
+        function assignGroupsToRooms(students, rooms, startFrom = 1) {
+            if (rooms.length === 0) {
+                throw new Error('Ajoutez au moins un local à l’étape 3 (collez le déroulement de Brio ou utilisez « Ajouter un local »).');
+            }
+            const missingCapacity = regularRooms.filter(room => !(room.capacity > 0)).map(room => room.name);
+            if (missingCapacity.length > 0) {
+                throw new Error(`Saisissez la capacité des locaux : ${missingCapacity.join(', ')}.`);
             }
             const roomByName = new Map(rooms.map(room => [room.name, room]));
-            const validRoomsFor = section => getSectionRooms(section)
-                .filter(name => roomByName.has(name))
-                .map(name => roomByName.get(name))
-                .sort((a, b) => b.capacity - a.capacity);
+            const byCapacityDesc = list => [...list].sort((a, b) => b.capacity - a.capacity);
 
-            const missingMappings = brioSections.filter(section => validRoomsFor(section).length === 0);
-            if (missingMappings.length > 0) {
-                throw new Error(`Cochez au moins un local pour chaque section : ${missingMappings.join(', ')}.`);
-            }
-
-            // Regrouper les étudiants par section, dans l'ordre des feuilles du fichier BRIO
-            const studentsBySection = new Map();
+            // Regrouper les étudiants par clé de groupe, dans l'ordre des feuilles de BRIO
+            const studentsByKey = new Map();
             for (const student of students) {
-                const section = String(student.section || '').trim();
-                if (!studentsBySection.has(section)) studentsBySection.set(section, []);
-                studentsBySection.get(section).push(student);
+                const key = groupKeyForSection(student.section);
+                if (!studentsByKey.has(key)) studentsByKey.set(key, []);
+                studentsByKey.get(key).push(student);
             }
-            const orderedSections = brioSections.filter(section => studentsBySection.has(section));
-            for (const section of studentsBySection.keys()) {
-                if (!orderedSections.includes(section)) orderedSections.push(section);
+            const orderedKeys = [];
+            for (const section of brioSections) {
+                const key = groupKeyForSection(section);
+                if (studentsByKey.has(key) && !orderedKeys.includes(key)) orderedKeys.push(key);
             }
+            for (const key of studentsByKey.keys()) if (!orderedKeys.includes(key)) orderedKeys.push(key);
+
+            const assignedAnywhere = new Set();
+            for (const key of orderedKeys) for (const name of getGroupRooms(key)) if (roomByName.has(name)) assignedAnywhere.add(name);
+            const freeRooms = rooms.filter(room => !assignedAnywhere.has(room.name));
 
             const remainingCapacity = new Map(rooms.map(room => [room.name, room.capacity]));
             const resetPerRoom = shouldResetNumberingPerRoom();
             const roomSeatNumbers = new Map();
             let seatNumber = Number(startFrom) || 1;
             const assigned = [];
+            lastGroupRoomUsage = new Map();
 
-            for (const section of orderedSections) {
-                const sectionStudents = studentsBySection.get(section);
-                const sectionRooms = validRoomsFor(section);
-                if (sectionRooms.length === 0) {
-                    throw new Error(`La section « ${section || '(sans nom)'} » n'a pas de local valide.`);
+            for (const key of orderedKeys) {
+                const groupStudents = studentsByKey.get(key);
+                let groupRooms = getGroupRooms(key).filter(name => roomByName.has(name)).map(name => roomByName.get(name));
+                const explicit = groupRooms.length > 0;
+                if (!explicit) groupRooms = freeRooms.length > 0 ? freeRooms : rooms;
+                groupRooms = byCapacityDesc(groupRooms);
+                const available = groupRooms.reduce((sum, room) => sum + remainingCapacity.get(room.name), 0);
+                if (groupStudents.length > available) {
+                    const which = explicit ? 'locaux cochés pour ce NRC' : (freeRooms.length > 0 ? 'locaux non attribués à un NRC' : 'tous les locaux');
+                    throw new Error(`Le NRC ${key} compte ${groupStudents.length} étudiants, mais il ne reste que ${available} places dans ${groupRooms.map(room => room.name).join(', ')} (${which} ; les places déjà prises par les NRC précédents sont déduites).`);
                 }
-                const available = sectionRooms.reduce((sum, room) => sum + remainingCapacity.get(room.name), 0);
-                if (sectionStudents.length > available) {
-                    throw new Error(`La section « ${section || '(sans nom)'} » compte ${sectionStudents.length} étudiants, mais il ne reste que ${available} places dans ${sectionRooms.map(room => room.name).join(', ')} (les places déjà prises par les sections précédentes sont déduites).`);
-                }
+                const used = [];
                 let index = 0;
-                for (const room of sectionRooms) {
-                    while (index < sectionStudents.length && remainingCapacity.get(room.name) > 0) {
-                        const student = sectionStudents[index++];
+                for (const room of groupRooms) {
+                    while (index < groupStudents.length && remainingCapacity.get(room.name) > 0) {
+                        const student = groupStudents[index++];
                         remainingCapacity.set(room.name, remainingCapacity.get(room.name) - 1);
                         let place;
                         if (resetPerRoom) {
@@ -2027,8 +1840,10 @@
                             place = String(seatNumber++);
                         }
                         assigned.push({ ...student, local: room.name, place });
+                        if (!used.includes(room.name)) used.push(room.name);
                     }
                 }
+                lastGroupRoomUsage.set(key, used);
             }
             return assigned;
         }
@@ -2100,8 +1915,8 @@
                 // get selected rooms and assign
                 const roomsToUse = getSelectedRooms();
                 console.log('generateAll: selected rooms:', roomsToUse);
-                if (!roomsToUse || roomsToUse.length === 0) {
-                    alert('⚠️ Veuillez sélectionner au moins un local dans l\'interface avant de générer l\'attribution.');
+                if (regularRooms.length === 0) {
+                    alert('⚠️ Ajoutez au moins un local à l’étape 3 (collez le déroulement de Brio ou utilisez « Ajouter un local »).');
                     return;
                 }
 
@@ -2142,10 +1957,7 @@
                 });
 
                 const startSeatNumber = getSeatNumberStart();
-                lastDistributionMode = getDistributionMode();
-                const assignedRegular = lastDistributionMode === 'section'
-                    ? assignSectionsToRooms(remaining, roomsToUse, startSeatNumber)
-                    : assignSeatsToRooms(remaining, roomsToUse, startSeatNumber);
+                const assignedRegular = assignGroupsToRooms(remaining, roomsToUse, startSeatNumber);
                 console.log('generateAll: assignedRegular count=', assignedRegular.length);
                 // Accommodement students use their own rooms in large-to-small order.
                 const accomRoomsToUse = getSelectedAccomRooms();
@@ -2188,32 +2000,6 @@
                     progressFill.style.width = '0%';
                 }
             }
-        }
-
-        function getSelectedRooms() {
-            const rows = Array.from(document.querySelectorAll('#roomList .roomRow'));
-            const rooms = [];
-            for (const row of rows) {
-                const checkbox = row.querySelector('.roomCheckbox');
-                const capacityInput = row.querySelector('.roomCapacity');
-                if (!checkbox || !capacityInput) continue;
-                if (checkbox.checked) {
-                    // Pour les salles custom, lire le nom depuis l'input texte
-                    const customNameInput = row.querySelector('.customRoomName');
-                    let name = '';
-                    if (customNameInput) {
-                        name = (customNameInput.value || '').trim();
-                        if (!name) continue; // ignorer si pas de nom saisi
-                        // synchroniser data-name pour cohérence
-                        checkbox.dataset.name = name;
-                    } else {
-                        name = checkbox.dataset.name || checkbox.id.replace('room_','');
-                    }
-                    const cap = parseInt(capacityInput.value, 10) || 0;
-                    if (cap > 0) rooms.push({ name: String(name), capacity: cap });
-                }
-            }
-            return rooms;
         }
 
         function getSelectedAccomRooms() {
@@ -2403,6 +2189,7 @@
                     console.error('Lecture des étudiants BRIO pour le placement manuel :', err);
                 }
             }
+            renderGroupRoomTable();
             renderAccomManualPlacement();
         }
 
