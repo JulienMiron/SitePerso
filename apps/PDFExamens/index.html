@@ -486,33 +486,17 @@
             <div class="intro-guide-body">
                 <p>Tout se passe dans votre navigateur : aucun fichier n'est envoyé sur un serveur. Suivez les étapes ci-dessous dans l'ordre :</p>
                 <ol>
-                    <li><strong>Étape 1 — Informations générales :</strong> le nom de l'évaluation et le sigle du cours, détectés dans <code>examen.pdf</code> et modifiables, imprimés sur chaque PDF.</li>
-                    <li><strong>Étape 2 — Fichiers de l'examen :</strong> sélectionnez le dossier contenant <code>BRIO.xlsx</code> et <code>examen.pdf</code> (obligatoires), et au besoin <code>accommodements.xlsx</code> ou <code>horscampus.xlsx</code>.</li>
-                    <li><strong>Étape 3 — Locaux et répartition :</strong> choisissez les locaux réguliers et, si nécessaire, les locaux d'accommodement, puis le mode de répartition des étudiants. Collez le déroulement de l'examen de Brio : locaux, heures et NRC sont repérés automatiquement, et vous cochez les locaux de chaque NRC. Certains étudiants en accommodement peuvent être placés manuellement dans un local précis.</li>
-                    <li><strong>Étape 4 — Options d'impression :</strong> format des listes de présence, pourcentage de copies vierges, numérotation.</li>
-                    <li><strong>Étape 5 — Génération :</strong> cliquez sur « Générer et Télécharger le ZIP ». Il contiendra les PDFs, les listes de présence et <code>Recapitulatif_etudiants.xlsx</code>.</li>
+                    <li><strong>Étape 1 — Fichiers de l'examen :</strong> sélectionnez ou glissez le dossier contenant <code>BRIO.xlsx</code> et <code>examen.pdf</code> (obligatoires), et au besoin <code>accommodements.xlsx</code> ou <code>horscampus.xlsx</code>. Le nom de l'évaluation et le sigle du cours sont détectés dans <code>examen.pdf</code> et proposés en bas de l'étape, modifiables.</li>
+                    <li><strong>Étape 2 — Locaux et répartition :</strong> collez le déroulement de l'examen de Brio : locaux, heures et NRC sont repérés automatiquement, et vous cochez les locaux de chaque NRC. Les salles d'accommodement viennent de <code>accommodements.xlsx</code>, et certains étudiants en accommodement peuvent être placés dans un local précis.</li>
+                    <li><strong>Étape 3 — Options d'impression :</strong> format des listes de présence, pourcentage de copies vierges, numérotation.</li>
+                    <li><strong>Étape 4 — Génération :</strong> cliquez sur « Générer et Télécharger le ZIP ». Il contiendra les PDFs, les listes de présence et <code>Recapitulatif_etudiants.xlsx</code>.</li>
                 </ol>
                 <p><strong>Après la génération :</strong> pour envoyer automatiquement un courriel à chaque étudiant avec son local et sa place, utilisez <code>envoi_courriels.py</code> (dossier <code>envoi_courriels/</code> à côté de cette page) avec le <code>Recapitulatif_etudiants.xlsx</code> extrait du ZIP. Voir <code>LISEZMOI.md</code> dans ce dossier pour la marche à suivre complète.</p>
             </div>
         </details>
 
         <div class="step-card">
-            <div class="step-header"><span class="step-badge">1</span><span class="step-title">Informations générales</span></div>
-            <div class="step-desc">Ces renseignements sont détectés automatiquement dans <code>examen.pdf</code> dès que le dossier est chargé (étape 2). Vérifiez-les et corrigez-les au besoin : ils apparaissent sur la page de couverture de chaque PDF et dans le récapitulatif Excel final.</div>
-            <div class="upload-section">
-                <label for="evalName">📝 Nom de l'évaluation (obligatoire)</label>
-                <input type="text" id="evalName" placeholder="Ex: Examen 1 (détecté dans examen.pdf)">
-                <div class="field-help">Ex. : « Examen 1 », « Intra », « Final ». Ce texte est imprimé tel quel sur chaque PDF.</div>
-            </div>
-            <div class="upload-section">
-                <label for="courseName">📚 Numéro du cours (obligatoire)</label>
-                <input type="text" id="courseName" placeholder="Ex: STT-1900 (détecté dans examen.pdf)">
-                <div class="field-help">Le sigle du cours tel qu'il doit apparaître sur les documents (ex. STT-1900).</div>
-                <div id="examInfoDetected" class="field-help" style="color:#333;margin-top:8px;"></div>
-            </div>
-        </div>
-        <div class="step-card">
-            <div class="step-header"><span class="step-badge">2</span><span class="step-title">Fichiers de l'examen</span></div>
+            <div class="step-header"><span class="step-badge">1</span><span class="step-title">Fichiers de l'examen</span></div>
             <div class="step-desc">Sélectionnez ou glissez un dossier : l'outil détecte automatiquement chaque fichier d'après son nom. Vous pouvez aussi glisser les fichiers un à un dans la zone ci-dessous.</div>
         <div class="upload-section">
             <label for="folderInput" style="display:inline;">📁 Sélectionner ou glisser le dossier (ou les fichiers un à un)</label>
@@ -607,13 +591,25 @@
         </div>
         </details>
 
-        <!-- pdfFile is now loaded from the folder -->
-
-        <!-- attribution handled automatically by the single action button -->
+        <div class="upload-section" style="margin-top:16px;">
+            <label>📝 Nom de l'évaluation et sigle du cours</label>
+            <div class="field-help">Détectés dans <code>examen.pdf</code> dès que le dossier est chargé. Vérifiez-les et corrigez-les au besoin : ils sont imprimés sur la page de couverture de chaque PDF et repris dans le récapitulatif Excel.</div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;">
+                <div style="flex:1;min-width:220px;">
+                    <label for="evalName" style="font-size:13px;">Nom de l'évaluation (obligatoire)</label>
+                    <input type="text" id="evalName" placeholder="Ex: Examen 1">
+                </div>
+                <div style="flex:1;min-width:220px;">
+                    <label for="courseName" style="font-size:13px;">Sigle du cours (obligatoire)</label>
+                    <input type="text" id="courseName" placeholder="Ex: STT-1900">
+                </div>
+            </div>
+            <div id="examInfoDetected" class="field-help" style="color:#333;margin-top:8px;"></div>
+        </div>
         </div>
 
         <div class="step-card">
-            <div class="step-header"><span class="step-badge">3</span><span class="step-title">Locaux et répartition des étudiants</span></div>
+            <div class="step-header"><span class="step-badge">2</span><span class="step-title">Locaux et répartition des étudiants</span></div>
             <div class="step-desc">Collez le déroulement de l'examen tel qu'affiché dans Brio : les locaux, les heures et les NRC sont repérés automatiquement. Les heures de chaque NRC sont reprises dans le récapitulatif et les listes de présence (les étudiants en accommodement gardent celles de <code>accommodements.xlsx</code>). Si un NRC a plusieurs locaux, ils sont remplis du plus grand au plus petit. Les étudiants en accommodement sont placés dans les salles d'accommodement plus bas.</div>
         <div class="upload-section" id="roomsUI">
             <label for="brioScheduleText">🏷️ Salles du groupe régulier</label>
@@ -653,7 +649,7 @@
         </div>
 
         <div class="step-card">
-            <div class="step-header"><span class="step-badge">4</span><span class="step-title">Options d'impression</span></div>
+            <div class="step-header"><span class="step-badge">3</span><span class="step-title">Options d'impression</span></div>
             <div class="step-desc">Réglages fins pour les listes de présence et la numérotation des copies.</div>
         <div class="upload-section">
             <label>📋 Format de la liste de présence</label>
@@ -693,7 +689,7 @@
         </div>
 
         <div class="step-card">
-            <div class="step-header"><span class="step-badge">5</span><span class="step-title">Génération</span></div>
+            <div class="step-header"><span class="step-badge">4</span><span class="step-title">Génération</span></div>
             <div class="step-desc">Vérifiez les étapes précédentes, puis générez le ZIP final. Selon le nombre d'étudiants, l'opération peut prendre de quelques secondes à quelques minutes.</div>
 
         <button id="generateBtn">
@@ -1844,7 +1840,7 @@
         // Un NRC sans local coché va dans les locaux non attribués à un NRC, ou à défaut dans tous les locaux.
         function assignGroupsToRooms(students, rooms, startFrom = 1) {
             if (rooms.length === 0) {
-                throw new Error('Ajoutez au moins un local à l’étape 3 (collez le déroulement de Brio ou utilisez « Ajouter un local »).');
+                throw new Error('Ajoutez au moins un local à l’étape 2 (collez le déroulement de Brio ou utilisez « Ajouter un local »).');
             }
             const missingCapacity = regularRooms.filter(room => !(room.capacity > 0)).map(room => room.name);
             if (missingCapacity.length > 0) {
@@ -1978,7 +1974,7 @@
                 const roomsToUse = getSelectedRooms();
                 console.log('generateAll: selected rooms:', roomsToUse);
                 if (regularRooms.length === 0) {
-                    alert('⚠️ Ajoutez au moins un local à l’étape 3 (collez le déroulement de Brio ou utilisez « Ajouter un local »).');
+                    alert('⚠️ Ajoutez au moins un local à l’étape 2 (collez le déroulement de Brio ou utilisez « Ajouter un local »).');
                     return;
                 }
 
