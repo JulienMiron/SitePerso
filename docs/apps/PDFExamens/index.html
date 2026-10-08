@@ -430,6 +430,10 @@
         details.column-mapping .mapping-block { margin-bottom:14px; }
         details.column-mapping .mapping-title { font-size:13px; font-weight:600; color:var(--color-text-secondary); margin-bottom:4px; }
         .pick-choice { width:auto; margin:0; padding:8px 14px; font-size:13px; }
+        .verification-list { font-size:14px; line-height:1.9; }
+        .verification-list p { margin:0; }
+        .verification-list .verification-total { margin-top:10px; padding-top:8px; border-top:1px solid var(--color-divider); }
+        .verification-list .verification-empty { color:var(--color-text-muted); font-size:13px; }
         .room-cards { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
         .room-card { display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid var(--color-primary-border); background:var(--color-primary-bg); border-radius:var(--radius); }
         .room-card-name { font-weight:700; color:var(--color-primary-dark); }
@@ -503,7 +507,8 @@
                     <li><strong>Étape 1 — Fichiers de l'examen :</strong> sélectionnez ou glissez le dossier contenant la liste des étudiants (export Brio ou grille de résultats Brio) et le PDF de l'examen (obligatoires), et au besoin la liste des accommodements ou celle des étudiants hors campus. Les fichiers sont reconnus par leur contenu, quel que soit leur nom. Le nom de l'évaluation et le sigle du cours sont détectés dans <code>examen.pdf</code> et proposés en bas de l'étape, modifiables.</li>
                     <li><strong>Étape 2 — Locaux et répartition :</strong> collez le déroulement de l'examen de Brio : locaux, heures et NRC sont repérés automatiquement, et vous cochez les locaux de chaque NRC. Les salles d'accommodement viennent de <code>accommodements.xlsx</code>, et certains étudiants en accommodement peuvent être placés dans un local précis.</li>
                     <li><strong>Étape 3 — Options d'impression :</strong> format des listes de présence, pourcentage de copies vierges, numérotation.</li>
-                    <li><strong>Étape 4 — Génération :</strong> cliquez sur « Générer et Télécharger le ZIP ». Il contiendra les PDFs, les listes de présence et <code>Recapitulatif_etudiants.xlsx</code>.</li>
+                    <li><strong>Étape 4 — Vérification :</strong> décompte en direct des étudiants par groupe régulier et d'accommodement, des hors campus, des abandons et du nombre de PDF qui seront générés.</li>
+                    <li><strong>Étape 5 — Génération :</strong> cliquez sur « Générer et Télécharger le ZIP ». Il contiendra les PDFs, les listes de présence et <code>Recapitulatif_etudiants.xlsx</code>.</li>
                 </ol>
                 <p><strong>Après la génération :</strong> pour envoyer automatiquement un courriel à chaque étudiant avec son local et sa place, utilisez <code>envoi_courriels.py</code> (dossier <code>envoi_courriels/</code> à côté de cette page) avec le <code>Recapitulatif_etudiants.xlsx</code> extrait du ZIP. Voir <code>LISEZMOI.md</code> dans ce dossier pour la marche à suivre complète.</p>
             </div>
@@ -712,7 +717,13 @@
         </div>
 
         <div class="step-card">
-            <div class="step-header"><span class="step-badge">4</span><span class="step-title">Génération</span></div>
+            <div class="step-header"><span class="step-badge">4</span><span class="step-title">Vérification</span></div>
+            <div class="step-desc">Décompte mis à jour en direct à partir des fichiers chargés et des options choisies. Vérifiez-le avant de générer.</div>
+            <div id="verificationList" class="verification-list" aria-live="polite"></div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-header"><span class="step-badge">5</span><span class="step-title">Génération</span></div>
             <div class="step-desc">Vérifiez les étapes précédentes, puis générez le ZIP final. Selon le nombre d'étudiants, l'opération peut prendre de quelques secondes à quelques minutes.</div>
 
         <button id="generateBtn">
@@ -1030,7 +1041,7 @@
                         blankPercent = parseFloat(document.getElementById('blankPercent').value);
                     } catch (e) { blankPercent = 0; }
                     if (isNaN(blankPercent) || !isFinite(blankPercent) || blankPercent < 0) blankPercent = 0;
-                    const blankCount = Math.ceil(students.length * (blankPercent / 100)) || 0;
+                    const blankCount = Math.ceil(students.length * (blankPercent / 100)) || 0; // même calcul que l'étape « Vérification »
                     if (blankCount > 0) {
                         for (let bi = 0; bi < blankCount; bi++) {
                             const idx = String(bi + 1).padStart(3, '0');
@@ -2068,12 +2079,12 @@
                     for (const s of allStudents) {
                         const key = (s.ni || '').toString().trim();
                         if (isAbandonStudent(s)) continue; // abandon : aucune place
-                        if (isAccommodementStudent(s)) {
+                        if (filterExcludeNISet && filterExcludeNISet.size > 0 && key && filterExcludeNISet.has(key)) {
+                            // hors campus : aucune place, même en accommodement (comme à la génération des PDF)
+                            continue;
+                        } else if (isAccommodementStudent(s)) {
                             const times = (accomTimeMap && accomTimeMap.has(normalizeNI(key))) ? accomTimeMap.get(normalizeNI(key)) : {};
                             accomList.push({ ...s, local: '', place: '', accomStart: times.start || '', accomEnd: times.end || '' });
-                        } else if (filterExcludeNISet && filterExcludeNISet.size > 0 && key && filterExcludeNISet.has(key)) {
-                            // excluded by filter: skip entirely
-                            continue;
                         } else {
                             remaining.push(s);
                         }
@@ -2339,6 +2350,8 @@
         let accomManualRooms = new Map();
         // Étudiants du fichier BRIO (cache pour afficher la liste des accommodements)
         let brioStudentsCache = [];
+        // Tous les étudiants de la liste, abandons compris (pour l'étape de vérification)
+        let brioAllStudentsCache = [];
         // Filtres (exclusion via fichiers de liste)
         let filterExcludeNISet = null; // Set of NI strings to exclude when TypeInscription != selected keep types
         // Valeurs de Type conservées (normalisées). Par défaut on conserve 'campus ul'
@@ -2358,6 +2371,7 @@
         function refreshAccommodementData() {
             accomNISet = new Set(Array.from(accomFileNISet, normalizeNI).filter(Boolean));
             accomTimeMap = new Map(Array.from(accomFileTimeMap, ([ni, times]) => [normalizeNI(ni), times]));
+            if (typeof renderVerification === 'function') renderVerification();
 
             // Salles détectées dans le fichier : retirer celles qui n'y sont plus, ajouter les nouvelles
             const fileRooms = new Set(accomFileRoomMap.values());
@@ -2408,10 +2422,12 @@
 
         async function refreshBrioStudentCache() {
             brioStudentsCache = [];
+            brioAllStudentsCache = [];
             let abandons = [];
             if (folderBrioFile && folderBrioFile.name.toLowerCase().endsWith('.xlsx')) {
                 try {
                     const all = await readXlsxRegistrationStudents(folderBrioFile);
+                    brioAllStudentsCache = all;
                     abandons = all.filter(isAbandonStudent);
                     brioStudentsCache = all.filter(student => !isAbandonStudent(student));
                 } catch (err) {
@@ -2427,6 +2443,69 @@
             }
             renderGroupRoomTable();
             renderAccomManualPlacement();
+            renderVerification();
+        }
+
+        // Étudiant hors campus (liste du SSE)
+        function isHorsCampusStudent(student) {
+            const key = (student && student.ni || '').toString().trim();
+            return Boolean(key && filterExcludeNISet && filterExcludeNISet.size > 0 && filterExcludeNISet.has(key));
+        }
+
+        // Pourcentage de copies vierges (même règle que la génération)
+        function getBlankPercent() {
+            const value = parseFloat((document.getElementById('blankPercent') || {}).value);
+            return Number.isFinite(value) && value > 0 ? value : 0;
+        }
+
+        // ===== Étape « Vérification » : décompte en direct =====
+        // Priorité, identique à la génération : abandon, puis hors campus, puis accommodement, sinon régulier
+        function renderVerification() {
+            const container = document.getElementById('verificationList');
+            if (!container) return;
+            container.replaceChildren();
+            const plural = (n, singular, pluralForm) => (n > 1 ? pluralForm : singular);
+            const line = (parts, className) => {
+                const p = document.createElement('p');
+                if (className) p.className = className;
+                for (const part of parts) {
+                    if (typeof part === 'string') p.appendChild(document.createTextNode(part));
+                    else { const strong = document.createElement('strong'); strong.textContent = String(part.b); p.appendChild(strong); }
+                }
+                container.appendChild(p);
+            };
+            if (!folderBrioFile || brioAllStudentsCache.length === 0) {
+                line(['Chargez la liste des étudiants à l’étape 1 pour voir le décompte.'], 'verification-empty');
+                return;
+            }
+
+            const groups = new Map(); // numéro de section -> { regular, accom }
+            const groupFor = section => {
+                const key = sectionNumber(section);
+                if (!groups.has(key)) groups.set(key, { regular: 0, accom: 0 });
+                return groups.get(key);
+            };
+            for (const section of brioSections) groupFor(section); // ordre des feuilles
+            let abandons = 0, horsCampus = 0;
+            for (const student of brioAllStudentsCache) {
+                if (isAbandonStudent(student)) { abandons++; continue; }
+                if (isHorsCampusStudent(student)) { horsCampus++; continue; }
+                if (isAccommodementStudent(student)) groupFor(student.section).accom++;
+                else groupFor(student.section).regular++;
+            }
+
+            let examCopies = 0;
+            for (const [section, counts] of groups) {
+                examCopies += counts.regular + counts.accom;
+                line(['Il y a ', { b: counts.regular }, ` ${plural(counts.regular, 'étudiant', 'étudiants')} dans le groupe régulier `, { b: section }]);
+                line(['Il y a ', { b: counts.accom }, ` ${plural(counts.accom, 'étudiant', 'étudiants')} dans le groupe d’accommodement `, { b: section }]);
+            }
+            line(['Il y a ', { b: horsCampus }, ` ${plural(horsCampus, 'étudiant', 'étudiants')} hors campus`]);
+            line(['Il y a ', { b: abandons }, ` ${plural(abandons, 'étudiant qui a abandonné', 'étudiants qui ont abandonné')}`]);
+
+            const blanks = Math.ceil(examCopies * (getBlankPercent() / 100)) || 0;
+            const total = examCopies + blanks;
+            line([{ b: total }, ` ${plural(total, 'PDF sera généré', 'PDF seront générés')} (incluant ${plural(blanks, 'la', 'les')} `, { b: blanks }, ` ${plural(blanks, 'copie vierge', 'vierges')})`], 'verification-total');
         }
 
         function renderAccomManualPlacement() {
@@ -2815,6 +2894,11 @@
             await onAccomFileSelected({ target: { files: folderAccomFile ? [folderAccomFile] : [] } });
             if (folderFilterFile) {
                 await onFilterFilesSelected({ target: { files: [folderFilterFile] } });
+            } else if (!merge) {
+                // nouveau dossier sans liste hors campus : ne pas garder celle du dossier précédent
+                filterExcludeNISet = null;
+                const filterMapDiv = document.getElementById('filterMap');
+                if (filterMapDiv) filterMapDiv.style.display = 'none';
             }
             await refreshBrioStudentCache();
             updateColumnMappingVisibility();
@@ -3553,6 +3637,7 @@
             // update result div if present
             const resultDiv = document.getElementById('filterResult');
             if (resultDiv) { resultDiv.style.display = 'block'; resultDiv.textContent = `Étudiants exclus détectés: ${filterExcludeNISet.size}`; }
+            renderVerification();
         }
 
         // Parcours les fichiers de filtre pour collecter les valeurs distinctes trouvées
@@ -4131,8 +4216,13 @@
             }
         }
 
-        // Rendu initial des salles d'accommodement (après la déclaration de tout l'état)
+        // Rendu initial des salles d'accommodement et de la vérification (après la déclaration de tout l'état)
         renderAccomRoomsUI();
+        renderVerification();
+        {
+            const blankInput = document.getElementById('blankPercent');
+            if (blankInput) blankInput.addEventListener('input', renderVerification);
+        }
 
         // Route generation through one handler so a click cannot start two concurrent runs.
         const generateBtnEl = document.getElementById('generateBtn');
