@@ -417,6 +417,7 @@
         details.column-mapping[open] summary { border-bottom:1px solid #e4dced; margin-bottom:8px; }
         details.column-mapping .mapping-block { margin-bottom:14px; }
         details.column-mapping .mapping-title { font-size:13px; font-weight:600; color:#555; margin-bottom:4px; }
+        .pick-choice { width:auto; margin:0; padding:8px 14px; font-size:13px; }
         .room-cards { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
         .room-card { display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid #d9c9e8; background:#f5f1fa; border-radius:8px; }
         .room-card-name { font-weight:700; color:#735093; }
@@ -498,7 +499,7 @@
 
         <div class="step-card">
             <div class="step-header"><span class="step-badge">1</span><span class="step-title">Fichiers de l'examen</span></div>
-            <div class="step-desc">Sélectionnez ou glissez un dossier : l'outil reconnaît chaque fichier d'après son contenu. Vous pouvez aussi ajouter les fichiers un à un, en les glissant dans la zone ci-dessous ou avec « choisir un fichier à la fois ».</div>
+            <div class="step-desc">Sélectionnez ou glissez un dossier : l'outil reconnaît chaque fichier d'après son contenu. Un clic dans la zone permet de choisir un dossier ou un fichier ; les fichiers choisis ou glissés un à un s'ajoutent à ce qui est déjà chargé.</div>
         <div class="upload-section">
             <label for="folderInput" style="display:inline;">📁 Sélectionner ou glisser le dossier (ou les fichiers un à un)</label>
             <span class="info-icon" id="folderInfoIcon" title="Informations">i
@@ -514,13 +515,14 @@
                 <strong>Accommodements</strong> <span class="step-tag">optionnel</span> — liste fournie par l'agente de secrétariat (NI, heures, local) ; permet d'attribuer des heures et locaux dédiés.<br>
                 <strong>Hors campus</strong> <span class="step-tag">optionnel</span> — liste des étudiants hors campus (site du SSE, colonne TypeInscription) ; ces étudiants sont exclus de l'attribution de places.
             </div>
-            <label for="folderInput" id="folderSelectBtn" style="display:block;width:100%;padding:12px;border:2px dashed #9467bd;border-radius:10px;background:#f5f1fa;cursor:pointer;transition:all 0.3s ease;text-align:left;color:#888;font-size:14px;margin-top:10px;">Cliquer pour sélectionner un dossier, ou glisser ici un dossier ou des fichiers...</label>
-            <input type="file" id="folderInput" webkitdirectory directory multiple style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none;">
-            <div style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:13px;color:#666;">
-                <span>ou</span>
-                <label for="singleFileInput" id="singleFileBtn" style="margin:0;font-weight:600;color:#735093;cursor:pointer;text-decoration:underline;">📄 choisir un fichier à la fois</label>
-                <span>(il s'ajoute à ce qui est déjà chargé)</span>
+            <div id="folderSelectBtn" role="button" tabindex="0" style="display:block;width:100%;padding:12px;border:2px dashed #9467bd;border-radius:10px;background:#f5f1fa;cursor:pointer;transition:all 0.3s ease;text-align:left;color:#888;font-size:14px;margin-top:10px;">Cliquer pour sélectionner un dossier ou un fichier, ou glisser ici un dossier ou des fichiers...</div>
+            <div id="pickMenu" style="display:none;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:10px 12px;border:1px solid #d9c9e8;border-radius:8px;background:#faf8fc;font-size:13px;">
+                <span style="color:#666;">Que voulez-vous ajouter ?</span>
+                <button type="button" id="pickFolderBtn" class="pick-choice">📂 Un dossier</button>
+                <button type="button" id="pickFileBtn" class="pick-choice">📄 Un fichier</button>
+                <span style="color:#888;">Un dossier remplace tout ; un fichier s'ajoute à ce qui est déjà chargé.</span>
             </div>
+            <input type="file" id="folderInput" webkitdirectory directory multiple style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none;">
             <input type="file" id="singleFileInput" accept=".xlsx,.xlsm,.xls,.csv,.pdf" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none;">
             <div id="folderStatus" style="margin-top:10px;font-size:13px;color:#333;display:none;">
                 <div id="statusBrio" style="margin-bottom:4px;"></div>
@@ -2464,36 +2466,47 @@
         // Flag to avoid double-firing onFolderSelected when the hidden input is used as fallback
         let folderHandledByPicker = false;
 
-        // Button that uses showDirectoryPicker (read+write) when available, otherwise the label naturally triggers the hidden input
+        // Un clic dans la zone ouvre un petit choix : un dossier ou un fichier (les boîtes de dialogue du navigateur ne peuvent pas proposer les deux à la fois)
         const folderSelectBtn = document.getElementById('folderSelectBtn');
-        if (folderSelectBtn && window.showDirectoryPicker) {
-            // When showDirectoryPicker is available, intercept the label click
-            folderSelectBtn.addEventListener('click', async (e) => {
-                e.preventDefault(); // prevent the label from triggering the file input
-                try {
-                    folderDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-                    // Read files from directory handle
-                    const files = [];
-                    for await (const entry of folderDirectoryHandle.values()) {
-                        if (entry.kind === 'file') {
-                            const file = await entry.getFile();
-                            files.push(file);
-                        }
-                    }
-                    // Update label text with folder name
-                    folderSelectBtn.textContent = '📂 ' + folderDirectoryHandle.name;
-                    folderSelectBtn.style.color = '#333';
-                    // Feed files to the existing handler
-                    folderHandledByPicker = true;
-                    await onFolderSelected({ target: { files } });
-                } catch (err) {
-                    if (err.name === 'AbortError') return; // user cancelled
-                    console.warn('showDirectoryPicker failed, falling back to file input:', err);
-                    folderDirectoryHandle = null;
-                    folderHandledByPicker = false;
-                    // Trigger the native file input as fallback
-                    if (folderEl) folderEl.click();
+        const pickMenu = document.getElementById('pickMenu');
+        const showPickMenu = show => { if (pickMenu) pickMenu.style.display = show ? 'flex' : 'none'; };
+        if (folderSelectBtn) {
+            folderSelectBtn.addEventListener('click', () => showPickMenu(!pickMenu || pickMenu.style.display === 'none'));
+            folderSelectBtn.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showPickMenu(true); }
+            });
+        }
+
+        async function pickFolder() {
+            showPickMenu(false);
+            if (!window.showDirectoryPicker) { if (folderEl) folderEl.click(); return; }
+            try {
+                folderDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                const files = [];
+                for await (const entry of folderDirectoryHandle.values()) {
+                    if (entry.kind === 'file') files.push(await entry.getFile());
                 }
+                folderSelectBtn.textContent = '📂 ' + folderDirectoryHandle.name;
+                folderSelectBtn.style.color = '#333';
+                folderHandledByPicker = true;
+                await onFolderSelected({ target: { files } });
+            } catch (err) {
+                if (err.name === 'AbortError') return; // annulé par l'utilisateur
+                console.warn('showDirectoryPicker failed, falling back to file input:', err);
+                folderDirectoryHandle = null;
+                folderHandledByPicker = false;
+                if (folderEl) folderEl.click();
+            }
+        }
+
+        {
+            const pickFolderBtn = document.getElementById('pickFolderBtn');
+            const pickFileBtn = document.getElementById('pickFileBtn');
+            if (pickFolderBtn) pickFolderBtn.addEventListener('click', pickFolder);
+            if (pickFileBtn) pickFileBtn.addEventListener('click', () => {
+                showPickMenu(false);
+                const input = document.getElementById('singleFileInput');
+                if (input) input.click();
             });
         }
 
