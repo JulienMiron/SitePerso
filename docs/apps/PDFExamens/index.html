@@ -486,7 +486,7 @@
             <div class="intro-guide-body">
                 <p>Tout se passe dans votre navigateur : aucun fichier n'est envoyé sur un serveur. Suivez les étapes ci-dessous dans l'ordre :</p>
                 <ol>
-                    <li><strong>Étape 1 — Fichiers de l'examen :</strong> sélectionnez ou glissez le dossier contenant <code>BRIO.xlsx</code> et <code>examen.pdf</code> (obligatoires), et au besoin <code>accommodements.xlsx</code> ou <code>horscampus.xlsx</code>. Le nom de l'évaluation et le sigle du cours sont détectés dans <code>examen.pdf</code> et proposés en bas de l'étape, modifiables.</li>
+                    <li><strong>Étape 1 — Fichiers de l'examen :</strong> sélectionnez ou glissez le dossier contenant la liste des étudiants (export Brio ou grille de résultats Brio) et le PDF de l'examen (obligatoires), et au besoin la liste des accommodements ou celle des étudiants hors campus. Les fichiers sont reconnus par leur contenu, quel que soit leur nom. Le nom de l'évaluation et le sigle du cours sont détectés dans <code>examen.pdf</code> et proposés en bas de l'étape, modifiables.</li>
                     <li><strong>Étape 2 — Locaux et répartition :</strong> collez le déroulement de l'examen de Brio : locaux, heures et NRC sont repérés automatiquement, et vous cochez les locaux de chaque NRC. Les salles d'accommodement viennent de <code>accommodements.xlsx</code>, et certains étudiants en accommodement peuvent être placés dans un local précis.</li>
                     <li><strong>Étape 3 — Options d'impression :</strong> format des listes de présence, pourcentage de copies vierges, numérotation.</li>
                     <li><strong>Étape 4 — Génération :</strong> cliquez sur « Générer et Télécharger le ZIP ». Il contiendra les PDFs, les listes de présence et <code>Recapitulatif_etudiants.xlsx</code>.</li>
@@ -501,16 +501,17 @@
         <div class="upload-section">
             <label for="folderInput" style="display:inline;">📁 Sélectionner ou glisser le dossier (ou les fichiers un à un)</label>
             <span class="info-icon" id="folderInfoIcon" title="Informations">i
-                <span class="info-bubble" id="folderInfoBubble">Le dossier sélectionné doit contenir les fichiers suivants
-                    :<br><br><strong>BRIO.xlsx</strong> — liste d'étudiants exportée de BRIO (obligatoire)
-                    <br><strong>examen.pdf</strong> — modèle PDF de l'examen selon le .cls créé par Jérôme Soucy ou Julien Miron (obligatoire)
-                    <br><strong>accommodements.xlsx</strong> — liste des accommodements fournie par l'agente de secrétariat (optionnel)
-                    <br><strong>horscampus.xlsx</strong> — liste examen hors campus qui se trouve sur le site du SSE (optionnel)</span></span>
+                <span class="info-bubble" id="folderInfoBubble">Les fichiers sont reconnus par leur contenu, quel que soit leur nom :
+                    <br><br><strong>Liste des étudiants</strong> — export Brio des inscrits ou grille de résultats Brio, une feuille par NRC (obligatoire)
+                    <br><strong>Examen (PDF)</strong> — modèle PDF de l'examen selon le .cls créé par Jérôme Soucy ou Julien Miron (obligatoire)
+                    <br><strong>Accommodements</strong> — liste fournie par l'agente de secrétariat (optionnel)
+                    <br><strong>Hors campus</strong> — liste examen hors campus du site du SSE (optionnel)</span></span>
             <div class="field-help">
-                <strong>BRIO.xlsx</strong> <span class="step-tag">obligatoire</span> — export de la liste des étudiants depuis BRIO.<br>
-                <strong>examen.pdf</strong> <span class="step-tag">obligatoire</span> — modèle PDF de l'examen (gabarit .cls de Jérôme Soucy ou Julien Miron).<br>
-                <strong>accommodements.xlsx</strong> <span class="step-tag">optionnel</span> — liste fournie par l'agente de secrétariat ; permet d'attribuer des heures et locaux dédiés.<br>
-                <strong>horscampus.xlsx</strong> <span class="step-tag">optionnel</span> — liste des étudiants hors campus (site du SSE) ; ces étudiants sont exclus de l'attribution de places.
+                Les fichiers sont reconnus par leur contenu, quel que soit leur nom.<br>
+                <strong>Liste des étudiants</strong> <span class="step-tag">obligatoire</span> — export Brio des inscrits <em>ou</em> grille de résultats Brio (.xlsx, une feuille par NRC avec Nom, Prénom et Numéro de dossier).<br>
+                <strong>Examen</strong> <span class="step-tag">obligatoire</span> — modèle PDF de l'examen (gabarit .cls de Jérôme Soucy ou Julien Miron).<br>
+                <strong>Accommodements</strong> <span class="step-tag">optionnel</span> — liste fournie par l'agente de secrétariat (NI, heures, local) ; permet d'attribuer des heures et locaux dédiés.<br>
+                <strong>Hors campus</strong> <span class="step-tag">optionnel</span> — liste des étudiants hors campus (site du SSE, colonne TypeInscription) ; ces étudiants sont exclus de l'attribution de places.
             </div>
             <label for="folderInput" id="folderSelectBtn" style="display:block;width:100%;padding:12px;border:2px dashed #9467bd;border-radius:10px;background:#f5f1fa;cursor:pointer;transition:all 0.3s ease;text-align:left;color:#888;font-size:14px;margin-top:10px;">Cliquer pour sélectionner un dossier, ou glisser ici un dossier ou des fichiers un à un...</label>
             <input type="file" id="folderInput" webkitdirectory directory multiple style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none;">
@@ -559,7 +560,7 @@
         </div>
 
         <div class="mapping-block" id="mappingUI" style="display:none;">
-            <div class="mapping-title">BRIO.xlsx</div>
+            <div class="mapping-title">Liste des étudiants</div>
             <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
                 <input type="checkbox" id="nameSeparate" checked> <label for="nameSeparate" style="margin:0;font-weight:600;">Nom séparé en Prénom / Nom</label>
             </div>
@@ -744,7 +745,7 @@
             const courseName = document.getElementById('courseName').value.trim();
 
             if (!csvFile || !pdfFile) {
-                alert('⚠️ Veuillez sélectionner un dossier contenant BRIO.xlsx et examen.pdf');
+                alert('⚠️ Veuillez charger la liste des étudiants (export Brio ou grille de résultats) et le PDF de l’examen.');
                 return;
             }
 
@@ -1554,7 +1555,7 @@
                 container.appendChild(message);
             };
             if (rows.length === 0) {
-                showMessage('Les NRC apparaîtront ici après le collage du déroulement de Brio ou le chargement de BRIO.xlsx.');
+                showMessage('Les NRC apparaîtront ici après le collage du déroulement de Brio ou le chargement de la liste des étudiants.');
                 return;
             }
             if (regularRooms.length === 0) {
@@ -1735,7 +1736,7 @@
 
             if (brioSections.length > 0 && brioSchedule.length > 0
                 && !brioSections.some(section => brioSchedule.some(g => String(section).includes(g.nrc)))) {
-                brioScheduleNotes.push('⚠️ Aucune feuille de BRIO.xlsx ne contient un de ces NRC : vérifiez les noms des feuilles.');
+                brioScheduleNotes.push('⚠️ Aucune feuille de la liste des étudiants ne contient un de ces NRC : vérifiez les noms des feuilles.');
             }
 
             renderRoomsUI();
@@ -1935,7 +1936,7 @@
             if (generateBtn.disabled) return;
 
             if (!csvFile || !pdfFile) {
-                alert('⚠️ Veuillez sélectionner un dossier contenant BRIO.xlsx et examen.pdf');
+                alert('⚠️ Veuillez charger la liste des étudiants (export Brio ou grille de résultats) et le PDF de l’examen.');
                 return;
             }
             if (!evalName || !courseName) {
@@ -2338,7 +2339,7 @@
             }
             const accomStudents = brioStudentsCache.filter(isAccommodementStudent).sort(compareStudentsByLastName);
             if (accomStudents.length === 0) {
-                showMessage('Aucun étudiant en accommodement détecté dans BRIO.xlsx (fournissez accommodements.xlsx).');
+                showMessage('Aucun étudiant en accommodement détecté dans la liste des étudiants (fournissez la liste des accommodements).');
                 return;
             }
             const accomRoomChoices = accomRooms.slice();
@@ -2558,6 +2559,60 @@
         ['nameCombinedSelect','firstNameSelect','lastNameSelect','niSelect','emailSelect']
             .forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', () => updateMappingFromUI()); });
 
+        // Lit les premières lignes de chaque feuille d'un fichier tabulaire (xlsx ou csv)
+        async function readSheetsPreview(file, maxRows = 25) {
+            const name = file.name.toLowerCase();
+            if (name.endsWith('.csv') || name.endsWith('.txt')) {
+                const text = await file.text();
+                const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).slice(0, maxRows);
+                const sep = lines.some(l => l.includes(';')) ? ';' : (lines.some(l => l.includes('\t')) ? '\t' : ',');
+                return [lines.map(l => l.split(sep).map(c => c.trim()))];
+            }
+            const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', sheetRows: maxRows });
+            return workbook.SheetNames.map(sheetName => XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 }));
+        }
+
+        // Reconnaît le rôle d'un fichier d'après son contenu : 'students' | 'accom' | 'filter' | 'pdf' | null
+        async function classifyExamFile(file) {
+            const name = file.name.toLowerCase();
+            if (name.endsWith('.pdf')) return 'pdf';
+            if (!/\.(xlsx|xlsm|xls|csv)$/.test(name)) return null;
+            const nameHint = /accommod|accomod/.test(name) ? 'accom'
+                : /hors|campus|sse/.test(name) ? 'filter'
+                : /recap|récap/.test(name) ? null
+                : /brio|r[ée]sultat|liste|[ée]tudiant|inscri/.test(name) ? 'students' : '';
+            let sheets = [];
+            try {
+                sheets = await readSheetsPreview(file, 25);
+            } catch (err) {
+                console.warn('Lecture impossible pour la classification de', file.name, err);
+                return nameHint || null;
+            }
+            const cells = [];
+            for (const rows of sheets) {
+                for (const row of rows) {
+                    for (const cell of row || []) {
+                        if (cell !== undefined && cell !== null && String(cell).trim()) cells.push(normalizeHeader(String(cell)));
+                    }
+                }
+            }
+            const has = re => cells.some(text => re.test(text));
+            // Récapitulatif produit par cet outil : à ignorer
+            if (has(/^place$/) && has(/^local$/) && has(/^ni$/)) return null;
+            if (has(/type\s*(d\s*)?inscription|typeinscription|hors\s*campus/)) return 'filter';
+            if (nameHint === 'accom' || nameHint === 'filter') return nameHint;
+            if (has(/accommod|accomod|heure\s*(de\s*)?(debut|fin)|temps\s*suppl|mesure|adaptation/)) return 'accom';
+            if (sheets.some(rows => findRegistrationHeaderInfo(rows))) return 'students';
+            return nameHint || null;
+        }
+
+        const FILE_KIND_LABELS = {
+            students: 'Liste des étudiants',
+            pdf: 'Examen (PDF)',
+            accom: 'Accommodements',
+            filter: 'Hors campus'
+        };
+
         async function onFolderSelected(e) {
             const files = Array.from(e.target.files || []);
             // merge = fichiers déposés un à un : on complète ce qui est déjà chargé au lieu de tout remplacer
@@ -2569,25 +2624,43 @@
                 folderPdfFile = null;
             }
 
-            // Scan folder files by name (case-insensitive)
+            // Reconnaissance de chaque fichier par son contenu (le nom ne sert que d'indice)
             const ignored = [];
+            const candidates = { students: [], accom: [], filter: [], pdf: [] };
             for (const f of files) {
-                const name = f.name.toLowerCase();
-                if (name === 'brio.xlsx') folderBrioFile = f;
-                else if (name === 'accommodements.xlsx') folderAccomFile = f;
-                else if (name === 'horscampus.xlsx') folderFilterFile = f;
-                else if (name === 'examen.pdf') folderPdfFile = f;
-                else ignored.push(f.name);
+                if (/^(\.|~\$)/.test(f.name)) continue; // fichiers cachés ou temporaires
+                const kind = await classifyExamFile(f);
+                if (kind) candidates[kind].push(f);
+                else if (merge || /\.(xlsx|xlsm|xls|csv|pdf)$/i.test(f.name)) ignored.push(f.name);
             }
+            const pick = (list, preferRe) => list.find(f => preferRe.test(f.name.toLowerCase())) || list[0] || null;
+            const duplicates = [];
+            const choose = (kind, preferRe) => {
+                if (candidates[kind].length === 0) return null;
+                const chosen = pick(candidates[kind], preferRe);
+                if (candidates[kind].length > 1) {
+                    duplicates.push(`${FILE_KIND_LABELS[kind]} : ${candidates[kind].map(f => f.name).join(', ')} → « ${chosen.name} » utilisé`);
+                }
+                return chosen;
+            };
+            const chosenStudents = choose('students', /brio/);
+            const chosenAccom = choose('accom', /accommod|accomod/);
+            const chosenFilter = choose('filter', /hors|campus/);
+            const chosenPdf = choose('pdf', /examen|exam/);
+            if (chosenStudents) folderBrioFile = chosenStudents;
+            if (chosenAccom) folderAccomFile = chosenAccom;
+            if (chosenFilter) folderFilterFile = chosenFilter;
+            if (chosenPdf) folderPdfFile = chosenPdf;
+
             const sIgnored = document.getElementById('statusIgnored');
             if (sIgnored) {
-                if (merge && ignored.length > 0) {
-                    sIgnored.textContent = `⚠️ Nom non reconnu, fichier ignoré : ${ignored.join(', ')} (noms attendus : BRIO.xlsx, examen.pdf, accommodements.xlsx, horscampus.xlsx)`;
-                    sIgnored.style.display = 'block';
-                } else {
-                    sIgnored.textContent = '';
-                    sIgnored.style.display = 'none';
-                }
+                const parts = [];
+                if (ignored.length > 0) parts.push(`${merge ? '⚠️' : 'ℹ️'} Fichier(s) non reconnu(s), ignoré(s) : ${ignored.join(', ')}`);
+                for (const line of duplicates) parts.push(`⚠️ Plusieurs fichiers possibles — ${line}`);
+                sIgnored.textContent = parts.join('\n');
+                sIgnored.style.whiteSpace = 'pre-line';
+                sIgnored.style.color = (merge && ignored.length > 0) || duplicates.length > 0 ? '#b26a00' : '#666';
+                sIgnored.style.display = parts.length > 0 ? 'block' : 'none';
             }
 
             // Show status
@@ -2603,16 +2676,17 @@
             const sFilter = document.getElementById('statusFilter');
             const sPdf = document.getElementById('statusPdf');
 
-            if (sBrio) sBrio.innerHTML = folderBrioFile ? ok('BRIO.xlsx trouvé') : missing('BRIO.xlsx non trouvé (obligatoire)');
-            if (sAccom) sAccom.innerHTML = folderAccomFile ? ok('accommodements.xlsx trouvé') : optional('accommodements.xlsx non trouvé (optionnel)');
-            if (sFilter) sFilter.innerHTML = folderFilterFile ? ok('horscampus.xlsx trouvé') : optional('horscampus.xlsx non trouvé (optionnel)');
-            if (sPdf) sPdf.innerHTML = folderPdfFile ? ok('examen.pdf trouvé') : missing('examen.pdf non trouvé (obligatoire)');
+            const esc = text => String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+            if (sBrio) sBrio.innerHTML = folderBrioFile ? ok(`Liste des étudiants : ${esc(folderBrioFile.name)}`) : missing('Liste des étudiants non trouvée (obligatoire) — export Brio ou grille de résultats Brio');
+            if (sPdf) sPdf.innerHTML = folderPdfFile ? ok(`Examen (PDF) : ${esc(folderPdfFile.name)}`) : missing('PDF de l’examen non trouvé (obligatoire)');
+            if (sAccom) sAccom.innerHTML = folderAccomFile ? ok(`Accommodements : ${esc(folderAccomFile.name)}`) : optional('Accommodements : aucun fichier (optionnel)');
+            if (sFilter) sFilter.innerHTML = folderFilterFile ? ok(`Hors campus : ${esc(folderFilterFile.name)}`) : optional('Hors campus : aucun fichier (optionnel)');
 
             try {
                 await loadBrioSections(folderBrioFile);
             } catch (err) {
                 console.error('Erreur lors de la lecture des sections de BRIO:', err);
-                alert('Impossible de lire les feuilles de BRIO.xlsx : ' + err.message);
+                alert('Impossible de lire les feuilles de la liste des étudiants : ' + err.message);
                 return;
             }
 
