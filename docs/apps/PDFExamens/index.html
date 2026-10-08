@@ -498,7 +498,7 @@
 
         <div class="step-card">
             <div class="step-header"><span class="step-badge">1</span><span class="step-title">Fichiers de l'examen</span></div>
-            <div class="step-desc">Sélectionnez ou glissez un dossier : l'outil détecte automatiquement chaque fichier d'après son nom. Vous pouvez aussi glisser les fichiers un à un dans la zone ci-dessous.</div>
+            <div class="step-desc">Sélectionnez ou glissez un dossier : l'outil reconnaît chaque fichier d'après son contenu. Vous pouvez aussi ajouter les fichiers un à un, en les glissant dans la zone ci-dessous ou avec « choisir un fichier à la fois ».</div>
         <div class="upload-section">
             <label for="folderInput" style="display:inline;">📁 Sélectionner ou glisser le dossier (ou les fichiers un à un)</label>
             <span class="info-icon" id="folderInfoIcon" title="Informations">i
@@ -514,8 +514,14 @@
                 <strong>Accommodements</strong> <span class="step-tag">optionnel</span> — liste fournie par l'agente de secrétariat (NI, heures, local) ; permet d'attribuer des heures et locaux dédiés.<br>
                 <strong>Hors campus</strong> <span class="step-tag">optionnel</span> — liste des étudiants hors campus (site du SSE, colonne TypeInscription) ; ces étudiants sont exclus de l'attribution de places.
             </div>
-            <label for="folderInput" id="folderSelectBtn" style="display:block;width:100%;padding:12px;border:2px dashed #9467bd;border-radius:10px;background:#f5f1fa;cursor:pointer;transition:all 0.3s ease;text-align:left;color:#888;font-size:14px;margin-top:10px;">Cliquer pour sélectionner un dossier, ou glisser ici un dossier ou des fichiers un à un...</label>
+            <label for="folderInput" id="folderSelectBtn" style="display:block;width:100%;padding:12px;border:2px dashed #9467bd;border-radius:10px;background:#f5f1fa;cursor:pointer;transition:all 0.3s ease;text-align:left;color:#888;font-size:14px;margin-top:10px;">Cliquer pour sélectionner un dossier, ou glisser ici un dossier ou des fichiers...</label>
             <input type="file" id="folderInput" webkitdirectory directory multiple style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none;">
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:13px;color:#666;">
+                <span>ou</span>
+                <label for="singleFileInput" id="singleFileBtn" style="margin:0;font-weight:600;color:#735093;cursor:pointer;text-decoration:underline;">📄 choisir un fichier à la fois</label>
+                <span>(il s'ajoute à ce qui est déjà chargé)</span>
+            </div>
+            <input type="file" id="singleFileInput" accept=".xlsx,.xlsm,.xls,.csv,.pdf" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none;">
             <div id="folderStatus" style="margin-top:10px;font-size:13px;color:#333;display:none;">
                 <div id="statusBrio" style="margin-bottom:4px;"></div>
                 <div id="statusAccom" style="margin-bottom:4px;"></div>
@@ -3917,6 +3923,34 @@
             return { files, folderName, directoryHandle };
         }
 
+        // Fichiers ajoutés un à un (sélecteur de fichier ou dépôt) : ils complètent ce qui est déjà chargé
+        async function addIndividualFiles(files) {
+            const list = Array.from(files || []);
+            if (list.length === 0) return;
+            const zone = document.getElementById('folderSelectBtn');
+            if (zone) {
+                zone.textContent = '📄 Fichiers ajoutés un à un (voir l’état ci-dessous)';
+                zone.style.color = '#333';
+            }
+            await onFolderSelected({ target: { files: list }, merge: true });
+        }
+
+        {
+            const singleFileInput = document.getElementById('singleFileInput');
+            if (singleFileInput) {
+                singleFileInput.addEventListener('change', async function () {
+                    const files = Array.from(this.files || []);
+                    this.value = ''; // permet de rechoisir le même fichier
+                    try {
+                        await addIndividualFiles(files);
+                    } catch (err) {
+                        console.error('Erreur lors de l’ajout du fichier :', err);
+                        alert('Impossible de lire le fichier choisi : ' + err.message);
+                    }
+                });
+            }
+        }
+
         {
             const dropZone = document.getElementById('folderSelectBtn');
             const dropArea = dropZone ? dropZone.closest('.upload-section') : null;
@@ -3941,14 +3975,14 @@
                             return;
                         }
                         // Un dossier remplace tout ; des fichiers individuels complètent ce qui est déjà chargé
-                        const merge = !dropped.folderName;
-                        if (dropped.directoryHandle) folderDirectoryHandle = dropped.directoryHandle;
-                        else if (!merge) folderDirectoryHandle = null;
-                        dropZone.textContent = dropped.folderName
-                            ? '📂 ' + dropped.folderName
-                            : '📄 Fichiers déposés un à un (voir l’état ci-dessous)';
-                        dropZone.style.color = '#333';
-                        await onFolderSelected({ target: { files: dropped.files }, merge });
+                        if (dropped.folderName) {
+                            folderDirectoryHandle = dropped.directoryHandle || null;
+                            dropZone.textContent = '📂 ' + dropped.folderName;
+                            dropZone.style.color = '#333';
+                            await onFolderSelected({ target: { files: dropped.files }, merge: false });
+                        } else {
+                            await addIndividualFiles(dropped.files);
+                        }
                     } catch (err) {
                         console.error('Erreur lors du dépôt de fichiers :', err);
                         alert('Impossible de lire les éléments déposés : ' + err.message);
