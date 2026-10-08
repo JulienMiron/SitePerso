@@ -522,7 +522,7 @@
                     <br><strong>Hors campus</strong> — liste examen hors campus du site du SSE (optionnel)</span></span>
             <div class="field-help">
                 Les fichiers sont reconnus par leur contenu, quel que soit leur nom.<br>
-                <strong>Liste des étudiants</strong> <span class="step-tag">obligatoire</span> — export Brio des inscrits <em>ou</em> grille de résultats Brio (.xlsx, une feuille par NRC avec Nom, Prénom et Numéro de dossier).<br>
+                <strong>Liste des étudiants</strong> <span class="step-tag">obligatoire</span> — export Brio des inscrits <em>ou</em> grille de résultats Brio (.xlsx, une feuille par NRC avec Nom, Prénom et Numéro de dossier). Les abandons (colonne « Statut d'inscription ») sont retirés automatiquement.<br>
                 <strong>Examen</strong> <span class="step-tag">obligatoire</span> — modèle PDF de l'examen (gabarit .cls de Jérôme Soucy ou Julien Miron).<br>
                 <strong>Accommodements</strong> <span class="step-tag">optionnel</span> — liste fournie par l'agente de secrétariat (NI, heures, local) ; permet d'attribuer des heures et locaux dédiés.<br>
                 <strong>Hors campus</strong> <span class="step-tag">optionnel</span> — liste des étudiants hors campus (site du SSE, colonne TypeInscription) ; ces étudiants sont exclus de l'attribution de places.
@@ -538,6 +538,7 @@
             <input type="file" id="singleFileInput" accept=".xlsx,.xlsm,.xls,.csv,.pdf" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none;">
             <div id="folderStatus" style="margin-top:10px;font-size:13px;color:var(--color-text);display:none;">
                 <div id="statusBrio" style="margin-bottom:4px;"></div>
+                <div id="statusAbandons" style="margin:-2px 0 4px 22px;color:var(--color-text-muted);display:none;"></div>
                 <div id="statusAccom" style="margin-bottom:4px;"></div>
                 <div id="statusFilter" style="margin-bottom:4px;"></div>
                 <div id="statusPdf" style="margin-bottom:4px;"></div>
@@ -810,8 +811,11 @@
                         const csvText = await csvFile.text();
                         students = parseCSV(csvText);
                     }
-                // garder une copie avant application du filtre pour produire la liste des exclus
+                // garder une copie avant application des filtres pour produire les listes des exclus et des abandons
                 const preFilterStudents = students.slice();
+
+                // Retirer les abandons : ni place, ni PDF, ni liste de présence, ni convocation
+                students = students.filter(s => !isAbandonStudent(s));
 
                 // Exclure les étudiants listés dans les fichiers de filtre
                 if (filterExcludeNISet && filterExcludeNISet.size > 0) {
@@ -1075,7 +1079,20 @@
                         console.log('generatePDFs: generating accommodation attendance PDF for', accomStudents.length, 'students');
                         const accomTimes = getTimesForStudents(accomStudents);
                         const accomAttendancePdfBytes = await generateAttendancePDF(
-                            accomStudents, 'section', 'Accommodements', evalName, courseName, accomTimes.start, accomTimes.end
+                            accomStudents, 'section', 'Accommodements', evalName, courseName, accomTimes.start, accomTimes.end,
+                            {
+                                titleLabel: '',
+                                sortMode: 'local',
+                                groupKey: student => String(student.local || ''),
+                                columns: [
+                                    { label: 'Nom', width: 160, value: 'name' },
+                                    { label: 'Matricule', width: 72, value: student => student.ni },
+                                    { label: 'Section', width: 60, value: student => sectionNumber(student.section) },
+                                    { label: 'Local', width: 85, value: student => student.local },
+                                    { label: 'Table', width: 45, value: student => student.table },
+                                    { label: 'Présence', width: 60, checkbox: true }
+                                ]
+                            }
                         );
                         zip.file('listes_presence/Presence_Accommodements.pdf', accomAttendancePdfBytes);
                     } catch (errAccomList) {
@@ -1084,17 +1101,38 @@
                     }
                 }
 
-                // Générer une liste pour les étudiants exclus (si présents)
+                // Listes des étudiants retirés de l'attribution : nom, matricule et section
+                const removedListOptions = () => ({
+                    titleLabel: '',
+                    sortMode: 'section',
+                    groupKey: student => sectionNumber(student.section),
+                    columns: [
+                        { label: 'Nom', width: 220, value: 'name' },
+                        { label: 'Matricule', width: 90, value: student => student.ni },
+                        { label: 'Section', width: 100, value: student => sectionNumber(student.section) },
+                        { label: 'Présence', width: 70, checkbox: true }
+                    ]
+                });
+
+                // Étudiants hors campus (si présents)
                 if (filterExcludeNISet && filterExcludeNISet.size > 0) {
                     const excludedStudents = preFilterStudents.filter(s => {
                         const key = (s.ni || '').toString().trim();
-                        return key && filterExcludeNISet.has(key);
+                        return key && filterExcludeNISet.has(key) && !isAbandonStudent(s);
                     });
                     if (excludedStudents.length > 0) {
                         const exclTimes = getTimesForStudents(excludedStudents);
-                        const exclPdf = await generateAttendancePDF(excludedStudents, 'section', 'Exclus', evalName, courseName, exclTimes.start, exclTimes.end);
+                        const exclPdf = await generateAttendancePDF(excludedStudents, 'section', 'Hors campus', evalName, courseName, exclTimes.start, exclTimes.end, removedListOptions());
                         zip.file('listes_presence/Presence_Exclus.pdf', exclPdf);
                     }
+                }
+
+                // Abandons (si présents)
+                const abandonStudents = preFilterStudents.filter(isAbandonStudent);
+                if (abandonStudents.length > 0) {
+                    const abandonTimes = getTimesForStudents(abandonStudents);
+                    const abandonPdf = await generateAttendancePDF(abandonStudents, 'section', 'Abandons', evalName, courseName, abandonTimes.start, abandonTimes.end, removedListOptions());
+                    zip.file('listes_presence/Presence_Abandons.pdf', abandonPdf);
                 }
 
                 progressFill.style.width = '95%';
@@ -1104,7 +1142,9 @@
                 try {
                     const recapRows = [['PrénomNom', 'NI', 'Place', 'Local', 'Section', 'ACC', 'Cours', 'Examen', 'Heure début', 'Heure fin', 'Courriel', 'Hors campus']];
                     // Inclure tous les étudiants (y compris exclus) dans le récapitulatif
-                    const allRecapStudents = (preFilterStudents && preFilterStudents.length > 0) ? preFilterStudents : orderedStudents;
+                    // Les abandons sont exclus de cette feuille (lue par envoi_courriels.py) : aucune convocation
+                    const allRecapStudents = ((preFilterStudents && preFilterStudents.length > 0) ? preFilterStudents : orderedStudents)
+                        .filter(s => !isAbandonStudent(s));
                     for (const s of allRecapStudents) {
                         const niValue = (s.ni || '').toString().trim();
                         const niKey = normalizeNI(niValue);
@@ -1143,6 +1183,16 @@
                     });
                     const recapWB = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(recapWB, recapSheet, 'Récapitulatif');
+                    const recapAbandons = (preFilterStudents || []).filter(isAbandonStudent);
+                    if (recapAbandons.length > 0) {
+                        const abandonRows = [['PrénomNom', 'NI', 'Section', 'Courriel']];
+                        for (const s of recapAbandons) {
+                            abandonRows.push([(s.name || '').trim(), (s.ni || '').trim(), sectionNumber(s.section), (s.email || '').trim()]);
+                        }
+                        const abandonSheet = XLSX.utils.aoa_to_sheet(abandonRows);
+                        abandonSheet['!cols'] = [{ wch: 32 }, { wch: 12 }, { wch: 12 }, { wch: 36 }];
+                        XLSX.utils.book_append_sheet(recapWB, abandonSheet, 'Abandons');
+                    }
                     if (brioSections.length > 0) {
                         const sectionAssignmentRows = [['Section', 'NRC', 'Locaux utilisés']];
                         for (const section of brioSections) {
@@ -1259,7 +1309,7 @@
             return h.toString()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                 .toLowerCase()
-                .replace(/[_\-\.,]/g, ' ')
+                .replace(/[_\-\.,'’‘`]/g, ' ') // apostrophes comprises : « Statut d'inscription » → « statut d inscription »
                 .replace(/\s+/g, ' ')
                 .trim();
         }
@@ -2017,6 +2067,7 @@
                 if (accomNISet && accomNISet.size > 0) {
                     for (const s of allStudents) {
                         const key = (s.ni || '').toString().trim();
+                        if (isAbandonStudent(s)) continue; // abandon : aucune place
                         if (isAccommodementStudent(s)) {
                             const times = (accomTimeMap && accomTimeMap.has(normalizeNI(key))) ? accomTimeMap.get(normalizeNI(key)) : {};
                             accomList.push({ ...s, local: '', place: '', accomStart: times.start || '', accomEnd: times.end || '' });
@@ -2030,6 +2081,7 @@
                 } else {
                     for (const s of allStudents) {
                         const key = (s.ni || '').toString().trim();
+                        if (isAbandonStudent(s)) continue; // abandon : aucune place
                         if (filterExcludeNISet && filterExcludeNISet.size > 0 && key && filterExcludeNISet.has(key)) {
                             continue;
                         }
@@ -2336,6 +2388,18 @@
             return accomFileNISet.has(ni);
         }
 
+        // Étudiant ayant abandonné le cours (colonne « Statut d'inscription » de la liste des étudiants)
+        function isAbandonStudent(student) {
+            return Boolean(student) && student.status === 'Abandon';
+        }
+
+        // Numéro de section (NRC à 5 chiffres) tiré du nom de la feuille, sinon le nom de la feuille
+        function sectionNumber(section) {
+            const text = String(section || '').trim();
+            const match = text.match(/(?<!\d)\d{5}(?!\d)/);
+            return match ? match[0] : text;
+        }
+
         function getAccomManualRoom(student) {
             const ni = normalizeNI(student.ni);
             const room = ni ? accomManualRooms.get(ni) : '';
@@ -2344,12 +2408,22 @@
 
         async function refreshBrioStudentCache() {
             brioStudentsCache = [];
+            let abandons = [];
             if (folderBrioFile && folderBrioFile.name.toLowerCase().endsWith('.xlsx')) {
                 try {
-                    brioStudentsCache = await readXlsxRegistrationStudents(folderBrioFile);
+                    const all = await readXlsxRegistrationStudents(folderBrioFile);
+                    abandons = all.filter(isAbandonStudent);
+                    brioStudentsCache = all.filter(student => !isAbandonStudent(student));
                 } catch (err) {
                     console.error('Lecture des étudiants BRIO pour le placement manuel :', err);
                 }
+            }
+            const abandonStatus = document.getElementById('statusAbandons');
+            if (abandonStatus) {
+                abandonStatus.textContent = abandons.length > 0
+                    ? `ℹ️ ${abandons.length} abandon(s) dans la liste des étudiants : retiré(s) de l’attribution des places et listé(s) dans Presence_Abandons.pdf.`
+                    : '';
+                abandonStatus.style.display = abandons.length > 0 ? 'block' : 'none';
             }
             renderGroupRoomTable();
             renderAccomManualPlacement();
@@ -3656,7 +3730,9 @@
                     // legacy: removed listOption select; no-op
         }
 
-        async function generateAttendancePDF(studentsGroup, groupBy, groupValue, evalName, courseName, startTime, endTime) {
+        // options (facultatif) : columns [{ label, width, value: 'name' | fonction, checkbox }],
+        // sortMode ('local' : local puis table ; 'section' : section puis nom), groupKey (trait épais entre groupes), titleLabel
+        async function generateAttendancePDF(studentsGroup, groupBy, groupValue, evalName, courseName, startTime, endTime, options = {}) {
             const pdfDoc = await PDFDocument.create();
             const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
             const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -3677,13 +3753,33 @@
                 return `${inferredLast}, ${inferredFirst}`;
             }
 
-            // Trier : par numéro de table (croissant) si par local, alphabétique si par section
-            const sorted = [...studentsGroup].sort((a, b) => {
-                if (groupBy === 'local') {
-                    return parseInt(a.table, 10) - parseInt(b.table, 10);
-                }
-                return getAttendanceDisplayName(a).localeCompare(getAttendanceDisplayName(b), 'fr', { sensitivity: 'base' });
-            });
+            const byName = (a, b) => getAttendanceDisplayName(a).localeCompare(getAttendanceDisplayName(b), 'fr', { sensitivity: 'base' });
+            const byTable = (a, b) => {
+                const ta = parseInt(a.table, 10), tb = parseInt(b.table, 10);
+                if (Number.isNaN(ta) && Number.isNaN(tb)) return 0;
+                if (Number.isNaN(ta)) return 1;
+                if (Number.isNaN(tb)) return -1;
+                return ta - tb;
+            };
+            const byText = (va, vb) => {
+                if (!va && vb) return 1; // valeurs vides à la fin
+                if (va && !vb) return -1;
+                return String(va).localeCompare(String(vb), 'fr', { sensitivity: 'base', numeric: true });
+            };
+            let compare;
+            if (options.sortMode === 'local') {
+                // regroupés par local, puis par numéro de table
+                compare = (a, b) => byText(a.local, b.local) || byTable(a, b) || byName(a, b);
+            } else if (options.sortMode === 'section') {
+                compare = (a, b) => byText(sectionNumber(a.section), sectionNumber(b.section)) || byName(a, b);
+            } else if (groupBy === 'local') {
+                // Trier : par numéro de table (croissant) si par local
+                compare = (a, b) => parseInt(a.table, 10) - parseInt(b.table, 10);
+            } else {
+                // alphabétique si par section
+                compare = byName;
+            }
+            const sorted = [...studentsGroup].sort(compare);
 
             // Configuration du tableau
             const pageWidth = 612; // Lettre portrait
@@ -3694,23 +3790,23 @@
             const rowSize = 10;
             const rowHeight = 22;
             const headerHeight = 25;
-            const colWidths = [190, 75, 55, 75, 65]; // Nom, Matricule, Table, Section/Local, Présence
+            // Colonnes : celles fournies, sinon selon le mode (par local : Section ; par section : Local)
+            const fourthColLabel = groupBy === 'local' ? 'section' : 'local';
+            const columns = options.columns || [
+                { label: 'Nom', width: 190, value: 'name' },
+                { label: 'Matricule', width: 75, value: student => student.ni },
+                { label: 'Table', width: 55, value: student => student.table },
+                { label: groupBy === 'local' ? 'Section' : 'Local', width: 75, value: student => student[fourthColLabel] },
+                { label: 'Présence', width: 65, checkbox: true }
+            ];
+            const colWidths = columns.map(column => column.width);
+            const headers = columns.map(column => column.label);
             const tableTop = pageHeight - margin - 45;
 
-            // En-têtes selon le mode
-            let headers, fourthColLabel;
-            if (groupBy === 'local') {
-                headers = ['Nom', 'Matricule', 'Table', 'Section', 'Présence'];
-                fourthColLabel = 'section';
-            } else {
-                headers = ['Nom', 'Matricule', 'Table', 'Local', 'Présence'];
-                fourthColLabel = 'local';
-            }
-
             // Titre
-            const titleLabel = groupBy === 'local' ? 'Local' : 'Section';
+            const titleLabel = options.titleLabel !== undefined ? options.titleLabel : (groupBy === 'local' ? 'Local' : 'Section');
             const timeStr = (startTime && endTime) ? ` (${startTime} - ${endTime})` : (startTime ? ` (début: ${startTime})` : (endTime ? ` (fin: ${endTime})` : ''));
-            const title = `Feuille de présence - ${evalName} - ${courseName}${timeStr} - ${titleLabel} ${groupValue}`;
+            const title = `Feuille de présence - ${evalName} - ${courseName}${timeStr} - ${titleLabel ? titleLabel + ' ' : ''}${groupValue}`;
 
             // Nombre d'étudiants par page
             const rowsPerPage = Math.floor((tableTop - margin - headerHeight) / rowHeight);
@@ -3779,21 +3875,30 @@
                         });
                     }
 
+                    // Trait épais entre deux groupes (ex. deux locaux) sur la même page
+                    if (options.groupKey && r > 0 && options.groupKey(student) !== options.groupKey(sorted[studentIndex - 1])) {
+                        page.drawLine({
+                            start: { x: tableX, y: rowY + 5 },
+                            end: { x: tableX + totalTableWidth, y: rowY + 5 },
+                            thickness: 1.5,
+                            color: pdfColor('--pdf-table-border'),
+                        });
+                    }
+
                     // Données
-                    const rowData = [
-                        getAttendanceDisplayName(student),
-                        String(student.ni || ''),
-                        String(student.table || ''),
-                        String(student[fourthColLabel] || ''),
-                        '' // case vide pour présence
-                    ];
+                    const rowData = columns.map(column => {
+                        if (column.checkbox) return ''; // case vide pour présence
+                        if (column.value === 'name') return getAttendanceDisplayName(student);
+                        const value = column.value(student);
+                        return value === undefined || value === null ? '' : String(value);
+                    });
 
                     colX = tableX;
                     for (let c = 0; c < rowData.length; c++) {
-                        if (c === 4) {
-                            // Case à cocher vide (petit carré)
+                        if (columns[c].checkbox) {
+                            // Case à cocher vide (petit carré), centrée dans la colonne
                             page.drawRectangle({
-                                x: colX + 25,
+                                x: colX + (colWidths[c] - 14) / 2,
                                 y: rowY - 12,
                                 width: 14,
                                 height: 14,
