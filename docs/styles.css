@@ -58,6 +58,8 @@
   --sage-pale: #f7fbf5;          /* fond du panneau de clôture (.closing-panel), de la navigation de rétroaction (.feedback-nav) et de l'en-tête du tableau de rétroaction (.feedback-table thead) */
   --sage-line: #dce7dc;          /* contour des puces de vérification (.mini-product-checks span) et du panneau de clôture (.closing-panel) */
   --sage-ink: #31784a;           /* icônes de vérification de la maquette (.mini-product-checks i) */
+  --sage-border: #b8cdb3;        /* bande gauche des citations de la demande de rétroaction (.feedback-request blockquote) */
+  --sage-focus: #496b3e;         /* contour de focus des liens de la navigation de rétroaction et du résumé de la demande (.feedback-nav a, .feedback-request summary) */
 
   /* Maquette de produit */
   --product-visual-bg: #f8fafb;  /* fond de base de l'illustration produit (.product-visual), sous les halos jaune et sarcelle */
@@ -2643,12 +2645,6 @@ blockquote { border-left: 4px solid var(--ulaval-yellow); padding-left: 1rem; co
    Palette alignée sur STT-4300 : les anciennes variables
    --brand-red/--brand-gold sont remplacées par --purple.
    ============================================================ */
-
-/* Couleurs propres à SitePerso */
-:root {
-  --sage-border: #b8cdb3;  /* bande gauche des citations de la demande de rétroaction (.feedback-request blockquote) */
-  --sage-focus: #496b3e;   /* contour de focus des liens de la navigation de rétroaction et du résumé de la demande (.feedback-nav a, .feedback-request summary) */
-}
 
 #title-block-header .subtitle {
   border-left: 3px solid var(--purple);
