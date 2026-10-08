@@ -228,7 +228,7 @@
             border-left-color: #dc3545;
         }
 
-        select, input[type="text"] {
+        select, input[type="text"], textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #9467bd;
@@ -240,12 +240,12 @@
             appearance: auto;
         }
 
-        select:hover, input[type="text"]:hover {
+        select:hover, input[type="text"]:hover, textarea:hover {
             border-color: #735093;
             background: #ece2f4;
         }
 
-        select:focus, input[type="text"]:focus {
+        select:focus, input[type="text"]:focus, textarea:focus {
             outline: none;
             border-color: #735093;
             box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.2);
@@ -592,6 +592,12 @@
             <div class="step-header"><span class="step-badge">3</span><span class="step-title">Locaux et répartition des étudiants</span></div>
             <div class="step-desc">Sélectionnez les locaux disponibles et la façon de répartir les étudiants entre eux. Les étudiants en accommodement sont toujours placés dans les locaux d'accommodement dédiés ci-dessous (ou dans le local choisi manuellement pour chacun), indépendamment de ce mode.</div>
         <div id="roomsUI" style="margin-bottom:16px;">
+            <div style="margin-bottom:18px;">
+                <label for="brioScheduleText">📋 Déroulement de l'examen (copié de Brio)</label>
+                <div class="field-help">Dans Brio, section <strong>Évaluations</strong>, copiez tout le texte de la colonne <strong>Déroulement de l'examen</strong> (groupes, dates et lieux) et collez-le ici. Les locaux de chaque NRC et les heures sont repérés automatiquement : les locaux sont cochés ci-dessous (saisissez la capacité des locaux inconnus), les heures sont remplies à l'étape 1 et, une fois <code>BRIO.xlsx</code> chargé, chaque section est associée à ses locaux en mode « Par section ».</div>
+                <textarea id="brioScheduleText" rows="5" placeholder="Groupe : 88927&#10;Le 22 oct. de 18 h 30 à 21 h 20&#10;Lieu : VCH-3880&#10;Groupe : 88928&#10;…" style="resize:vertical;font-family:inherit;line-height:1.4;" spellcheck="false"></textarea>
+                <div id="brioScheduleResult" style="margin-top:8px;font-size:13px;"></div>
+            </div>
             <label>🏷️ Choisir les locaux à utiliser</label>
                         <div style="margin-top:10px;">
                 <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block;">Mode de répartition : <span class="info-icon" id="repartitionInfoIcon" title="Informations">i
@@ -1550,14 +1556,19 @@
                     checkbox.checked = previous.includes(room.name);
                     if (checkbox.checked) selectedNames.push(room.name);
                     checkbox.addEventListener('change', () => {
+                        const visibleNames = selectedRooms.map(r => r.name);
+                        const hidden = getSectionRooms(section).filter(name => !visibleNames.includes(name));
                         sectionRoomAssignments[section] = Array.from(choices.querySelectorAll('input[type="checkbox"]'))
                             .filter(input => input.checked)
-                            .map(input => input.dataset.room);
+                            .map(input => input.dataset.room)
+                            .concat(hidden);
                     });
                     choiceLabel.append(checkbox, document.createTextNode(`${room.name} (${room.capacity} places)`));
                     choices.appendChild(choiceLabel);
                 }
-                sectionRoomAssignments[section] = selectedNames;
+                // Conserver aussi les locaux attribués mais pas encore sélectionnables (ex. capacité à saisir)
+                const visibleNames = selectedRooms.map(r => r.name);
+                sectionRoomAssignments[section] = selectedNames.concat(previous.filter(name => !visibleNames.includes(name)));
 
                 row.append(sectionLabel, assignmentLabel, choices);
                 container.appendChild(row);
@@ -1572,6 +1583,10 @@
                 brioSections = workbook.SheetNames.slice();
             }
             renderSectionRoomAssignments();
+            if (brioSchedule.length > 0) {
+                applyBrioScheduleToSections();
+                renderBrioScheduleSummary();
+            }
             refreshAccommodementData();
         }
 
@@ -1587,6 +1602,210 @@
             });
         }
         updateDistributionModeUI();
+
+        // ===== Déroulement de l'examen collé depuis Brio (NRC, heures, locaux) =====
+        let brioSchedule = []; // [{ nrc, date, start, end, rooms: [] }]
+        let brioScheduleNotes = []; // avertissements (capacités manquantes, etc.)
+
+        function parseBrioSchedule(text) {
+            const groups = [];
+            const pad = value => String(value).padStart(2, '0');
+            const blocks = String(text || '').split(/(?=Groupe\s*:\s*\d)/i);
+            for (const block of blocks) {
+                const nrcMatch = block.match(/Groupe\s*:\s*(\d{3,6})/i);
+                if (!nrcMatch) continue;
+                const nrc = nrcMatch[1];
+                let group = groups.find(g => g.nrc === nrc);
+                if (!group) {
+                    group = { nrc, date: '', start: '', end: '', rooms: [] };
+                    groups.push(group);
+                }
+                const lieuRe = /Lieu\s*:\s*([^\n]*)/gi;
+                let lieu;
+                while ((lieu = lieuRe.exec(block)) !== null) {
+                    for (const code of lieu[1].toUpperCase().match(/[A-Z]{2,4}-\d{3,5}[A-Z]?/g) || []) {
+                        if (!group.rooms.includes(code)) group.rooms.push(code);
+                    }
+                }
+                const timeMatch = block.match(/de\s+(\d{1,2})\s*h\s*(\d{2})?\s*(?:à|a|-|–)\s*(\d{1,2})\s*h\s*(\d{2})?/i);
+                if (timeMatch && !group.start) {
+                    group.start = `${pad(timeMatch[1])}:${pad(timeMatch[2] || '00')}`;
+                    group.end = `${pad(timeMatch[3])}:${pad(timeMatch[4] || '00')}`;
+                }
+                const dateMatch = block.match(/\b[Ll]e\s+(\d{1,2}(?:er)?\s+[A-Za-zéèûôî]+\.?)(?:\s+\d{4})?/);
+                if (dateMatch && !group.date) group.date = dateMatch[1];
+            }
+            return groups;
+        }
+
+        // Coche exactement les locaux donnés dans la liste des locaux réguliers (ajoute les inconnus
+        // dans « Salles supplémentaires »). Retourne les locaux dont la capacité reste à saisir.
+        function selectRegularRooms(names) {
+            const rows = Array.from(document.querySelectorAll('#roomList .roomRow'));
+            const wanted = new Set(names);
+            const found = new Set();
+            const missingCapacity = [];
+            const hasCapacity = row => parseInt(row.querySelector('.roomCapacity').value, 10) > 0;
+            const flagCapacity = row => { row.querySelector('.roomCapacity').style.borderColor = '#c62828'; };
+            for (const row of rows) {
+                const checkbox = row.querySelector('.roomCheckbox');
+                const nameInput = row.querySelector('.customRoomName');
+                const name = nameInput ? nameInput.value.trim().toUpperCase() : (checkbox.dataset.name || '');
+                if (name && wanted.has(name)) {
+                    checkbox.checked = true;
+                    found.add(name);
+                    if (!hasCapacity(row)) { missingCapacity.push(name); flagCapacity(row); }
+                } else {
+                    checkbox.checked = false;
+                }
+            }
+            for (const name of names) {
+                if (found.has(name)) continue;
+                const emptyRow = rows.find(row => {
+                    const nameInput = row.querySelector('.customRoomName');
+                    return nameInput && !nameInput.value.trim();
+                });
+                if (!emptyRow) {
+                    missingCapacity.push(`${name} (aucune ligne libre dans « Salles supplémentaires »)`);
+                    continue;
+                }
+                emptyRow.querySelector('.customRoomName').value = name;
+                const checkbox = emptyRow.querySelector('.roomCheckbox');
+                checkbox.checked = true;
+                checkbox.dataset.name = name;
+                found.add(name);
+                if (!hasCapacity(emptyRow)) { missingCapacity.push(name); flagCapacity(emptyRow); }
+            }
+            return missingCapacity;
+        }
+
+        // Associe chaque section de BRIO.xlsx (nom contenant le NRC) aux locaux de son groupe.
+        function applyBrioScheduleToSections() {
+            const matches = new Map(); // nrc -> section
+            if (brioSchedule.length === 0 || brioSections.length === 0) return matches;
+            for (const section of brioSections) {
+                const group = brioSchedule.find(g => String(section).includes(g.nrc));
+                if (!group) continue;
+                matches.set(group.nrc, section);
+                sectionRoomAssignments[section] = group.rooms.slice();
+            }
+            if (matches.size > 0) {
+                const radio = document.querySelector('input[name="distMode"][value="section"]');
+                if (radio) { radio.checked = true; updateDistributionModeUI(); }
+                renderSectionRoomAssignments();
+            }
+            return matches;
+        }
+
+        function renderBrioScheduleSummary() {
+            const result = document.getElementById('brioScheduleResult');
+            if (!result) return;
+            result.replaceChildren();
+            if (brioSchedule.length === 0) return;
+            const sectionByNrc = new Map();
+            for (const section of brioSections) {
+                const group = brioSchedule.find(g => String(section).includes(g.nrc));
+                if (group && !sectionByNrc.has(group.nrc)) sectionByNrc.set(group.nrc, section);
+            }
+
+            const table = document.createElement('table');
+            table.style.cssText = 'width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;';
+            const header = document.createElement('tr');
+            for (const title of ['NRC', 'Date', 'Heures', 'Locaux', 'Section BRIO']) {
+                const cell = document.createElement('th');
+                cell.textContent = title;
+                cell.style.cssText = 'padding:6px 8px;text-align:left;background:#ece4f4;border-bottom:1px solid #d9c9e8;';
+                header.appendChild(cell);
+            }
+            table.appendChild(header);
+            for (const group of brioSchedule) {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #e4dced';
+                const section = sectionByNrc.get(group.nrc);
+                const sectionText = brioSections.length === 0
+                    ? '(chargez BRIO.xlsx)'
+                    : (section || 'aucune section ne contient ce NRC');
+                const cells = [
+                    group.nrc,
+                    group.date || '—',
+                    group.start ? `${group.start} – ${group.end}` : '—',
+                    group.rooms.length > 0 ? group.rooms.join(', ') : 'aucun local repéré',
+                    sectionText
+                ];
+                for (const [index, text] of cells.entries()) {
+                    const cell = document.createElement('td');
+                    cell.textContent = text;
+                    cell.style.padding = '6px 8px';
+                    if ((index === 3 && group.rooms.length === 0) || (index === 4 && brioSections.length > 0 && !section)) cell.style.color = '#b26a00';
+                    tr.appendChild(cell);
+                }
+                table.appendChild(tr);
+            }
+            result.appendChild(table);
+
+            for (const note of brioScheduleNotes) {
+                const line = document.createElement('div');
+                line.textContent = note;
+                line.style.cssText = 'margin-top:6px;color:#b26a00;';
+                result.appendChild(line);
+            }
+        }
+
+        function applyBrioSchedule() {
+            const textarea = document.getElementById('brioScheduleText');
+            const result = document.getElementById('brioScheduleResult');
+            if (!textarea || !result) return;
+            const text = textarea.value;
+            brioSchedule = parseBrioSchedule(text);
+            brioScheduleNotes = [];
+            if (!text.trim()) { result.replaceChildren(); return; }
+            if (brioSchedule.length === 0) {
+                result.textContent = 'Aucun groupe (« Groupe : NRC ») repéré dans le texte collé. Vérifiez que vous avez copié toute la colonne « Déroulement de l’examen ».';
+                result.style.color = '#b26a00';
+                return;
+            }
+            result.style.color = '';
+
+            // 1) Locaux
+            const allRooms = [];
+            for (const group of brioSchedule) for (const room of group.rooms) if (!allRooms.includes(room)) allRooms.push(room);
+            const missingCapacity = selectRegularRooms(allRooms);
+            if (missingCapacity.length > 0) {
+                brioScheduleNotes.push(`⚠️ Capacité à saisir pour : ${missingCapacity.join(', ')}.`);
+            }
+
+            // 2) Heures (étape 1), seulement si tous les groupes ont les mêmes
+            const starts = new Set(brioSchedule.map(g => g.start).filter(Boolean));
+            const ends = new Set(brioSchedule.map(g => g.end).filter(Boolean));
+            const startInput = document.getElementById('startTime');
+            const endInput = document.getElementById('endTime');
+            if (starts.size === 1 && ends.size === 1) {
+                if (startInput) startInput.value = [...starts][0];
+                if (endInput) endInput.value = [...ends][0];
+            } else if (starts.size > 1 || ends.size > 1) {
+                brioScheduleNotes.push('⚠️ Les groupes n’ont pas tous les mêmes heures : les heures de l’étape 1 n’ont pas été modifiées.');
+            }
+
+            // 3) Sections (si BRIO.xlsx est chargé)
+            renderSectionRoomAssignments();
+            const matches = applyBrioScheduleToSections();
+            if (brioSections.length > 0 && matches.size === 0) {
+                brioScheduleNotes.push('⚠️ Aucune feuille de BRIO.xlsx ne contient un de ces NRC : les sections n’ont pas été associées automatiquement.');
+            }
+
+            renderBrioScheduleSummary();
+        }
+
+        {
+            const scheduleTextarea = document.getElementById('brioScheduleText');
+            if (scheduleTextarea) scheduleTextarea.addEventListener('input', applyBrioSchedule);
+            const roomListForCapacity = document.getElementById('roomList');
+            if (roomListForCapacity) {
+                roomListForCapacity.addEventListener('input', event => {
+                    if (event.target.matches('.roomCapacity')) event.target.style.borderColor = '';
+                });
+            }
+        }
 
         function getSeatNumberStart() {
             const input = document.getElementById('numberingStart');
