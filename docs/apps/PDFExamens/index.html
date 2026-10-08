@@ -502,20 +502,6 @@
                 <input type="text" id="courseName" placeholder="Ex: STT-1900">
                 <div class="field-help">Le sigle du cours tel qu'il doit apparaître sur les documents (ex. STT-1900).</div>
             </div>
-            <div class="upload-section">
-                <label>🕐 Heures de l'examen (optionnel)</label>
-                <div class="field-help">Utilisées dans le récapitulatif et pour les courriels de convocation. Les étudiants en accommodement conserveront automatiquement leurs propres heures si celles-ci sont fournies dans <code>accommodements.xlsx</code>.</div>
-                <div style="display:flex;gap:16px;align-items:center;">
-                    <div style="flex:1;">
-                        <label for="startTime" style="font-size:13px;">Début</label>
-                        <input type="time" id="startTime" style="width:100%;padding:12px;border:2px solid #9467bd;border-radius:10px;background:#f5f1fa;font-size:14px;color:#333;">
-                    </div>
-                    <div style="flex:1;">
-                        <label for="endTime" style="font-size:13px;">Fin</label>
-                        <input type="time" id="endTime" style="width:100%;padding:12px;border:2px solid #9467bd;border-radius:10px;background:#f5f1fa;font-size:14px;color:#333;">
-                    </div>
-                </div>
-            </div>
         </div>
         <div class="step-card">
             <div class="step-header"><span class="step-badge">2</span><span class="step-title">Fichiers de l'examen</span></div>
@@ -614,7 +600,7 @@
 
         <div class="step-card">
             <div class="step-header"><span class="step-badge">3</span><span class="step-title">Locaux et répartition des étudiants</span></div>
-            <div class="step-desc">Collez le déroulement de l'examen tel qu'affiché dans Brio : les locaux, les heures et les NRC sont repérés automatiquement. Si un NRC a plusieurs locaux, ils sont remplis du plus grand au plus petit. Les étudiants en accommodement sont placés dans les salles d'accommodement plus bas.</div>
+            <div class="step-desc">Collez le déroulement de l'examen tel qu'affiché dans Brio : les locaux, les heures et les NRC sont repérés automatiquement. Les heures de chaque NRC sont reprises dans le récapitulatif et les listes de présence (les étudiants en accommodement gardent celles de <code>accommodements.xlsx</code>). Si un NRC a plusieurs locaux, ils sont remplis du plus grand au plus petit. Les étudiants en accommodement sont placés dans les salles d'accommodement plus bas.</div>
         <div class="upload-section" id="roomsUI">
             <label for="brioScheduleText">🏷️ Salles du groupe régulier</label>
             <textarea id="brioScheduleText" rows="6" placeholder="Groupe : 88927&#10;Le 22 oct. de 18 h 30 à 21 h 20&#10;Lieu : VCH-3880&#10;Groupe : 88928&#10;…" style="resize:vertical;font-family:inherit;line-height:1.4;" spellcheck="false"></textarea>
@@ -743,8 +729,6 @@
             const pdfFile = folderPdfFile;
             const evalName = document.getElementById('evalName').value.trim();
             const courseName = document.getElementById('courseName').value.trim();
-            const startTime = document.getElementById('startTime').value.trim();
-            const endTime = document.getElementById('endTime').value.trim();
 
             if (!csvFile || !pdfFile) {
                 alert('⚠️ Veuillez sélectionner un dossier contenant BRIO.xlsx et examen.pdf');
@@ -1027,8 +1011,9 @@
                 for (const [idx, groupValue] of groupKeys.entries()) {
                     try {
                         console.log(`generatePDFs: generating attendance PDF ${idx+1}/${groupKeys.length} for ${groupValue}`);
+                        const groupTimes = getTimesForStudents(groups[groupValue]);
                         const attendancePdfBytes = await generateAttendancePDF(
-                            groups[groupValue], groupBy, groupValue, evalName, courseName, startTime, endTime
+                            groups[groupValue], groupBy, groupValue, evalName, courseName, groupTimes.start, groupTimes.end
                         );
                         const label = groupBy === 'local' ? 'Local' : 'Section';
                         const fileName = `listes_presence/Presence_${label}_${sanitizeFileName(groupValue)}.pdf`;
@@ -1042,8 +1027,9 @@
                 if (accomStudents.length > 0) {
                     try {
                         console.log('generatePDFs: generating accommodation attendance PDF for', accomStudents.length, 'students');
+                        const accomTimes = getTimesForStudents(accomStudents);
                         const accomAttendancePdfBytes = await generateAttendancePDF(
-                            accomStudents, 'section', 'Accommodements', evalName, courseName, startTime, endTime
+                            accomStudents, 'section', 'Accommodements', evalName, courseName, accomTimes.start, accomTimes.end
                         );
                         zip.file('listes_presence/Presence_Accommodements.pdf', accomAttendancePdfBytes);
                     } catch (errAccomList) {
@@ -1059,7 +1045,8 @@
                         return key && filterExcludeNISet.has(key);
                     });
                     if (excludedStudents.length > 0) {
-                        const exclPdf = await generateAttendancePDF(excludedStudents, 'section', 'Exclus', evalName, courseName, startTime, endTime);
+                        const exclTimes = getTimesForStudents(excludedStudents);
+                        const exclPdf = await generateAttendancePDF(excludedStudents, 'section', 'Exclus', evalName, courseName, exclTimes.start, exclTimes.end);
                         zip.file('listes_presence/Presence_Exclus.pdf', exclPdf);
                     }
                 }
@@ -1077,9 +1064,10 @@
                         const niKey = normalizeNI(niValue);
                         const isAccom = isAccommodementStudent(s);
                         const isExcluded = (filterExcludeNISet && filterExcludeNISet.size > 0 && niValue && filterExcludeNISet.has(niValue));
-                        // Pour les ACC, utiliser les heures du fichier d'accommodements ; sinon les heures globales
-                        let sStart = startTime || '';
-                        let sEnd = endTime || '';
+                        // Heures du NRC de l'étudiant (texte de Brio) ; pour les ACC, celles du fichier d'accommodements si fournies
+                        const sectionTimes = getScheduleTimesForSection(s.section);
+                        let sStart = sectionTimes.start || '';
+                        let sEnd = sectionTimes.end || '';
                         if (isAccom && accomTimeMap && accomTimeMap.has(niKey)) {
                             const at = accomTimeMap.get(niKey);
                             if (at.start) sStart = at.start;
@@ -1292,6 +1280,7 @@
         let groupRoomAssignments = Object.create(null); // clé de groupe (NRC, sinon nom de section) -> [locaux]
         let brioSchedule = [];          // [{ nrc, date, start, end, rooms: [] }] issu du texte de Brio
         let brioScheduleNotes = [];
+        let brioScheduleInfo = '';      // heures détectées, affichées sous la zone de collage
         let lastScheduleRoomsByNrc = new Map(); // pour ne pas écraser les coches modifiées à la main
         let lastGroupRoomUsage = new Map();     // clé de groupe -> locaux réellement utilisés (récapitulatif)
 
@@ -1388,6 +1377,12 @@
             const container = document.getElementById('brioScheduleNotes');
             if (!container) return;
             container.replaceChildren();
+            if (brioScheduleInfo) {
+                const info = document.createElement('div');
+                info.textContent = brioScheduleInfo;
+                info.style.color = '#333';
+                container.appendChild(info);
+            }
             for (const note of brioScheduleNotes) {
                 const line = document.createElement('div');
                 line.textContent = note;
@@ -1649,6 +1644,33 @@
             return groups;
         }
 
+        // Heures communes à tous les NRC (vides si elles diffèrent ou sont absentes)
+        function getCommonScheduleTimes() {
+            const starts = new Set(brioSchedule.map(g => g.start).filter(Boolean));
+            const ends = new Set(brioSchedule.map(g => g.end).filter(Boolean));
+            return { start: starts.size === 1 ? [...starts][0] : '', end: ends.size === 1 ? [...ends][0] : '' };
+        }
+
+        // Heures du NRC d'une section BRIO, sinon les heures communes
+        function getScheduleTimesForSection(section) {
+            const key = groupKeyForSection(section);
+            const group = brioSchedule.find(g => g.nrc === key);
+            if (group && group.start) return { start: group.start, end: group.end };
+            return getCommonScheduleTimes();
+        }
+
+        // Heures d'un ensemble d'étudiants (ex. une liste de présence) : seulement si elles sont uniformes
+        function getTimesForStudents(students) {
+            const starts = new Set();
+            const ends = new Set();
+            for (const student of students) {
+                const times = getScheduleTimesForSection(student.section);
+                if (times.start) starts.add(times.start);
+                if (times.end) ends.add(times.end);
+            }
+            return { start: starts.size === 1 ? [...starts][0] : '', end: ends.size === 1 ? [...ends][0] : '' };
+        }
+
         function applyBrioSchedule() {
             const textarea = document.getElementById('brioScheduleText');
             if (!textarea) return;
@@ -1683,16 +1705,19 @@
                 if (group.rooms.length === 0) brioScheduleNotes.push(`⚠️ Aucun local repéré pour le NRC ${group.nrc}.`);
             }
 
-            // Heures de l'étape 1, seulement si tous les groupes ont les mêmes
-            const starts = new Set(brioSchedule.map(g => g.start).filter(Boolean));
-            const ends = new Set(brioSchedule.map(g => g.end).filter(Boolean));
-            const startInput = document.getElementById('startTime');
-            const endInput = document.getElementById('endTime');
-            if (starts.size === 1 && ends.size === 1) {
-                if (startInput) startInput.value = [...starts][0];
-                if (endInput) endInput.value = [...ends][0];
-            } else if (starts.size > 1 || ends.size > 1) {
-                brioScheduleNotes.push('⚠️ Les groupes n’ont pas tous les mêmes heures : les heures de l’étape 1 n’ont pas été modifiées.');
+            // Heures détectées
+            brioScheduleInfo = '';
+            if (brioSchedule.length > 0) {
+                const withTimes = brioSchedule.filter(g => g.start);
+                const common = getCommonScheduleTimes();
+                if (withTimes.length === 0) {
+                    brioScheduleNotes.push('⚠️ Aucune heure repérée dans le texte collé : le récapitulatif et les listes de présence seront sans heures.');
+                } else if (common.start && common.end && withTimes.length === brioSchedule.length) {
+                    brioScheduleInfo = `🕐 Heures détectées : ${common.start} – ${common.end}` + (brioSchedule[0].date ? ` (${brioSchedule[0].date})` : '');
+                } else {
+                    brioScheduleInfo = '🕐 Heures détectées : ' + brioSchedule.map(g => `${g.nrc} ${g.start ? `${g.start} – ${g.end}` : 'aucune'}`).join(' ; ');
+                    brioScheduleNotes.push('ℹ️ Les NRC n’ont pas tous les mêmes heures : chaque étudiant garde celles de son NRC dans le récapitulatif et les listes de présence.');
+                }
             }
 
             if (brioSections.length > 0 && brioSchedule.length > 0
@@ -1889,8 +1914,6 @@
             const pdfFile = folderPdfFile;
             const evalName = document.getElementById('evalName').value.trim();
             const courseName = document.getElementById('courseName').value.trim();
-            const startTime = document.getElementById('startTime').value.trim();
-            const endTime = document.getElementById('endTime').value.trim();
             const generateBtn = document.getElementById('generateBtn');
             const progressDiv = document.getElementById('progress');
             const progressFill = document.getElementById('progressFill');
