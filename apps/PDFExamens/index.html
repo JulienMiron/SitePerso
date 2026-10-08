@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
 
         :root {
@@ -461,7 +460,7 @@
                 <p>Tout se passe dans votre navigateur : aucun fichier n'est envoyé sur un serveur. Suivez les étapes ci-dessous dans l'ordre :</p>
                 <ol>
                     <li><strong>Étape 1 — Informations générales :</strong> le nom de l'évaluation et le cours, imprimés sur chaque PDF.</li>
-                    <li><strong>Étape 2 — Fichiers de l'examen :</strong> sélectionnez le dossier contenant <code>BRIO.xlsx</code> et <code>examen.pdf</code> (obligatoires), et au besoin <code>accommodements.xlsx</code>, <code>horscampus.xlsx</code> ou des captures d'écran d'accommodements.</li>
+                    <li><strong>Étape 2 — Fichiers de l'examen :</strong> sélectionnez le dossier contenant <code>BRIO.xlsx</code> et <code>examen.pdf</code> (obligatoires), et au besoin <code>accommodements.xlsx</code> ou <code>horscampus.xlsx</code>.</li>
                     <li><strong>Étape 3 — Locaux et répartition :</strong> choisissez les locaux réguliers et, si nécessaire, les locaux d'accommodement, puis le mode de répartition des étudiants. En mode « Par section », chaque section peut être répartie dans plusieurs locaux, et certains étudiants en accommodement peuvent être placés manuellement dans un local précis.</li>
                     <li><strong>Étape 4 — Options d'impression :</strong> format des listes de présence, pourcentage de copies vierges, numérotation.</li>
                     <li><strong>Étape 5 — Génération :</strong> cliquez sur « Générer et Télécharger le ZIP ». Il contiendra les PDFs, les listes de présence et <code>Recapitulatif_etudiants.xlsx</code>.</li>
@@ -524,19 +523,6 @@
                 <div id="statusPdf" style="margin-bottom:4px;"></div>
             </div>
             <div id="detectionResult" style="margin-top:10px;font-size:13px;color:#333"></div>
-        </div>
-
-        <div class="upload-section">
-            <label>🖼️ Captures des accommodements (optionnel, une par section)</label>
-            <div class="field-help">Alternative (ou complément) à <code>accommodements.xlsx</code> : si vous n'avez qu'une capture d'écran du système d'accommodements pour chaque section, ajoutez-la ici. L'outil y reconnaît automatiquement le texte (OCR, dans votre navigateur) pour présélectionner les étudiants ayant une activation aux examens supérieure à 0.</div>
-            <div style="font-size:12px;color:#666;margin-bottom:8px;">Ajoutez une capture pour chaque section et indiquez sa section BRIO. Les NI des étudiants ayant une activation aux examens supérieure à 0 seront présélectionnés. <strong>Vérifiez et corrigez les résultats avant de générer</strong> — l'OCR peut se tromper. Les images sont analysées dans votre navigateur et ne sont pas téléversées.</div>
-            <div id="accomScreenshotCaptures"></div>
-            <button type="button" id="addAccomScreenshotBtn" style="width:auto;padding:8px 12px;margin-top:6px;font-size:13px;">＋ Ajouter une capture de section</button>
-            <div id="accomScreenshotStatus" role="status" aria-live="polite" style="font-size:13px;margin:8px 0;"></div>
-            <label id="accomScreenshotConfirmLabel" style="display:none;margin-top:8px;font-size:13px;">
-                <input type="checkbox" id="accomScreenshotConfirmed">
-                J’ai vérifié les NI, les sections et les étudiants sélectionnés dans toutes les captures.
-            </label>
         </div>
 
         <!-- Hidden accom mapping UI (shown when accommodements.xlsx found) -->
@@ -711,7 +697,7 @@
 
         <div id="accomRoomsUI" style="margin-bottom:16px;">
             <label>🟪 Salles d'accommodement (optionnel)</label>
-            <div class="field-help">Locaux réservés exclusivement aux étudiants identifiés en accommodement (via <code>accommodements.xlsx</code> ou une capture). Ils sont remplis du plus grand au plus petit, séparément des locaux réguliers.</div>
+            <div class="field-help">Locaux réservés exclusivement aux étudiants identifiés en accommodement (via <code>accommodements.xlsx</code>). Ils sont remplis du plus grand au plus petit, séparément des locaux réguliers.</div>
             <div id="accomRoomList" style="margin-top:8px;">
                 <div class="accomRoomRow" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                     <input type="checkbox" class="accomRoomCheckbox" id="accom_room_1">
@@ -1585,7 +1571,7 @@
                 brioSections = workbook.SheetNames.slice();
             }
             renderSectionRoomAssignments();
-            refreshScreenshotSectionOptions();
+            refreshAccommodementData();
         }
 
         document.querySelectorAll('input[name="distMode"]').forEach(input => {
@@ -1868,32 +1854,9 @@
             generateBtn.disabled = true;
             progressDiv.style.display = 'block';
             progressFill.style.width = '5%';
-            progressText.textContent = screenshotCaptures.some(capture => capture.file)
-                ? 'Attente de la fin de l’analyse des captures...'
-                : 'Préparation de l’attribution...';
+            progressText.textContent = 'Préparation de l’attribution...';
             let handedOffToPdfGeneration = false;
             try {
-                await waitForScreenshotOCR();
-                const capturesWithFiles = screenshotCaptures.filter(capture => capture.file);
-                if (capturesWithFiles.length > 0) {
-                    const invalidCaptures = capturesWithFiles.filter(capture =>
-                        capture.error || !capture.section || capture.rows.length === 0
-                    );
-                    if (invalidCaptures.length > 0) {
-                        const issues = invalidCaptures.map(capture => {
-                            if (!capture.section) return `Choisissez la section pour « ${capture.file.name} ».`;
-                            return `Vérifiez la capture « ${capture.file.name} » : ${capture.error || 'aucun résultat OCR valide'}`;
-                        });
-                        alert(`⚠️ Corrigez les captures d’accommodements avant de continuer.\n${issues.join('\n')}`);
-                        return;
-                    }
-                    const confirmation = document.getElementById('accomScreenshotConfirmed');
-                    if (!confirmation || !confirmation.checked) {
-                        alert('⚠️ Vérifiez les NI, les sections et les étudiants sélectionnés dans toutes les captures, puis confirmez avant de générer.');
-                        return;
-                    }
-                }
-
                 console.log('generateAll: starting processing');
                 progressText.textContent = 'Lecture du fichier d’inscription...';
                 progressFill.style.width = '15%';
@@ -2177,11 +2140,6 @@
         let accomManualRooms = new Map();
         // Étudiants du fichier BRIO (cache pour afficher la liste des accommodements)
         let brioStudentsCache = [];
-        let screenshotCaptures = [];
-        let screenshotAccomNIBySection = new Map();
-        let nextScreenshotCaptureId = 1;
-        let screenshotOCRPromise = Promise.resolve();
-        let screenshotAccomRows = [];
         // Filtres (exclusion via fichiers de liste)
         let filterExcludeNISet = null; // Set of NI strings to exclude when TypeInscription != selected keep types
         // Valeurs de Type conservées (normalisées). Par défaut on conserve 'campus ul'
@@ -2201,29 +2159,13 @@
         function refreshAccommodementData() {
             accomNISet = new Set(Array.from(accomFileNISet, normalizeNI).filter(Boolean));
             accomTimeMap = new Map(Array.from(accomFileTimeMap, ([ni, times]) => [normalizeNI(ni), times]));
-            screenshotAccomNIBySection = new Map();
-            screenshotAccomRows = screenshotCaptures.flatMap(capture =>
-                capture.rows.map(row => ({ ...row, section: capture.section }))
-            );
-            for (const row of screenshotAccomRows) {
-                const ni = normalizeNI(row.ni);
-                if (row.selected && ni) {
-                    accomNISet.add(ni);
-                    if (!screenshotAccomNIBySection.has(row.section)) {
-                        screenshotAccomNIBySection.set(row.section, new Set());
-                    }
-                    screenshotAccomNIBySection.get(row.section).add(ni);
-                }
-            }
             renderAccomManualPlacement();
         }
 
         function isAccommodementStudent(student) {
             const ni = normalizeNI(student.ni);
             if (!ni) return false;
-            if (accomFileNISet.has(ni)) return true;
-            const sectionNIs = screenshotAccomNIBySection.get(String(student.section || '').trim());
-            return Boolean(sectionNIs && sectionNIs.has(ni));
+            return accomFileNISet.has(ni);
         }
 
         function getAccomManualRoom(student) {
@@ -2260,7 +2202,7 @@
             }
             const accomStudents = brioStudentsCache.filter(isAccommodementStudent).sort(compareStudentsByLastName);
             if (accomStudents.length === 0) {
-                showMessage('Aucun étudiant en accommodement détecté dans BRIO.xlsx (fournissez accommodements.xlsx ou une capture d’écran).');
+                showMessage('Aucun étudiant en accommodement détecté dans BRIO.xlsx (fournissez accommodements.xlsx).');
                 return;
             }
             const accomRooms = getSelectedAccomRooms();
@@ -2365,307 +2307,8 @@
             accomRoomListElement.addEventListener('change', renderAccomManualPlacement);
         }
 
-        function updateScreenshotAccomStatus() {
-            const status = document.getElementById('accomScreenshotStatus');
-            if (!status) return;
-            const capturesWithFiles = screenshotCaptures.filter(capture => capture.file);
-            const selectedCount = screenshotAccomRows.filter(row => row.selected && normalizeNI(row.ni)).length;
-            status.textContent = capturesWithFiles.length === 0
-                ? ''
-                : `${capturesWithFiles.length} capture(s); ${screenshotAccomRows.length} NI détecté(s); ${selectedCount} présélectionné(s). Vérifiez la section, les NI et les sélections.`;
-        }
-
-        function renderScreenshotCaptureRows(capture) {
-            const review = capture.review;
-            if (!review) return;
-            review.replaceChildren();
-            if (capture.rows.length === 0) {
-                review.style.display = 'none';
-                return;
-            }
-            const table = document.createElement('table');
-            table.style.cssText = 'width:100%;border-collapse:collapse;font-size:13px;';
-            const header = document.createElement('tr');
-            for (const title of ['Inclure', 'Nom détecté', 'NI (modifiable)', 'Activation examens']) {
-                const cell = document.createElement('th');
-                cell.textContent = title;
-                cell.style.cssText = 'padding:8px;text-align:left;background:#eee;border-bottom:1px solid #ccc;';
-                header.appendChild(cell);
-            }
-            table.appendChild(header);
-
-            for (const row of capture.rows) {
-                const tr = document.createElement('tr');
-                tr.style.borderBottom = '1px solid #ddd';
-
-                const includeCell = document.createElement('td');
-                includeCell.style.padding = '8px';
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = row.selected;
-                checkbox.setAttribute('aria-label', `Inclure le NI ${row.ni}`);
-                checkbox.addEventListener('change', () => {
-                    row.selected = checkbox.checked;
-                    const confirmation = document.getElementById('accomScreenshotConfirmed');
-                    if (confirmation) confirmation.checked = false;
-                    refreshAccommodementData();
-                    updateScreenshotAccomStatus();
-                });
-                includeCell.appendChild(checkbox);
-
-                const nameCell = document.createElement('td');
-                nameCell.textContent = row.name || 'Nom non détecté';
-                nameCell.title = row.line;
-                nameCell.style.padding = '8px';
-
-                const niCell = document.createElement('td');
-                niCell.style.padding = '8px';
-                const niInput = document.createElement('input');
-                niInput.type = 'text';
-                niInput.inputMode = 'numeric';
-                niInput.value = row.ni;
-                niInput.setAttribute('aria-label', 'Numéro d’identification');
-                niInput.style.cssText = 'width:150px;padding:6px;';
-                niInput.addEventListener('input', () => {
-                    row.ni = niInput.value;
-                    checkbox.setAttribute('aria-label', `Inclure le NI ${row.ni}`);
-                    const confirmation = document.getElementById('accomScreenshotConfirmed');
-                    if (confirmation) confirmation.checked = false;
-                    refreshAccommodementData();
-                    updateScreenshotAccomStatus();
-                });
-                niCell.appendChild(niInput);
-
-                const activationCell = document.createElement('td');
-                activationCell.textContent = row.examActivations === null ? 'À vérifier' : String(row.examActivations);
-                activationCell.style.padding = '8px';
-
-                tr.append(includeCell, nameCell, niCell, activationCell);
-                table.appendChild(tr);
-            }
-            review.appendChild(table);
-            review.style.display = 'block';
-        }
-
-        function resetScreenshotConfirmation() {
-            const confirmationLabel = document.getElementById('accomScreenshotConfirmLabel');
-            const confirmation = document.getElementById('accomScreenshotConfirmed');
-            if (confirmation) confirmation.checked = false;
-            if (confirmationLabel) {
-                confirmationLabel.style.display = screenshotCaptures.some(capture => capture.file && capture.rows.length > 0)
-                    ? 'block'
-                    : 'none';
-            }
-        }
-
-        async function waitForScreenshotOCR() {
-            let pendingOCR;
-            do {
-                pendingOCR = screenshotOCRPromise;
-                await pendingOCR;
-            } while (pendingOCR !== screenshotOCRPromise);
-        }
-
-        function updateScreenshotSectionOptions(select, selectedSection = '') {
-            if (!select) return;
-            select.replaceChildren();
-            const placeholder = document.createElement('option');
-            placeholder.value = '';
-            placeholder.textContent = brioSections.length > 0 ? '-- choisir la section --' : 'Chargez BRIO.xlsx d’abord';
-            select.appendChild(placeholder);
-            for (const section of brioSections) {
-                const option = document.createElement('option');
-                option.value = section;
-                option.textContent = section;
-                select.appendChild(option);
-            }
-            select.value = brioSections.includes(selectedSection) ? selectedSection : '';
-        }
-
-        function refreshScreenshotSectionOptions() {
-            for (const capture of screenshotCaptures) {
-                const previous = capture.section;
-                updateScreenshotSectionOptions(capture.sectionSelect, previous);
-                capture.section = capture.sectionSelect ? capture.sectionSelect.value : '';
-            }
-            refreshAccommodementData();
-            updateScreenshotAccomStatus();
-            resetScreenshotConfirmation();
-        }
-
-        function addAccomScreenshotCapture() {
-            const container = document.getElementById('accomScreenshotCaptures');
-            if (!container) return;
-            const capture = {
-                id: nextScreenshotCaptureId++,
-                section: '',
-                file: null,
-                rows: [],
-                error: '',
-                status: null,
-                sectionSelect: null,
-                review: null
-            };
-            const card = document.createElement('div');
-            card.style.cssText = 'margin:8px 0;padding:12px;border:1px solid #d9d9d9;border-radius:8px;background:#fafafa;';
-
-            const controls = document.createElement('div');
-            controls.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;';
-            const sectionLabel = document.createElement('label');
-            sectionLabel.textContent = 'Section';
-            sectionLabel.style.margin = '0';
-            const sectionSelect = document.createElement('select');
-            sectionSelect.style.cssText = 'width:auto;min-width:180px;padding:8px;';
-            updateScreenshotSectionOptions(sectionSelect);
-            capture.sectionSelect = sectionSelect;
-            sectionLabel.htmlFor = `accomSection_${capture.id}`;
-            sectionSelect.id = sectionLabel.htmlFor;
-            sectionSelect.addEventListener('change', () => {
-                capture.section = sectionSelect.value;
-                resetScreenshotConfirmation();
-                refreshAccommodementData();
-                updateScreenshotAccomStatus();
-            });
-
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = 'image/*';
-            fileInput.setAttribute('aria-label', `Capture d’accommodements pour la section ${capture.id}`);
-            fileInput.style.cssText = 'flex:1;min-width:240px;padding:8px;';
-            fileInput.addEventListener('change', () => {
-                const file = fileInput.files && fileInput.files[0];
-                if (!file) return;
-                capture.file = file;
-                capture.rows = [];
-                capture.error = '';
-                resetScreenshotConfirmation();
-                refreshAccommodementData();
-                updateScreenshotAccomStatus();
-                screenshotOCRPromise = screenshotOCRPromise.then(() => onAccomScreenshotSelected(capture, file));
-            });
-
-            const removeButton = document.createElement('button');
-            removeButton.type = 'button';
-            removeButton.textContent = 'Retirer';
-            removeButton.style.cssText = 'width:auto;margin:0;padding:8px 10px;font-size:13px;';
-            removeButton.addEventListener('click', () => {
-                screenshotCaptures = screenshotCaptures.filter(item => item !== capture);
-                card.remove();
-                resetScreenshotConfirmation();
-                refreshAccommodementData();
-                updateScreenshotAccomStatus();
-            });
-
-            const captureStatus = document.createElement('div');
-            captureStatus.setAttribute('role', 'status');
-            captureStatus.style.cssText = 'font-size:12px;margin-top:6px;';
-            capture.status = captureStatus;
-            const review = document.createElement('div');
-            review.style.cssText = 'display:none;overflow-x:auto;margin-top:8px;';
-            capture.review = review;
-            controls.append(sectionLabel, sectionSelect, fileInput, removeButton);
-            card.append(controls, captureStatus, review);
-            container.appendChild(card);
-            screenshotCaptures.push(capture);
-            refreshAccommodementData();
-            updateScreenshotAccomStatus();
-        }
-
-        function extractScreenshotAccomRows(ocrData) {
-            const rowsByNI = new Map();
-            for (const line of ocrData.lines || []) {
-                const text = String(line.text || '').trim();
-                const niMatch = text.match(/(?:^|[^\d])(\d{3})[\s.-]?(\d{3})[\s.-]?(\d{3})(?=$|[^\d])/);
-                if (!niMatch) continue;
-                const ni = niMatch.slice(1, 4).join('');
-                const activationMatch = text.match(/(?:^|\s)(\d{1,3})\s*$/);
-                const examActivations = activationMatch ? Number(activationMatch[1]) : null;
-                const name = text.slice(0, niMatch.index).replace(/^[\s—–\-−]+|[\s—–\-−]+$/g, '');
-                const candidate = {
-                    ni,
-                    name,
-                    line: text,
-                    examActivations,
-                    selected: examActivations !== null && examActivations > 0
-                };
-                const existing = rowsByNI.get(ni);
-                if (!existing || (!existing.name && candidate.name)) {
-                    rowsByNI.set(ni, candidate);
-                } else if (candidate.selected) {
-                    existing.selected = true;
-                    existing.examActivations = Math.max(existing.examActivations || 0, examActivations);
-                }
-            }
-            return Array.from(rowsByNI.values());
-        }
-
-        async function onAccomScreenshotSelected(capture, file) {
-            const status = capture.status;
-            const review = capture.review;
-            if (!file) return;
-            capture.file = file;
-            capture.error = '';
-            capture.rows = [];
-            refreshAccommodementData();
-            if (review) {
-                review.replaceChildren();
-                review.style.display = 'none';
-            }
-            if (!file.type.startsWith('image/')) {
-                capture.error = 'Le fichier choisi n’est pas une image.';
-                if (status) {
-                    status.textContent = capture.error;
-                    status.style.color = '#a4262c';
-                }
-                updateScreenshotAccomStatus();
-                return;
-            }
-            if (status) {
-                status.textContent = `Lecture de « ${file.name} » dans le navigateur…`;
-                status.style.color = '#555';
-            }
-
-            try {
-                if (!window.Tesseract) throw new Error('Le moteur OCR n’est pas disponible. Vérifiez votre connexion puis rechargez la page.');
-                const result = await Tesseract.recognize(file, 'fra', {
-                    logger: message => {
-                        if (status && message.status === 'recognizing text') {
-                            status.textContent = `Analyse OCR… ${Math.round(message.progress * 100)} %`;
-                        }
-                    }
-                });
-                capture.rows = extractScreenshotAccomRows(result.data);
-                refreshAccommodementData();
-                if (capture.rows.length === 0) {
-                    capture.error = 'Aucun NI n’a été détecté. Essayez une capture plus nette et vérifiez que les NI sont visibles.';
-                    if (status) {
-                        status.textContent = capture.error;
-                        status.style.color = '#a4262c';
-                    }
-                    updateScreenshotAccomStatus();
-                    return;
-                }
-                renderScreenshotCaptureRows(capture);
-                if (status) {
-                    status.textContent = `${capture.rows.length} NI détecté(s) dans cette capture.`;
-                    status.style.color = '#333';
-                }
-                resetScreenshotConfirmation();
-            } catch (error) {
-                console.error('Erreur lors de l’analyse de la capture d’accommodements:', error);
-                capture.error = error.message;
-                if (status) {
-                    status.textContent = `L’analyse de cette capture a échoué : ${error.message}`;
-                    status.style.color = '#a4262c';
-                }
-            }
-            updateScreenshotAccomStatus();
-        }
-
         // Safe DOM listener registration: check elements exist before binding to avoid hard errors
         const folderEl = document.getElementById('folderInput');
-        const addAccomScreenshotBtn = document.getElementById('addAccomScreenshotBtn');
-        if (addAccomScreenshotBtn) addAccomScreenshotBtn.addEventListener('click', addAccomScreenshotCapture);
         // Flag to avoid double-firing onFolderSelected when the hidden input is used as fallback
         let folderHandledByPicker = false;
 
