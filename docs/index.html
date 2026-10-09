@@ -143,14 +143,14 @@ window.Quarto = {
 <link rel="stylesheet" href="styles.css">
 <meta property="og:title" content="Julien Miron">
 <meta property="og:description" content="Chargé d’enseignement en statistique · Département de mathématiques et de statistique · Université Laval">
-<meta property="og:image" content="https://julienmiron.github.io/img/logo.png">
+<meta property="og:image" content="https://julienmiron.ca/img/logo.png">
 <meta property="og:site_name" content="Julien Miron">
 <meta property="og:image:alt" content="">
 <meta property="og:image:height" content="400">
 <meta property="og:image:width" content="600">
 <meta name="twitter:title" content="Julien Miron">
 <meta name="twitter:description" content="Chargé d’enseignement en statistique · Département de mathématiques et de statistique · Université Laval">
-<meta name="twitter:image" content="https://julienmiron.github.io/img/logo.png">
+<meta name="twitter:image" content="https://julienmiron.ca/img/logo.png">
 <meta name="twitter:image:alt" content="">
 <meta name="twitter:image-height" content="400">
 <meta name="twitter:image-width" content="600">
@@ -350,19 +350,19 @@ window.Quarto = {
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-cours">    
         <li>
-    <a class="dropdown-item" href="https://julienmiron.github.io/STT-1000/">
+    <a class="dropdown-item" href="https://julienmiron.ca/STT-1000/">
  <span class="dropdown-text">STT-1000</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="https://julienmiron.github.io/STT-1900/">
+    <a class="dropdown-item" href="https://julienmiron.ca/STT-1900/">
  <span class="dropdown-text">STT-1900</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="https://julienmiron.github.io/STT-1920/">
+    <a class="dropdown-item" href="https://julienmiron.ca/STT-1920/">
  <span class="dropdown-text">STT-1920</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="https://julienmiron.github.io/STT-4300/">
+    <a class="dropdown-item" href="https://julienmiron.ca/STT-4300/">
  <span class="dropdown-text">STT-4300</span></a>
   </li>  
         <li>
@@ -476,7 +476,7 @@ Département de mathématiques et de statistique, Université Laval. Cette page 
 <div id="listing-liste-sites" class="quarto-listing quarto-listing-container-grid">
 <div class="list grid quarto-listing-cols-3">
 <div class="g-col-1" data-index="0" data-categories="Q291cnM=">
-<a href="https://julienmiron.github.io/STT-1000/diapos.html" class="quarto-grid-link">
+<a href="https://julienmiron.ca/STT-1000/diapos.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <div class="card-body post-contents">
 <h5 class="no-anchor card-title listing-title">
@@ -494,7 +494,7 @@ STT-1000
 </div></a>
 </div>
 <div class="g-col-1" data-index="1" data-categories="Q291cnM=">
-<a href="https://julienmiron.github.io/STT-1900/diapos.html" class="quarto-grid-link">
+<a href="https://julienmiron.ca/STT-1900/diapos.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <div class="card-body post-contents">
 <h5 class="no-anchor card-title listing-title">
@@ -512,7 +512,7 @@ STT-1900
 </div></a>
 </div>
 <div class="g-col-1" data-index="2" data-categories="Q291cnM=">
-<a href="https://julienmiron.github.io/STT-1920/" class="quarto-grid-link">
+<a href="https://julienmiron.ca/STT-1920/" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <div class="card-body post-contents">
 <h5 class="no-anchor card-title listing-title">
@@ -530,7 +530,7 @@ STT-1920
 </div></a>
 </div>
 <div class="g-col-1" data-index="3" data-categories="Q291cnM=">
-<a href="https://julienmiron.github.io/STT-4300/" class="quarto-grid-link">
+<a href="https://julienmiron.ca/STT-4300/" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <div class="card-body post-contents">
 <h5 class="no-anchor card-title listing-title">
@@ -623,7 +623,7 @@ GS vers Brio
   const afficher = (depots) => {
     if (!depots.length) { cible.textContent = "Aucun dépôt public pour le moment."; return; }
     cible.innerHTML = depots.map(d => {
-      const site = d.homepage || (d.has_pages ? `https://${USER.toLowerCase()}.github.io/${d.name}/` : null);
+      const site = d.homepage || (d.has_pages ? (d.name.toLowerCase() === `${USER.toLowerCase()}.github.io` ? "https://julienmiron.ca/" : `https://julienmiron.ca/${d.name}/`) : null);
       const maj = new Date(d.pushed_at).toLocaleDateString("fr-CA");
       return `
         <article class="depot">
@@ -764,7 +764,7 @@ GS vers Brio
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/julienmiron\.github\.io");
+        var filterRegex = new RegExp("https:\/\/julienmiron\.ca");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -1096,4 +1096,4 @@ GS vers Brio
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions"><ul><li><a href="https://github.com/JulienMiron/SitePerso/edit/main/index.qmd" class="toc-action"><i class="bi bi-github"></i>Modifier cette page</a></li><li><a href="https://github.com/JulienMiron/SitePerso/blob/main/index.qmd" class="toc-action"><i class="bi empty"></i>Voir la source</a></li><li><a href="https://github.com/JulienMiron/SitePerso/issues/new" class="toc-action"><i class="bi empty"></i>Faire part d'un problème</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions"><ul><li><a href="https://github.com/JulienMiron/julienmiron.github.io/edit/main/index.qmd" class="toc-action"><i class="bi bi-github"></i>Modifier cette page</a></li><li><a href="https://github.com/JulienMiron/julienmiron.github.io/blob/main/index.qmd" class="toc-action"><i class="bi empty"></i>Voir la source</a></li><li><a href="https://github.com/JulienMiron/julienmiron.github.io/issues/new" class="toc-action"><i class="bi empty"></i>Faire part d'un problème</a></li></ul></div></div></div></footer></body></html>

@@ -1,1 +1,1 @@
-Sitemap: https://julienmiron.github.io/sitemap.xml
+Sitemap: https://julienmiron.ca/sitemap.xml
