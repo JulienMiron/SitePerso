@@ -63,7 +63,7 @@ Chargement des dépôts…
   const afficher = (depots) => {
     if (!depots.length) { cible.textContent = "Aucun dépôt public pour le moment."; return; }
     cible.innerHTML = depots.map(d => {
-      const site = d.homepage || (d.has_pages ? `https://${USER.toLowerCase()}.github.io/${d.name}/` : null);
+      const site = d.homepage || (d.has_pages ? (d.name.toLowerCase() === `${USER.toLowerCase()}.github.io` ? "https://julienmiron.ca/" : `https://julienmiron.ca/${d.name}/`) : null);
       const maj = new Date(d.pushed_at).toLocaleDateString("fr-CA");
       return `
         <article class="depot">
